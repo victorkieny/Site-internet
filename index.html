@@ -12,46 +12,28 @@
   </head>
   <body>
     <main class="page" id="accueil">
-      <header class="site-header" aria-label="Présentation et coordonnées">
-        <a class="monogram" href="#accueil" aria-label="Accueil Victor KIENY">VK</a>
-        <div class="identity">
-          <p class="identity-name">Victor KIENY</p>
-          <p>Conseiller en ingénierie patrimoniale</p>
-        </div>
-        <address class="top-contact" aria-label="Coordonnées principales">
-          <a href="tel:+33767095950">
-            <span>Téléphone</span>
-            +33 7 67 09 59 50
-          </a>
-          <a href="mailto:conseil@victorkieny.fr">
-            <span>Email</span>
-            conseil@victorkieny.fr
-          </a>
-        </address>
-      </header>
-
       <section class="intro" aria-labelledby="hero-title">
-        <p class="eyebrow">Conseiller en ingénierie patrimoniale</p>
-        <h1 id="hero-title">Victor KIENY</h1>
+        <div class="title-block">
+          <h1 id="hero-title">Victor Kieny</h1>
+          <p class="eyebrow">Conseiller en ingénierie patrimoniale</p>
+        </div>
+        <address class="top-details" aria-label="Coordonnées">
+          <a href="tel:+33767095950">+33 7 67 09 59 50</a>
+          <span aria-hidden="true">•</span>
+          <a href="mailto:conseil@victorkieny.fr">conseil@victorkieny.fr</a>
+        </address>
+      </section>
+
+      <section class="welcome" aria-label="Message de bienvenue">
         <p class="lead">
-          Bienvenue sur mon espace de prise de rendez-vous.
-          Choisissez le format d'échange le plus adapté à votre situation ;
-          les créneaux proposés sont reliés à mon agenda et vous recevrez
-          une confirmation après réservation.
+          <span class="lead-primary">Bienvenue sur mon espace de prise de rendez-vous.</span>
+          <span class="lead-secondary">Choisissez le format d'échange adapté à votre besoin.</span>
         </p>
-        <a class="primary-action" href="#rendez-vous">
-          Voir les rendez-vous
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M5 12h14"></path>
-            <path d="m13 6 6 6-6 6"></path>
-          </svg>
-        </a>
       </section>
 
       <section class="appointments" id="rendez-vous" aria-labelledby="appointments-title">
         <div class="section-heading">
-          <p class="eyebrow">Rendez-vous proposés</p>
-          <h2 id="appointments-title">Trois formats, selon le moment.</h2>
+          <h2 id="appointments-title">Choisissez votre rendez-vous.</h2>
         </div>
 
         <div class="appointment-grid">
@@ -73,14 +55,13 @@
               </svg>
               30 minutes
             </p>
-            <p class="appointment-copy">Pour une première question ou un point rapide.</p>
             <a
               class="appointment-link"
               href="https://calendar.app.google/hFCpwhxGwRXCt1ie8"
               target="_blank"
               rel="noopener noreferrer"
             >
-              Réserver ce rendez-vous
+              Choisir ce rendez-vous
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M5 12h14"></path>
                 <path d="m13 6 6 6-6 6"></path>
@@ -106,14 +87,13 @@
               </svg>
               1 h 30
             </p>
-            <p class="appointment-copy">Pour poser le cadre et comprendre votre situation.</p>
             <a
               class="appointment-link"
               href="https://calendar.app.google/gGCpyHk1Dj5sxGqg9"
               target="_blank"
               rel="noopener noreferrer"
             >
-              Réserver ce rendez-vous
+              Choisir ce rendez-vous
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M5 12h14"></path>
                 <path d="m13 6 6 6-6 6"></path>
@@ -139,14 +119,13 @@
               </svg>
               1 heure
             </p>
-            <p class="appointment-copy">Pour avancer sur un dossier ou faire le point.</p>
             <a
               class="appointment-link"
               href="https://calendar.app.google/NVPXnf91Q5xbu4fG6"
               target="_blank"
               rel="noopener noreferrer"
             >
-              Réserver ce rendez-vous
+              Choisir ce rendez-vous
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M5 12h14"></path>
                 <path d="m13 6 6 6-6 6"></path>
@@ -157,7 +136,7 @@
       </section>
 
       <footer class="page-note">
-        <p>Votre confirmation de rendez-vous vous sera envoyée automatiquement.</p>
+        <p>Tous les rendez-vous sont synchronisées avec mon agenda, une confirmation vous sera envoyée automatiquement après la réservation.</p>
       </footer>
     </main>
   </body>
