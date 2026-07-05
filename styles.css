@@ -56,7 +56,7 @@ svg {
   width: min(100%, 1480px);
   min-height: 100svh;
   margin: 0 auto;
-  padding: 136px 52px 92px;
+  padding: 112px 52px 116px;
   display: grid;
   grid-template-rows: auto auto 1fr auto;
   row-gap: 24px;
@@ -146,7 +146,7 @@ h1 {
   justify-content: center;
   align-items: center;
   gap: 12px;
-  margin: 2px 0 0;
+  margin: 10px 0 0;
   color: var(--ink);
   font-family: var(--sans);
   font-size: 1.05rem;
@@ -341,7 +341,7 @@ h3 {
   }
 
   .page {
-    padding: 56px 44px 44px;
+    padding: 32px 44px 68px;
     grid-template-rows: auto auto 1fr auto;
     row-gap: 9px;
   }
