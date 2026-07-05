@@ -201,7 +201,7 @@ h2 {
 }
 
 .appointment {
-  min-height: 292px;
+  min-height: 365px;
   display: grid;
   align-content: start;
   gap: 12px;
@@ -233,9 +233,9 @@ h2 {
 }
 
 h3 {
-  font-size: 2.15rem;
-  line-height: 1;
-  transform: scaleX(1.08);
+  font-size: 1.92rem;
+  line-height: 0.96;
+  transform: scaleX(1.16);
   transform-origin: left center;
 }
 
@@ -250,11 +250,21 @@ h3 {
   font-weight: 400;
 }
 
+.appointment-copy {
+  min-height: 120px;
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-family: var(--sans);
+  font-size: 0.95rem;
+  font-weight: 400;
+  line-height: 1.35;
+}
+
 .appointment-link {
   width: fit-content;
   min-width: 286px;
   min-height: 54px;
-  margin-top: 22px;
+  margin-top: 24px;
   padding: 0 24px;
   font-size: 0.98rem;
 }
@@ -342,7 +352,7 @@ h3 {
   }
 
   .appointment {
-    min-height: 205px;
+    min-height: 265px;
     gap: 7px;
     padding: 18px 22px;
     border-radius: 20px;
@@ -356,7 +366,7 @@ h3 {
   }
 
   h3 {
-    font-size: 1.4rem;
+    font-size: 1.24rem;
   }
 
   .duration {
@@ -366,7 +376,7 @@ h3 {
   .appointment-link {
     min-width: 228px;
     min-height: 42px;
-    margin-top: 8px;
+    margin-top: 14px;
     padding: 0 18px;
     font-size: 0.88rem;
   }
@@ -400,11 +410,15 @@ h3 {
   }
 
   h3 {
-    font-size: 1.55rem;
+    font-size: 1.38rem;
   }
 
   .appointment {
     padding: 24px;
+  }
+
+  .appointment-copy {
+    min-height: 96px;
   }
 
   .appointment-link {
@@ -500,8 +514,8 @@ h3 {
   }
 
   h3 {
-    font-size: 1.44rem;
-    transform: scaleX(1.04);
+    font-size: 1.32rem;
+    transform: scaleX(1.08);
   }
 
   .appointment-link {
