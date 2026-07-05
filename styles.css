@@ -25,7 +25,10 @@ html {
 body {
   margin: 0;
   color: var(--ink);
-  background: var(--paper);
+  background:
+    linear-gradient(rgba(242, 238, 230, 0.88), rgba(242, 238, 230, 0.9)),
+    linear-gradient(180deg, rgba(242, 238, 230, 0.92) 0%, rgba(242, 238, 230, 0.78) 45%, rgba(242, 238, 230, 0.94) 100%),
+    url("IMG_1312.JPG") center / cover fixed;
   font-family: var(--sans);
   font-weight: 400;
   font-synthesis: none;
@@ -272,7 +275,7 @@ h3 {
 .page-note {
   display: grid;
   justify-items: center;
-  margin-top: 132px;
+  margin-top: 24px;
   color: #918a81;
   font-family: var(--sans);
   font-size: 1rem;
@@ -382,7 +385,7 @@ h3 {
   }
 
   .page-note {
-    margin-top: 42px;
+    margin-top: 16px;
     font-size: 0.88rem;
   }
 }
@@ -456,7 +459,7 @@ h3 {
   }
 
   .page-note {
-    margin-top: 48px;
+    margin-top: 28px;
   }
 }
 
