@@ -156,26 +156,38 @@ h1 {
 }
 
 .contact-link {
+  position: relative;
+  overflow: hidden;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  min-height: 38px;
-  padding: 0 15px;
-  border: 1px solid rgba(43, 37, 30, 0.14);
+  min-height: 40px;
+  padding: 0 17px;
+  border: 1px solid rgba(43, 37, 30, 0.16);
   border-radius: 999px;
-  background: rgba(255, 253, 250, 0.42);
+  background: linear-gradient(180deg, rgba(255, 253, 250, 0.86), rgba(255, 253, 250, 0.66));
   color: var(--ink);
-  box-shadow: 0 10px 24px rgba(43, 37, 30, 0.05);
-  backdrop-filter: blur(10px);
-  transition: transform 180ms ease, background 180ms ease, border-color 180ms ease, color 180ms ease;
+  box-shadow: 0 16px 32px rgba(43, 37, 30, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(18px) saturate(1.08);
+  transition: transform 200ms ease, background 200ms ease, border-color 200ms ease, color 200ms ease, box-shadow 200ms ease;
+}
+
+.contact-link::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 2px;
+  background: linear-gradient(90deg, rgba(234, 223, 205, 0), rgba(177, 151, 112, 0.58), rgba(234, 223, 205, 0));
+  opacity: 0.9;
 }
 
 .contact-link:hover {
-  transform: translateY(-1px);
+  transform: translateY(-2px);
   border-color: var(--button);
   background: var(--button);
   color: var(--white);
+  box-shadow: 0 18px 34px rgba(43, 37, 30, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 .contact-link svg {
@@ -193,19 +205,21 @@ h1 {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 13px;
-  min-height: 54px;
+  gap: 12px;
+  min-height: 50px;
   border-radius: 999px;
   background: var(--button);
   color: var(--white);
   font-family: var(--sans);
   font-weight: 400;
-  transition: transform 180ms ease, background 180ms ease;
+  box-shadow: 0 12px 22px rgba(43, 37, 30, 0.12);
+  transition: transform 200ms ease, background 200ms ease, box-shadow 200ms ease;
 }
 
 .appointment-link:hover {
-  transform: translateY(-2px);
+  transform: translateY(-2px) scale(1.01);
   background: var(--button-hover);
+  box-shadow: 0 16px 28px rgba(43, 37, 30, 0.16);
 }
 
 .appointments {
@@ -234,35 +248,50 @@ h2 {
 }
 
 .appointment {
+  position: relative;
+  overflow: hidden;
   min-height: 365px;
   display: grid;
   align-content: start;
   gap: 12px;
   padding: 32px;
-  border: 1px solid var(--line);
-  border-radius: 26px;
-  background: rgba(255, 253, 250, 0.88);
-  box-shadow: var(--shadow);
+  border: 1px solid rgba(43, 37, 30, 0.14);
+  border-radius: 24px;
+  background: linear-gradient(180deg, rgba(255, 253, 250, 0.96), rgba(255, 253, 250, 0.84));
+  box-shadow: 0 28px 62px rgba(43, 37, 30, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(22px) saturate(1.12);
   transform-origin: center;
-  transition: transform 220ms ease, box-shadow 220ms ease, background 220ms ease;
+  transition: transform 220ms ease, box-shadow 220ms ease, background 220ms ease, border-color 220ms ease;
+}
+
+.appointment::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 4px;
+  background: linear-gradient(90deg, rgba(234, 223, 205, 0), rgba(177, 151, 112, 0.66), rgba(234, 223, 205, 0));
+  opacity: 0.9;
 }
 
 .appointment:hover {
-  background: var(--surface);
-  box-shadow: 0 24px 48px rgba(43, 37, 30, 0.12);
-  transform: scale(1.025);
+  border-color: rgba(43, 37, 30, 0.22);
+  background: linear-gradient(180deg, rgba(255, 253, 250, 0.99), rgba(255, 253, 250, 0.9));
+  box-shadow: 0 34px 72px rgba(43, 37, 30, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.96);
+  transform: translateY(-6px) scale(1.018);
 }
 
 .card-icon {
-  width: 54px;
-  height: 54px;
+  width: 48px;
+  height: 48px;
   display: grid;
   place-items: center;
-  margin-bottom: 26px;
+  margin-bottom: 24px;
   border-radius: 50%;
-  background: var(--accent);
+  background: linear-gradient(180deg, rgba(238, 228, 210, 0.96), rgba(221, 205, 178, 0.86));
+  border: 1px solid rgba(43, 37, 30, 0.12);
   color: var(--ink);
-  font-size: 1.35rem;
+  font-size: 1.18rem;
+  box-shadow: 0 10px 20px rgba(43, 37, 30, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.82);
 }
 
 h3 {
@@ -295,11 +324,11 @@ h3 {
 
 .appointment-link {
   width: fit-content;
-  min-width: 286px;
-  min-height: 54px;
+  min-width: 270px;
+  min-height: 50px;
   margin-top: 24px;
-  padding: 0 24px;
-  font-size: 0.98rem;
+  padding: 0 22px;
+  font-size: 0.94rem;
 }
 
 .page-note {
@@ -389,14 +418,14 @@ h3 {
     min-height: 265px;
     gap: 7px;
     padding: 18px 22px;
-    border-radius: 20px;
+    border-radius: 18px;
   }
 
   .card-icon {
-    width: 38px;
-    height: 38px;
+    width: 36px;
+    height: 36px;
     margin-bottom: 8px;
-    font-size: 1rem;
+    font-size: 0.92rem;
   }
 
   h3 {
@@ -408,11 +437,11 @@ h3 {
   }
 
   .appointment-link {
-    min-width: 228px;
-    min-height: 42px;
+    min-width: 218px;
+    min-height: 40px;
     margin-top: 14px;
     padding: 0 18px;
-    font-size: 0.88rem;
+    font-size: 0.84rem;
   }
 
   .page-note {
@@ -550,7 +579,7 @@ h3 {
 
   .appointment {
     padding: 22px;
-    border-radius: 20px;
+    border-radius: 18px;
   }
 
   h3 {
