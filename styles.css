@@ -26,8 +26,8 @@ body {
   margin: 0;
   color: var(--ink);
   background:
-    linear-gradient(rgba(242, 238, 230, 0.88), rgba(242, 238, 230, 0.9)),
-    linear-gradient(180deg, rgba(242, 238, 230, 0.92) 0%, rgba(242, 238, 230, 0.78) 45%, rgba(242, 238, 230, 0.94) 100%),
+    linear-gradient(rgba(242, 238, 230, 0.57), rgba(242, 238, 230, 0.62)),
+    linear-gradient(180deg, rgba(242, 238, 230, 0.66) 0%, rgba(242, 238, 230, 0.37) 45%, rgba(242, 238, 230, 0.74) 100%),
     url("IMG_1312.JPG") center / cover fixed;
   font-family: var(--sans);
   font-weight: 400;
@@ -80,10 +80,10 @@ svg {
 
 .eyebrow {
   margin: 0;
-  color: var(--label);
+  color: var(--muted);
   font-family: var(--sans);
   font-size: 1.55rem;
-  font-weight: 400;
+  font-weight: 500;
   letter-spacing: 0.11em;
   line-height: 1.1;
   text-align: center;
@@ -118,7 +118,7 @@ h1 {
   margin: 0;
   font-family: var(--sans);
   font-size: 2.35rem;
-  font-weight: 400;
+  font-weight: 450;
   line-height: 1.35;
 }
 
@@ -128,7 +128,7 @@ h1 {
 }
 
 .lead-secondary {
-  color: var(--muted);
+  color: #777168;
 }
 
 .welcome {
@@ -147,7 +147,7 @@ h1 {
   align-items: baseline;
   gap: 10px;
   margin: 2px 0 0;
-  color: var(--muted);
+  color: var(--ink);
   font-family: var(--sans);
   font-size: 1.05rem;
   font-style: normal;
@@ -279,7 +279,7 @@ h3 {
   color: #918a81;
   font-family: var(--sans);
   font-size: 1rem;
-  font-weight: 400;
+  font-weight: 450;
   text-align: center;
 }
 
