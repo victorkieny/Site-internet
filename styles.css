@@ -163,6 +163,10 @@ h1 {
   line-height: 1.35;
 }
 
+.lead-mobile {
+  display: none;
+}
+
 .lead-primary {
   display: block;
   color: var(--ink);
@@ -651,6 +655,8 @@ h3 {
 
   .page-note {
     margin-top: 28px;
+    font-size: 0.82rem;
+    line-height: 1.35;
   }
 }
 
@@ -691,27 +697,37 @@ h3 {
   }
 
   .lead {
-    font-size: 1rem;
+    font-size: 1.1rem;
     line-height: 1.28;
   }
 
+  .lead-desktop {
+    display: none;
+  }
+
+  .lead-mobile {
+    display: block;
+  }
+
   .top-details {
-    width: min(100%, 360px);
+    width: fit-content;
+    max-width: 100%;
+    display: grid;
     gap: 8px;
     font-size: 0.84rem;
-    flex-wrap: wrap;
     justify-content: center;
     white-space: normal;
   }
 
   .contact-link {
-    width: min(100%, 280px);
+    width: 100%;
+    max-width: 100%;
     min-height: 38px;
     padding: 0 16px;
   }
 
   .section-heading {
-    margin-bottom: 22px;
+    display: none;
   }
 
   h2 {
