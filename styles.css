@@ -20,21 +20,36 @@
 
 html {
   scroll-behavior: smooth;
-}
-
-body {
-  margin: 0;
-  color: var(--ink);
   background:
     linear-gradient(rgba(242, 238, 230, 0.57), rgba(242, 238, 230, 0.62)),
     linear-gradient(180deg, rgba(242, 238, 230, 0.66) 0%, rgba(242, 238, 230, 0.37) 45%, rgba(242, 238, 230, 0.74) 100%),
-    url("IMG_1312.JPG") center / cover fixed;
+    url("assets/background.jpg") center / cover no-repeat var(--paper);
+}
+
+body {
+  position: relative;
+  margin: 0;
+  color: var(--ink);
+  background: var(--paper);
   font-family: var(--sans);
   font-weight: 400;
   font-synthesis: none;
   letter-spacing: 0;
   -webkit-font-smoothing: antialiased;
   text-rendering: geometricPrecision;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  z-index: 0;
+  inset: -1px;
+  background:
+    linear-gradient(rgba(242, 238, 230, 0.57), rgba(242, 238, 230, 0.62)),
+    linear-gradient(180deg, rgba(242, 238, 230, 0.66) 0%, rgba(242, 238, 230, 0.37) 45%, rgba(242, 238, 230, 0.74) 100%),
+    url("assets/background.jpg") center / cover no-repeat;
+  pointer-events: none;
+  transform: translateZ(0);
 }
 
 a {
@@ -54,6 +69,7 @@ svg {
 
 .page {
   position: relative;
+  z-index: 1;
   isolation: isolate;
   width: min(100%, 1480px);
   min-height: 100svh;
@@ -228,24 +244,45 @@ h1 {
 }
 
 .appointment-link {
+  position: relative;
+  overflow: hidden;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 12px;
   min-height: 50px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 999px;
-  background: var(--button);
+  background: linear-gradient(180deg, #332d25 0%, var(--button) 54%, #211c17 100%);
   color: var(--white);
   font-family: var(--sans);
   font-weight: 400;
-  box-shadow: 0 12px 22px rgba(43, 37, 30, 0.12);
-  transition: transform 200ms ease, background 200ms ease, box-shadow 200ms ease;
+  box-shadow: 0 16px 28px rgba(43, 37, 30, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.12), inset 0 -1px 0 rgba(0, 0, 0, 0.22);
+  transition: transform 220ms ease, border-color 220ms ease, background 220ms ease, box-shadow 220ms ease;
+}
+
+.appointment-link::before {
+  content: "";
+  position: absolute;
+  inset: 1px 12px auto;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.32), rgba(255, 255, 255, 0));
+  opacity: 0.7;
 }
 
 .appointment-link:hover {
-  transform: translateY(-2px) scale(1.01);
-  background: var(--button-hover);
-  box-shadow: 0 16px 28px rgba(43, 37, 30, 0.16);
+  transform: translateY(-3px) scale(1.012);
+  border-color: rgba(255, 255, 255, 0.14);
+  background: linear-gradient(180deg, #40382e 0%, var(--button-hover) 58%, #15110e 100%);
+  box-shadow: 0 22px 36px rgba(43, 37, 30, 0.26), inset 0 1px 0 rgba(255, 255, 255, 0.14), inset 0 -1px 0 rgba(0, 0, 0, 0.28);
+}
+
+.appointment-link svg {
+  transition: transform 220ms ease;
+}
+
+.appointment-link:hover svg {
+  transform: translateX(4px);
 }
 
 .appointments {
