@@ -120,7 +120,7 @@ svg {
 .title-block {
   width: max-content;
   display: grid;
-  gap: 18px;
+  gap: 24px;
   transform: scaleX(1.12);
   transform-origin: center;
 }
@@ -269,6 +269,7 @@ h1 {
   color: var(--white);
   font-family: var(--sans);
   font-weight: 400;
+  white-space: nowrap;
   box-shadow: 0 16px 28px rgba(43, 37, 30, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.12), inset 0 -1px 0 rgba(0, 0, 0, 0.22);
   transition: transform 220ms ease, border-color 220ms ease, background 220ms ease, box-shadow 220ms ease;
 }
@@ -372,6 +373,7 @@ h2 {
 }
 
 h3 {
+  max-width: 100%;
   font-size: 1.92rem;
   line-height: 0.96;
   transform: scaleX(1.16);
@@ -405,6 +407,7 @@ h3 {
   min-height: 50px;
   margin-top: 24px;
   align-self: end;
+  justify-self: center;
   padding: 0 22px;
   font-size: 0.94rem;
 }
@@ -602,7 +605,7 @@ h3 {
   }
 
   .title-block {
-    gap: clamp(10px, 1.4svh, 15px);
+    gap: clamp(16px, 2svh, 24px);
   }
 
   h1 {
@@ -667,7 +670,8 @@ h3 {
   }
 
   h3 {
-    font-size: clamp(1.24rem, 1.75vw, 1.68rem);
+    font-size: clamp(1.18rem, 1.45vw, 1.52rem);
+    transform: scaleX(1.04);
   }
 
   .duration {
@@ -680,8 +684,9 @@ h3 {
   }
 
   .appointment-link {
-    width: 100%;
-    min-width: 0;
+    width: min(100%, max(238px, 82%));
+    min-width: 238px;
+    justify-self: center;
     min-height: clamp(40px, 4.6svh, 48px);
     margin-top: clamp(18px, 2.4svh, 24px);
     padding: 0 clamp(16px, 1.6vw, 22px);
