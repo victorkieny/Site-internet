@@ -6,7 +6,7 @@
   --surface: #fffdfa;
   --line: #ded7cc;
   --accent: #eadfcd;
-  --logo-gold: #ba9869;
+  --logo-gold: #c7ae89;
   --button: #2c261f;
   --button-hover: #17130f;
   --white: #ffffff;
@@ -414,10 +414,10 @@ h2 {
   margin-bottom: 24px;
   border-radius: 50%;
   background: var(--logo-gold);
-  border: 1px solid rgba(43, 37, 30, 0.16);
+  border: 1px solid rgba(185, 148, 85, 0.32);
   color: var(--ink);
   font-size: 1.18rem;
-  box-shadow: 0 12px 22px rgba(43, 37, 30, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  box-shadow: 0 12px 22px rgba(43, 37, 30, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.34);
 }
 
 h3 {
