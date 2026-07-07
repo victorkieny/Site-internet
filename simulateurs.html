@@ -26,83 +26,21 @@
       </header>
 
       <section class="simulator-workspace" aria-label="Espace simulateurs">
-        <div class="simulator-tabs" role="tablist" aria-label="Liste des simulateurs">
-          <button
-            class="simulator-tab is-active"
-            id="tab-projection"
-            type="button"
-            role="tab"
-            aria-selected="true"
-            aria-controls="panel-simulator"
-            data-title="Projection AV / SCPI / PER"
-            data-description="Comparez les hypothèses d'épargne, de rendement, de revenus et de capital dans le temps."
-            data-url="simulateurs/projection.html"
-          >
-            Projection
-          </button>
+        <div class="simulator-choice-grid" aria-label="Liste des simulateurs">
+          <a class="simulator-choice" href="simulateurs/projection.html?mode=av">
+            <span>Assurance Vie</span>
+            <p>Projeter l'encours et visualiser les intérêts composés dans le temps.</p>
+          </a>
+          <a class="simulator-choice" href="simulateurs/projection.html?mode=scpi">
+            <span>SCPI</span>
+            <p>Estimer le capital investi et les revenus potentiels année après année.</p>
+          </a>
+          <a class="simulator-choice" href="simulateurs/projection.html?mode=per">
+            <span>PER</span>
+            <p>Construire une projection retraite, avec le volet fiscal à intégrer ensuite.</p>
+          </a>
         </div>
-
-        <article class="simulator-shell" id="panel-simulator" role="tabpanel" aria-labelledby="tab-projection">
-          <div class="simulator-panel-header">
-            <div>
-              <p class="simulator-kicker">Simulateur</p>
-              <h2 id="simulator-title">Projection AV / SCPI / PER</h2>
-            </div>
-            <p id="simulator-description">Comparez les hypothèses d'épargne, de rendement, de revenus et de capital dans le temps.</p>
-          </div>
-
-          <div class="simulator-frame-wrap">
-            <iframe
-              id="simulator-frame"
-              title="Simulateur sélectionné"
-              loading="lazy"
-              referrerpolicy="no-referrer-when-downgrade"
-            ></iframe>
-            <div class="simulator-empty" id="simulator-empty">
-              <p>Ajoutez ici l'adresse du simulateur.</p>
-              <span>Quand tu m'enverras les liens, je les brancherai dans les onglets correspondants.</span>
-            </div>
-          </div>
-        </article>
       </section>
     </main>
-
-    <script>
-      const tabs = Array.from(document.querySelectorAll(".simulator-tab"));
-      const panel = document.querySelector("#panel-simulator");
-      const title = document.querySelector("#simulator-title");
-      const description = document.querySelector("#simulator-description");
-      const frame = document.querySelector("#simulator-frame");
-      const empty = document.querySelector("#simulator-empty");
-
-      function activateTab(tab) {
-        tabs.forEach((item) => {
-          const isActive = item === tab;
-          item.classList.toggle("is-active", isActive);
-          item.setAttribute("aria-selected", String(isActive));
-        });
-
-        panel.setAttribute("aria-labelledby", tab.id);
-        title.textContent = tab.dataset.title;
-        description.textContent = tab.dataset.description;
-
-        if (tab.dataset.url) {
-          frame.src = tab.dataset.url;
-          frame.hidden = false;
-          empty.hidden = true;
-          return;
-        }
-
-        frame.removeAttribute("src");
-        frame.hidden = true;
-        empty.hidden = false;
-      }
-
-      tabs.forEach((tab) => {
-        tab.addEventListener("click", () => activateTab(tab));
-      });
-
-      activateTab(tabs[0]);
-    </script>
   </body>
 </html>

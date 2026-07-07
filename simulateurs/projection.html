@@ -3,68 +3,51 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Projection AV / SCPI / PER</title>
+    <title>Simulateur patrimonial</title>
     <link rel="stylesheet" href="../styles.css">
   </head>
   <body class="tool-body">
-    <main class="tool-page" aria-labelledby="tool-title">
-      <header class="tool-header">
-        <div>
-          <p class="tool-kicker">Simulateur</p>
-          <h1 id="tool-title">Projection patrimoniale</h1>
-        </div>
-        <p>SCPI, Assurance Vie et PER, avec hypothèses modifiables en rendez-vous.</p>
-      </header>
-
-      <section class="client-panel" aria-label="Informations client">
-        <label>
-          <span>Prénom</span>
-          <input id="client-firstname" type="text" placeholder="Jean">
-        </label>
-        <label>
-          <span>Nom</span>
-          <input id="client-lastname" type="text" placeholder="Dupont">
-        </label>
-        <label>
-          <span>Âge</span>
-          <input id="client-age" type="number" min="0" max="100" placeholder="35">
-        </label>
-      </section>
-
-      <nav class="tool-tabs" aria-label="Choix du simulateur">
-        <button class="tool-tab is-active" type="button" data-mode="scpi">SCPI</button>
-        <button class="tool-tab" type="button" data-mode="av">Assurance Vie</button>
-        <button class="tool-tab" type="button" data-mode="per">PER</button>
+    <main class="tool-page" aria-labelledby="tool-page-title">
+      <nav class="tool-nav" aria-label="Navigation du simulateur">
+        <a href="../simulateurs.html">← Simulateurs</a>
+        <h1 id="tool-page-title">Assurance Vie</h1>
       </nav>
 
       <section class="tool-layout">
-        <div class="tool-results">
-          <div class="tool-kpis" id="kpis"></div>
-          <div class="tool-chart-card">
+        <section class="tool-overview" aria-label="Synthèse et hypothèses">
+          <aside class="tool-params" aria-label="Hypothèses">
+            <div class="tool-params-title">
+              <h2>Hypothèses</h2>
+            </div>
+            <div id="fields" class="tool-fields"></div>
+          </aside>
+
+          <div class="tool-summary" id="summary"></div>
+        </section>
+
+        <section class="tool-detail" aria-label="Projection détaillée">
+          <div class="tool-view-toggle" aria-label="Affichage des résultats">
+            <button class="is-active" type="button" data-view="chart">Graphique</button>
+            <button type="button" data-view="table">Calendrier</button>
+          </div>
+
+          <div class="tool-chart-card" id="chart-panel">
             <div class="tool-card-title">
               <h2>Projection</h2>
               <span id="projection-label"></span>
             </div>
-            <div class="mini-chart" id="chart" aria-label="Graphique de projection"></div>
+            <div class="line-chart" id="chart" aria-label="Graphique de projection"></div>
           </div>
-          <div class="tool-table-card">
+          <div class="tool-table-card" id="table-panel" hidden>
             <div class="tool-card-title">
-              <h2>Détail annuel</h2>
+              <h2>Calendrier annuel</h2>
               <span id="table-note"></span>
             </div>
             <div class="tool-table-wrap">
               <table id="projection-table"></table>
             </div>
           </div>
-        </div>
-
-        <aside class="tool-params" aria-label="Hypothèses">
-          <div class="tool-params-title">
-            <h2>Hypothèses</h2>
-            <button type="button" id="reset-button">Réinitialiser</button>
-          </div>
-          <div id="fields" class="tool-fields"></div>
-        </aside>
+        </section>
       </section>
     </main>
 
@@ -91,7 +74,6 @@
         av: {
           capitalInitial: 10000,
           versementMensuel: 500,
-          dureeVersements: 25,
           dureeTotale: 30,
           rendement: 3,
           frais: 0.6,
@@ -112,15 +94,35 @@
         }
       };
 
+      const params = new URLSearchParams(window.location.search);
+      const requestedMode = params.get("mode");
+      const initialMode = ["av", "scpi", "per"].includes(requestedMode) ? requestedMode : "av";
+
       const state = {
-        mode: "scpi",
+        mode: initialMode,
+        view: "chart",
         values: structuredClone(defaults)
       };
 
-      const modeLabels = {
-        scpi: "SCPI",
-        av: "Assurance Vie",
-        per: "PER"
+      const modeContent = {
+        av: {
+          label: "Assurance Vie",
+          title: "Assurance Vie",
+          description: "Projection de l'encours dans le temps et visualisation des intérêts composés.",
+          chartTitle: "Encours projeté"
+        },
+        scpi: {
+          label: "SCPI",
+          title: "SCPI",
+          description: "Projection du capital investi et des revenus potentiels générés par les parts.",
+          chartTitle: "Capital et revenus"
+        },
+        per: {
+          label: "PER",
+          title: "PER",
+          description: "Base de projection dédiée au PER, prête à recevoir le volet fiscal.",
+          chartTitle: "Capital retraite"
+        }
       };
 
       function computeScpi(values) {
@@ -163,26 +165,31 @@
 
       function computeAssuranceVie(values) {
         const rows = [];
-        const rendementNet = Math.max(0, values.rendement - (values.fraisActifs ? values.frais : 0));
+        const rendementNet = Math.max(
+          0,
+          values.rendement
+            - (values.fraisActifs ? values.frais : 0)
+        );
         const entreeNet = 1 - (values.fraisEntreeActifs ? values.fraisEntree / 100 : 0);
         let versementsCumules = 0;
         let interetsCumules = 0;
         let capital = 0;
 
         for (let annee = 1; annee <= values.dureeTotale; annee++) {
-          const versementAnnuel = (annee <= values.dureeVersements ? values.versementMensuel * 12 : 0) * entreeNet;
+          const versementAnnuel = values.versementMensuel * 12;
+          const versementAnnuelNet = versementAnnuel * entreeNet;
           if (annee === 1) {
             const capitalInitialNet = values.capitalInitial * entreeNet;
-            versementsCumules = capitalInitialNet + versementAnnuel;
+            versementsCumules = values.capitalInitial + versementAnnuel;
             const interetsAnnuels = capitalInitialNet * (rendementNet / 100);
             interetsCumules += interetsAnnuels;
-            capital = capitalInitialNet + versementAnnuel + interetsAnnuels;
+            capital = capitalInitialNet + versementAnnuelNet + interetsAnnuels;
             rows.push({ annee, versementsCumules, versementAnnuel, interetsAnnuels, interetsCumules, capital });
           } else {
             versementsCumules += versementAnnuel;
             const interetsAnnuels = capital * (rendementNet / 100);
             interetsCumules += interetsAnnuels;
-            capital = capital + versementAnnuel + interetsAnnuels;
+            capital = capital + versementAnnuelNet + interetsAnnuels;
             rows.push({ annee, versementsCumules, versementAnnuel, interetsAnnuels, interetsCumules, capital });
           }
         }
@@ -229,15 +236,14 @@
           { key: "reinvestir", label: "Réinvestir les loyers", type: "checkbox" }
         ],
         av: [
-          { key: "rendement", label: "Taux de rentabilité", type: "number", min: 0, max: 15, step: 0.1, suffix: "%" },
-          { key: "capitalInitial", label: "Capital initial", type: "number", min: 0, max: 500000, step: 1000, suffix: "€" },
+          { key: "capitalInitial", label: "Versement initial", type: "number", min: 0, max: 500000, step: 1000, suffix: "€" },
           { key: "versementMensuel", label: "Versement mensuel", type: "number", min: 0, max: 10000, step: 50, suffix: "€" },
-          { key: "dureeVersements", label: "Durée des versements", type: "number", min: 1, max: 50, step: 1, suffix: "ans" },
+          { key: "rendement", label: "Taux d'intérêt annuel", type: "number", min: 0, max: 15, step: 0.1, suffix: "%" },
           { key: "dureeTotale", label: "Durée totale", type: "number", min: 1, max: 60, step: 1, suffix: "ans" },
-          { key: "fraisEntreeActifs", label: "Frais d'entrée", type: "checkbox" },
-          { key: "fraisEntree", label: "Taux de frais d'entrée", type: "number", min: 0, max: 4.8, step: 0.1, suffix: "%", dependsOn: "fraisEntreeActifs" },
-          { key: "fraisActifs", label: "Frais annuels", type: "checkbox" },
-          { key: "frais", label: "Taux de frais annuels", type: "number", min: 0, max: 3, step: 0.1, suffix: "%", dependsOn: "fraisActifs" }
+          { key: "fraisEntreeActifs", label: "Droits d'entrée", type: "checkbox" },
+          { key: "fraisEntree", label: "Taux des droits d'entrée", type: "number", min: 0, max: 4.8, step: 0.1, suffix: "%", dependsOn: "fraisEntreeActifs" },
+          { key: "fraisActifs", label: "Frais de gestion annuels", type: "checkbox" },
+          { key: "frais", label: "Taux de frais de gestion", type: "number", min: 0, max: 3, step: 0.1, suffix: "%", dependsOn: "fraisActifs" }
         ],
         per: [
           { key: "rendement", label: "Taux de rentabilité", type: "number", min: 0, max: 15, step: 0.1, suffix: "%" },
@@ -291,23 +297,88 @@
             input.max = field.max;
             input.step = field.step;
             input.value = values[field.key];
+            const range = document.createElement("input");
+            range.className = "tool-range";
+            range.type = "range";
+            range.min = field.min;
+            range.max = field.max;
+            range.step = field.step;
+            range.value = values[field.key];
             input.addEventListener("input", () => {
               values[field.key] = Number(input.value || 0);
-              render();
+              range.value = values[field.key];
+              renderOutputs();
+            });
+            range.addEventListener("input", () => {
+              values[field.key] = Number(range.value || 0);
+              input.value = values[field.key];
+              renderOutputs();
             });
             const suffix = document.createElement("small");
             suffix.textContent = field.suffix;
             control.append(input, suffix);
             label.append(control);
+            label.append(range);
           }
 
           fields.append(label);
         });
       }
 
-      function renderKpis(rows) {
+      function renderSummary(rows) {
         const last = rows.at(-1) || {};
-        const kpis = document.querySelector("#kpis");
+        const summary = document.querySelector("#summary");
+
+        if (state.mode === "av") {
+          const values = state.values.av;
+          const capital = last.capital || 0;
+          const invested = last.versementsCumules || 0;
+          const interests = last.interetsCumules || 0;
+          const investedShare = capital > 0 ? Math.max(0, Math.min(100, (invested / capital) * 100)) : 0;
+          const interestsShare = Math.max(0, 100 - investedShare);
+          const multiple = invested > 0 ? capital / invested : 0;
+          const annualRate = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 1 }).format(values.rendement);
+
+          summary.innerHTML = `
+            <article class="tool-result-card tool-result-editorial">
+              <div class="capital-heading">
+                <div>
+                  <span>Capital final</span>
+                  <strong>${formatMoney(capital)}</strong>
+                </div>
+                <div class="capital-multiple">
+                  <span>Multiple obtenu</span>
+                  <strong>× ${multiple.toFixed(2)}</strong>
+                </div>
+              </div>
+              <div class="capital-breakdown" aria-label="Répartition du capital final">
+                <div style="width:${investedShare}%"></div>
+                <div style="width:${interestsShare}%"></div>
+              </div>
+              <div class="capital-metrics">
+                <span class="capital-metric-invested"><small>Sommes investies</small><strong>${formatMoney(invested)}</strong></span>
+                <span class="capital-metric-interest"><small>Intérêts gagnés</small><strong>${formatMoney(interests)}</strong></span>
+              </div>
+              <div class="capital-shares">
+                <span><small>Multiple obtenu</small><strong>× ${multiple.toFixed(2)}</strong></span>
+                <span><small>Part des intérêts gagnés</small><strong>${formatNumber(interestsShare)} %</strong></span>
+              </div>
+              <div class="capital-insight">
+                <div class="capital-visual" aria-label="Répartition visuelle du capital projeté">
+                  <span style="width:${investedShare}%"></span>
+                  <span style="width:${interestsShare}%"></span>
+                </div>
+                <p>
+                  Votre placement initial de ${formatMoney(values.capitalInitial)}, plus vos versements mensuels de
+                  ${formatMoney(values.versementMensuel)} par mois à un taux d'intérêt annualisé de
+                  ${annualRate} %, vaudra ${formatMoney(capital)} après ${formatNumber(values.dureeTotale)} années.
+                </p>
+              </div>
+            </article>
+          `;
+          return;
+        }
+
         let items;
 
         if (state.mode === "scpi") {
@@ -334,8 +405,8 @@
           ];
         }
 
-        kpis.innerHTML = items.map(([label, value]) => `
-          <article class="tool-kpi">
+        summary.innerHTML = items.map(([label, value]) => `
+          <article class="tool-result-card">
             <span>${label}</span>
             <strong>${value}</strong>
           </article>
@@ -344,18 +415,54 @@
 
       function renderChart(rows) {
         const chart = document.querySelector("#chart");
-        const max = Math.max(...rows.map((row) => row.capital || 0), 1);
-        const shown = rows.filter((row) => row.annee === 1 || row.annee % Math.ceil(rows.length / 16) === 0 || row.annee === rows.length);
-
-        chart.innerHTML = shown.map((row) => {
-          const height = Math.max(4, (row.capital / max) * 100);
+        const width = 960;
+        const height = 360;
+        const pad = { top: 24, right: 28, bottom: 42, left: 64 };
+        const max = Math.max(...rows.flatMap((row) => [
+          row.capital || 0,
+          row.versementsCumules || 0,
+          row.interetsCumules || row.revenusCumules || row.gainsCumules || 0
+        ]), 1);
+        const x = (index) => pad.left + (index / Math.max(rows.length - 1, 1)) * (width - pad.left - pad.right);
+        const y = (value) => height - pad.bottom - (value / max) * (height - pad.top - pad.bottom);
+        const metric = state.mode === "scpi" ? "revenusCumules" : state.mode === "av" ? "interetsCumules" : "gainsCumules";
+        const metricLabel = state.mode === "scpi" ? "Revenus cumulés" : state.mode === "av" ? "Intérêts gagnés" : "Gains cumulés";
+        const pointsFor = (key) => rows.map((row, index) => `${x(index)},${y(row[key] || 0)}`).join(" ");
+        const grid = [0.25, 0.5, 0.75, 1].map((ratio) => {
+          const value = max * ratio;
+          const lineY = y(value);
           return `
-            <div class="mini-bar" title="Année ${row.annee} - ${formatMoney(row.capital)}">
-              <span style="height:${height}%"></span>
-              <small>${row.annee}</small>
-            </div>
+            <g>
+              <line x1="${pad.left}" y1="${lineY}" x2="${width - pad.right}" y2="${lineY}" />
+              <text x="${pad.left - 12}" y="${lineY + 4}">${formatMoney(value)}</text>
+            </g>
           `;
         }).join("");
+        const tickEvery = Math.max(1, Math.ceil(rows.length / 8));
+        const ticks = rows.filter((row) => row.annee === 1 || row.annee === rows.length || row.annee % tickEvery === 0).map((row) => {
+          const tickX = x(row.annee - 1);
+          return `<text x="${tickX}" y="${height - 10}">${row.annee}</text>`;
+        }).join("");
+
+        chart.innerHTML = `
+          <div class="chart-totals">
+            <span>Capital final <strong>${formatMoney(rows.at(-1)?.capital)}</strong></span>
+            <span>${metricLabel} <strong>${formatMoney(rows.at(-1)?.[metric])}</strong></span>
+            <span>Sommes investies <strong>${formatMoney(rows.at(-1)?.versementsCumules)}</strong></span>
+          </div>
+          <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Evolution annuelle du capital, des intérêts et des sommes investies">
+            <g class="chart-grid">${grid}</g>
+            <polyline class="chart-line chart-line-capital" points="${pointsFor("capital")}"></polyline>
+            <polyline class="chart-line chart-line-gains" points="${pointsFor(metric)}"></polyline>
+            <polyline class="chart-line chart-line-invested" points="${pointsFor("versementsCumules")}"></polyline>
+            <g class="chart-axis">${ticks}</g>
+          </svg>
+          <div class="chart-legend">
+            <span><i class="legend-capital"></i>Capital final</span>
+            <span><i class="legend-gains"></i>${metricLabel}</span>
+            <span><i class="legend-invested"></i>Sommes investies</span>
+          </div>
+        `;
       }
 
       function renderTable(rows) {
@@ -379,27 +486,33 @@
         `;
       }
 
-      function render() {
+      function renderOutputs() {
         const rows = rowsForMode();
-        document.querySelector("#projection-label").textContent = modeLabels[state.mode];
+        const content = modeContent[state.mode];
+        document.title = `${content.title} | Simulateur`;
+        document.querySelector("#tool-page-title").textContent = content.title;
+        document.querySelector(".tool-card-title h2").textContent = content.chartTitle;
+        document.querySelector("#projection-label").textContent = content.label;
         document.querySelector("#table-note").textContent = `${rows.length} années`;
-        renderFields();
-        renderKpis(rows);
+        renderSummary(rows);
         renderChart(rows);
         renderTable(rows);
       }
 
-      document.querySelectorAll(".tool-tab").forEach((tab) => {
-        tab.addEventListener("click", () => {
-          state.mode = tab.dataset.mode;
-          document.querySelectorAll(".tool-tab").forEach((item) => item.classList.toggle("is-active", item === tab));
-          render();
-        });
-      });
+      function render() {
+        renderFields();
+        renderOutputs();
+      }
 
-      document.querySelector("#reset-button").addEventListener("click", () => {
-        state.values[state.mode] = structuredClone(defaults[state.mode]);
-        render();
+      document.querySelectorAll(".tool-view-toggle button").forEach((button) => {
+        button.addEventListener("click", () => {
+          state.view = button.dataset.view;
+          document.querySelectorAll(".tool-view-toggle button").forEach((item) => {
+            item.classList.toggle("is-active", item === button);
+          });
+          document.querySelector("#chart-panel").hidden = state.view !== "chart";
+          document.querySelector("#table-panel").hidden = state.view !== "table";
+        });
       });
 
       render();
