@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta
+      name="description"
+      content="Espace simulateurs de Victor KIENY, conseiller en ingénierie patrimoniale."
+    >
+    <title>Simulateurs | Victor KIENY</title>
+    <link rel="preload" href="assets/background.jpg" as="image">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="simulator-page" id="simulateurs">
+      <nav class="main-nav" aria-label="Navigation principale">
+        <a href="index.html">Accueil</a>
+        <a href="simulateurs.html" aria-current="page">Simulateur</a>
+      </nav>
+      <header class="simulator-header">
+        <img class="simulator-logo" src="assets/logo-transparent.png" alt="Logo Victor Kieny">
+        <div class="simulator-title-block">
+          <p class="eyebrow">Conseiller en ingénierie patrimoniale</p>
+          <h1>Simulateurs</h1>
+        </div>
+      </header>
+
+      <section class="simulator-workspace" aria-label="Espace simulateurs">
+        <div class="simulator-tabs" role="tablist" aria-label="Liste des simulateurs">
+          <button
+            class="simulator-tab is-active"
+            id="tab-retraite"
+            type="button"
+            role="tab"
+            aria-selected="true"
+            aria-controls="panel-simulator"
+            data-title="Retraite"
+            data-description="Projection, horizon de départ et premières hypothèses de revenus."
+            data-url=""
+          >
+            Retraite
+          </button>
+          <button
+            class="simulator-tab"
+            id="tab-impot"
+            type="button"
+            role="tab"
+            aria-selected="false"
+            aria-controls="panel-simulator"
+            data-title="Fiscalité"
+            data-description="Estimation et lecture rapide des principaux impacts fiscaux."
+            data-url=""
+          >
+            Fiscalité
+          </button>
+          <button
+            class="simulator-tab"
+            id="tab-credit"
+            type="button"
+            role="tab"
+            aria-selected="false"
+            aria-controls="panel-simulator"
+            data-title="Financement"
+            data-description="Capacité d'emprunt, mensualité et scénarios de financement."
+            data-url=""
+          >
+            Financement
+          </button>
+        </div>
+
+        <article class="simulator-shell" id="panel-simulator" role="tabpanel" aria-labelledby="tab-retraite">
+          <div class="simulator-panel-header">
+            <div>
+              <p class="simulator-kicker">Simulateur</p>
+              <h2 id="simulator-title">Retraite</h2>
+            </div>
+            <p id="simulator-description">Projection, horizon de départ et premières hypothèses de revenus.</p>
+          </div>
+
+          <div class="simulator-frame-wrap">
+            <iframe
+              id="simulator-frame"
+              title="Simulateur sélectionné"
+              loading="lazy"
+              referrerpolicy="no-referrer-when-downgrade"
+            ></iframe>
+            <div class="simulator-empty" id="simulator-empty">
+              <p>Ajoutez ici l'adresse du simulateur.</p>
+              <span>Quand tu m'enverras les liens, je les brancherai dans les onglets correspondants.</span>
+            </div>
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <script>
+      const tabs = Array.from(document.querySelectorAll(".simulator-tab"));
+      const panel = document.querySelector("#panel-simulator");
+      const title = document.querySelector("#simulator-title");
+      const description = document.querySelector("#simulator-description");
+      const frame = document.querySelector("#simulator-frame");
+      const empty = document.querySelector("#simulator-empty");
+
+      function activateTab(tab) {
+        tabs.forEach((item) => {
+          const isActive = item === tab;
+          item.classList.toggle("is-active", isActive);
+          item.setAttribute("aria-selected", String(isActive));
+        });
+
+        panel.setAttribute("aria-labelledby", tab.id);
+        title.textContent = tab.dataset.title;
+        description.textContent = tab.dataset.description;
+
+        if (tab.dataset.url) {
+          frame.src = tab.dataset.url;
+          frame.hidden = false;
+          empty.hidden = true;
+          return;
+        }
+
+        frame.removeAttribute("src");
+        frame.hidden = true;
+        empty.hidden = false;
+      }
+
+      tabs.forEach((tab) => {
+        tab.addEventListener("click", () => activateTab(tab));
+      });
+
+      activateTab(tabs[0]);
+    </script>
+  </body>
+</html>
