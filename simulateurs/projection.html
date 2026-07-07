@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Projection AV / SCPI / PER</title>
+    <link rel="stylesheet" href="../styles.css">
+  </head>
+  <body class="tool-body">
+    <main class="tool-page" aria-labelledby="tool-title">
+      <header class="tool-header">
+        <div>
+          <p class="tool-kicker">Simulateur</p>
+          <h1 id="tool-title">Projection patrimoniale</h1>
+        </div>
+        <p>SCPI, Assurance Vie et PER, avec hypothèses modifiables en rendez-vous.</p>
+      </header>
+
+      <section class="client-panel" aria-label="Informations client">
+        <label>
+          <span>Prénom</span>
+          <input id="client-firstname" type="text" placeholder="Jean">
+        </label>
+        <label>
+          <span>Nom</span>
+          <input id="client-lastname" type="text" placeholder="Dupont">
+        </label>
+        <label>
+          <span>Âge</span>
+          <input id="client-age" type="number" min="0" max="100" placeholder="35">
+        </label>
+      </section>
+
+      <nav class="tool-tabs" aria-label="Choix du simulateur">
+        <button class="tool-tab is-active" type="button" data-mode="scpi">SCPI</button>
+        <button class="tool-tab" type="button" data-mode="av">Assurance Vie</button>
+        <button class="tool-tab" type="button" data-mode="per">PER</button>
+      </nav>
+
+      <section class="tool-layout">
+        <div class="tool-results">
+          <div class="tool-kpis" id="kpis"></div>
+          <div class="tool-chart-card">
+            <div class="tool-card-title">
+              <h2>Projection</h2>
+              <span id="projection-label"></span>
+            </div>
+            <div class="mini-chart" id="chart" aria-label="Graphique de projection"></div>
+          </div>
+          <div class="tool-table-card">
+            <div class="tool-card-title">
+              <h2>Détail annuel</h2>
+              <span id="table-note"></span>
+            </div>
+            <div class="tool-table-wrap">
+              <table id="projection-table"></table>
+            </div>
+          </div>
+        </div>
+
+        <aside class="tool-params" aria-label="Hypothèses">
+          <div class="tool-params-title">
+            <h2>Hypothèses</h2>
+            <button type="button" id="reset-button">Réinitialiser</button>
+          </div>
+          <div id="fields" class="tool-fields"></div>
+        </aside>
+      </section>
+    </main>
+
+    <script>
+      const formatMoney = (value) => new Intl.NumberFormat("fr-FR", {
+        style: "currency",
+        currency: "EUR",
+        maximumFractionDigits: 0
+      }).format(Math.round(value || 0));
+
+      const formatNumber = (value) => new Intl.NumberFormat("fr-FR", {
+        maximumFractionDigits: 0
+      }).format(Math.round(value || 0));
+
+      const defaults = {
+        scpi: {
+          rendement: 5,
+          versementInitial: 10000,
+          versementMensuel: 750,
+          dureeVersements: 25,
+          dureeTotale: 50,
+          reinvestir: false
+        },
+        av: {
+          capitalInitial: 10000,
+          versementMensuel: 500,
+          dureeVersements: 25,
+          dureeTotale: 30,
+          rendement: 3,
+          frais: 0.6,
+          fraisActifs: false,
+          fraisEntree: 0,
+          fraisEntreeActifs: false
+        },
+        per: {
+          capitalInitial: 5000,
+          versementMensuel: 400,
+          dureeVersements: 25,
+          dureeTotale: 30,
+          rendement: 4,
+          renteActive: false,
+          tauxConversion: 4,
+          fraisEntree: 0,
+          fraisEntreeActifs: false
+        }
+      };
+
+      const state = {
+        mode: "scpi",
+        values: structuredClone(defaults)
+      };
+
+      const modeLabels = {
+        scpi: "SCPI",
+        av: "Assurance Vie",
+        per: "PER"
+      };
+
+      function computeScpi(values) {
+        const rows = [];
+        let versementsCumules = 0;
+        let capital = 0;
+        let revenusCumules = 0;
+
+        for (let annee = 1; annee <= values.dureeTotale; annee++) {
+          const versementAnnuel = annee <= values.dureeVersements ? values.versementMensuel * 12 : 0;
+          if (annee === 1) {
+            versementsCumules = values.versementInitial + versementAnnuel;
+            capital = versementsCumules;
+          } else {
+            versementsCumules += versementAnnuel;
+            capital += versementAnnuel;
+          }
+
+          const revenuAnnuel = capital * (values.rendement / 100);
+          const revenuMensuel = revenuAnnuel / 12;
+          revenusCumules += revenuAnnuel;
+
+          if (values.reinvestir) {
+            capital += revenuAnnuel;
+            versementsCumules += revenuAnnuel;
+          }
+
+          rows.push({
+            annee,
+            versementsCumules,
+            versementAnnuel,
+            revenuMensuel,
+            revenuAnnuel,
+            revenusCumules,
+            capital
+          });
+        }
+        return rows;
+      }
+
+      function computeAssuranceVie(values) {
+        const rows = [];
+        const rendementNet = Math.max(0, values.rendement - (values.fraisActifs ? values.frais : 0));
+        const entreeNet = 1 - (values.fraisEntreeActifs ? values.fraisEntree / 100 : 0);
+        let versementsCumules = 0;
+        let interetsCumules = 0;
+        let capital = 0;
+
+        for (let annee = 1; annee <= values.dureeTotale; annee++) {
+          const versementAnnuel = (annee <= values.dureeVersements ? values.versementMensuel * 12 : 0) * entreeNet;
+          if (annee === 1) {
+            const capitalInitialNet = values.capitalInitial * entreeNet;
+            versementsCumules = capitalInitialNet + versementAnnuel;
+            const interetsAnnuels = capitalInitialNet * (rendementNet / 100);
+            interetsCumules += interetsAnnuels;
+            capital = capitalInitialNet + versementAnnuel + interetsAnnuels;
+            rows.push({ annee, versementsCumules, versementAnnuel, interetsAnnuels, interetsCumules, capital });
+          } else {
+            versementsCumules += versementAnnuel;
+            const interetsAnnuels = capital * (rendementNet / 100);
+            interetsCumules += interetsAnnuels;
+            capital = capital + versementAnnuel + interetsAnnuels;
+            rows.push({ annee, versementsCumules, versementAnnuel, interetsAnnuels, interetsCumules, capital });
+          }
+        }
+        return rows;
+      }
+
+      function computePer(values) {
+        const rows = [];
+        const entreeNet = 1 - (values.fraisEntreeActifs ? values.fraisEntree / 100 : 0);
+        let versementsCumules = 0;
+        let gainsCumules = 0;
+        let capital = 0;
+
+        for (let annee = 1; annee <= values.dureeTotale; annee++) {
+          const versementAnnuel = (annee <= values.dureeVersements ? values.versementMensuel * 12 : 0) * entreeNet;
+          if (annee === 1) {
+            const capitalInitialNet = values.capitalInitial * entreeNet;
+            versementsCumules = capitalInitialNet + versementAnnuel;
+            const gainsAnnuels = capitalInitialNet * (values.rendement / 100);
+            gainsCumules += gainsAnnuels;
+            capital = capitalInitialNet + versementAnnuel + gainsAnnuels;
+            rows.push({ annee, versementsCumules, versementAnnuel, gainsAnnuels, gainsCumules, capital });
+          } else {
+            versementsCumules += versementAnnuel;
+            const gainsAnnuels = capital * (values.rendement / 100);
+            gainsCumules += gainsAnnuels;
+            capital = capital + versementAnnuel + gainsAnnuels;
+            const renteMensuelle = values.renteActive && annee === values.dureeTotale
+              ? capital * (values.tauxConversion / 100) / 12
+              : undefined;
+            rows.push({ annee, versementsCumules, versementAnnuel, gainsAnnuels, gainsCumules, capital, renteMensuelle });
+          }
+        }
+        return rows;
+      }
+
+      const fieldDefinitions = {
+        scpi: [
+          { key: "rendement", label: "Taux de rendement", type: "number", min: 0, max: 15, step: 0.1, suffix: "%" },
+          { key: "versementInitial", label: "Versement initial", type: "number", min: 0, max: 500000, step: 1000, suffix: "€" },
+          { key: "versementMensuel", label: "Versement mensuel", type: "number", min: 0, max: 10000, step: 50, suffix: "€" },
+          { key: "dureeVersements", label: "Durée des versements", type: "number", min: 1, max: 50, step: 1, suffix: "ans" },
+          { key: "dureeTotale", label: "Durée totale", type: "number", min: 1, max: 60, step: 1, suffix: "ans" },
+          { key: "reinvestir", label: "Réinvestir les loyers", type: "checkbox" }
+        ],
+        av: [
+          { key: "rendement", label: "Taux de rentabilité", type: "number", min: 0, max: 15, step: 0.1, suffix: "%" },
+          { key: "capitalInitial", label: "Capital initial", type: "number", min: 0, max: 500000, step: 1000, suffix: "€" },
+          { key: "versementMensuel", label: "Versement mensuel", type: "number", min: 0, max: 10000, step: 50, suffix: "€" },
+          { key: "dureeVersements", label: "Durée des versements", type: "number", min: 1, max: 50, step: 1, suffix: "ans" },
+          { key: "dureeTotale", label: "Durée totale", type: "number", min: 1, max: 60, step: 1, suffix: "ans" },
+          { key: "fraisEntreeActifs", label: "Frais d'entrée", type: "checkbox" },
+          { key: "fraisEntree", label: "Taux de frais d'entrée", type: "number", min: 0, max: 4.8, step: 0.1, suffix: "%", dependsOn: "fraisEntreeActifs" },
+          { key: "fraisActifs", label: "Frais annuels", type: "checkbox" },
+          { key: "frais", label: "Taux de frais annuels", type: "number", min: 0, max: 3, step: 0.1, suffix: "%", dependsOn: "fraisActifs" }
+        ],
+        per: [
+          { key: "rendement", label: "Taux de rentabilité", type: "number", min: 0, max: 15, step: 0.1, suffix: "%" },
+          { key: "capitalInitial", label: "Capital initial", type: "number", min: 0, max: 500000, step: 1000, suffix: "€" },
+          { key: "versementMensuel", label: "Versement mensuel", type: "number", min: 0, max: 10000, step: 50, suffix: "€" },
+          { key: "dureeVersements", label: "Durée des versements", type: "number", min: 1, max: 50, step: 1, suffix: "ans" },
+          { key: "dureeTotale", label: "Durée totale", type: "number", min: 1, max: 60, step: 1, suffix: "ans" },
+          { key: "fraisEntreeActifs", label: "Frais d'entrée", type: "checkbox" },
+          { key: "fraisEntree", label: "Taux de frais d'entrée", type: "number", min: 0, max: 4.8, step: 0.1, suffix: "%", dependsOn: "fraisEntreeActifs" },
+          { key: "renteActive", label: "Sortie en rente", type: "checkbox" },
+          { key: "tauxConversion", label: "Taux de conversion", type: "number", min: 1, max: 10, step: 0.1, suffix: "%", dependsOn: "renteActive" }
+        ]
+      };
+
+      function rowsForMode() {
+        if (state.mode === "scpi") return computeScpi(state.values.scpi);
+        if (state.mode === "av") return computeAssuranceVie(state.values.av);
+        return computePer(state.values.per);
+      }
+
+      function renderFields() {
+        const fields = document.querySelector("#fields");
+        const values = state.values[state.mode];
+        fields.innerHTML = "";
+
+        fieldDefinitions[state.mode].forEach((field) => {
+          if (field.dependsOn && !values[field.dependsOn]) return;
+
+          const label = document.createElement("label");
+          label.className = field.type === "checkbox" ? "tool-switch-row" : "tool-field";
+
+          const span = document.createElement("span");
+          span.textContent = field.label;
+          label.append(span);
+
+          if (field.type === "checkbox") {
+            const input = document.createElement("input");
+            input.type = "checkbox";
+            input.checked = values[field.key];
+            input.addEventListener("change", () => {
+              values[field.key] = input.checked;
+              render();
+            });
+            label.append(input);
+          } else {
+            const control = document.createElement("div");
+            control.className = "tool-input-wrap";
+            const input = document.createElement("input");
+            input.type = "number";
+            input.min = field.min;
+            input.max = field.max;
+            input.step = field.step;
+            input.value = values[field.key];
+            input.addEventListener("input", () => {
+              values[field.key] = Number(input.value || 0);
+              render();
+            });
+            const suffix = document.createElement("small");
+            suffix.textContent = field.suffix;
+            control.append(input, suffix);
+            label.append(control);
+          }
+
+          fields.append(label);
+        });
+      }
+
+      function renderKpis(rows) {
+        const last = rows.at(-1) || {};
+        const kpis = document.querySelector("#kpis");
+        let items;
+
+        if (state.mode === "scpi") {
+          items = [
+            ["Capital final", formatMoney(last.capital)],
+            ["Versements cumulés", formatMoney(last.versementsCumules)],
+            ["Revenus cumulés", formatMoney(last.revenusCumules)],
+            [`Revenu mensuel an ${state.values.scpi.dureeTotale}`, formatMoney(last.revenuMensuel)]
+          ];
+        } else if (state.mode === "av") {
+          const ratio = last.versementsCumules > 0 ? (last.capital / last.versementsCumules).toFixed(2) : "—";
+          items = [
+            ["Capital final", formatMoney(last.capital)],
+            ["Versements cumulés", formatMoney(last.versementsCumules)],
+            ["Intérêts cumulés", formatMoney(last.interetsCumules)],
+            ["Capital / versements", `× ${ratio}`]
+          ];
+        } else {
+          items = [
+            ["Capital final", formatMoney(last.capital)],
+            ["Versements cumulés", formatMoney(last.versementsCumules)],
+            ["Gains cumulés", formatMoney(last.gainsCumules)],
+            [state.values.per.renteActive ? "Rente mensuelle estimée" : `Gains an ${state.values.per.dureeTotale}`, formatMoney(state.values.per.renteActive ? last.renteMensuelle : last.gainsAnnuels)]
+          ];
+        }
+
+        kpis.innerHTML = items.map(([label, value]) => `
+          <article class="tool-kpi">
+            <span>${label}</span>
+            <strong>${value}</strong>
+          </article>
+        `).join("");
+      }
+
+      function renderChart(rows) {
+        const chart = document.querySelector("#chart");
+        const max = Math.max(...rows.map((row) => row.capital || 0), 1);
+        const shown = rows.filter((row) => row.annee === 1 || row.annee % Math.ceil(rows.length / 16) === 0 || row.annee === rows.length);
+
+        chart.innerHTML = shown.map((row) => {
+          const height = Math.max(4, (row.capital / max) * 100);
+          return `
+            <div class="mini-bar" title="Année ${row.annee} - ${formatMoney(row.capital)}">
+              <span style="height:${height}%"></span>
+              <small>${row.annee}</small>
+            </div>
+          `;
+        }).join("");
+      }
+
+      function renderTable(rows) {
+        const table = document.querySelector("#projection-table");
+        let headers;
+        let mapper;
+        if (state.mode === "scpi") {
+          headers = ["Année", "Versements", "Revenu mensuel", "Revenus cumulés", "Capital"];
+          mapper = (row) => [row.annee, formatMoney(row.versementsCumules), formatMoney(row.revenuMensuel), formatMoney(row.revenusCumules), formatMoney(row.capital)];
+        } else if (state.mode === "av") {
+          headers = ["Année", "Versements", "Intérêts annuels", "Intérêts cumulés", "Capital"];
+          mapper = (row) => [row.annee, formatMoney(row.versementsCumules), formatMoney(row.interetsAnnuels), formatMoney(row.interetsCumules), formatMoney(row.capital)];
+        } else {
+          headers = ["Année", "Versements", "Gains annuels", "Gains cumulés", "Capital"];
+          mapper = (row) => [row.annee, formatMoney(row.versementsCumules), formatMoney(row.gainsAnnuels), formatMoney(row.gainsCumules), formatMoney(row.capital)];
+        }
+
+        table.innerHTML = `
+          <thead><tr>${headers.map((head) => `<th>${head}</th>`).join("")}</tr></thead>
+          <tbody>${rows.map((row) => `<tr>${mapper(row).map((cell) => `<td>${cell}</td>`).join("")}</tr>`).join("")}</tbody>
+        `;
+      }
+
+      function render() {
+        const rows = rowsForMode();
+        document.querySelector("#projection-label").textContent = modeLabels[state.mode];
+        document.querySelector("#table-note").textContent = `${rows.length} années`;
+        renderFields();
+        renderKpis(rows);
+        renderChart(rows);
+        renderTable(rows);
+      }
+
+      document.querySelectorAll(".tool-tab").forEach((tab) => {
+        tab.addEventListener("click", () => {
+          state.mode = tab.dataset.mode;
+          document.querySelectorAll(".tool-tab").forEach((item) => item.classList.toggle("is-active", item === tab));
+          render();
+        });
+      });
+
+      document.querySelector("#reset-button").addEventListener("click", () => {
+        state.values[state.mode] = structuredClone(defaults[state.mode]);
+        render();
+      });
+
+      render();
+    </script>
+  </body>
+</html>
