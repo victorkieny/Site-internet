@@ -269,6 +269,14 @@
         const values = state.values[state.mode];
         fields.innerHTML = "";
 
+        const updateRangeProgress = (range) => {
+          const min = Number(range.min || 0);
+          const max = Number(range.max || 100);
+          const value = Number(range.value || 0);
+          const progress = max > min ? ((value - min) / (max - min)) * 100 : 0;
+          range.style.setProperty("--range-progress", `${Math.max(0, Math.min(100, progress))}%`);
+        };
+
         fieldDefinitions[state.mode].forEach((field) => {
           if (field.dependsOn && !values[field.dependsOn]) return;
 
@@ -304,14 +312,17 @@
             range.max = field.max;
             range.step = field.step;
             range.value = values[field.key];
+            updateRangeProgress(range);
             input.addEventListener("input", () => {
               values[field.key] = Number(input.value || 0);
               range.value = values[field.key];
+              updateRangeProgress(range);
               renderOutputs();
             });
             range.addEventListener("input", () => {
               values[field.key] = Number(range.value || 0);
               input.value = values[field.key];
+              updateRangeProgress(range);
               renderOutputs();
             });
             const suffix = document.createElement("small");
@@ -338,22 +349,23 @@
           const interestsShare = Math.max(0, 100 - investedShare);
           const multiple = invested > 0 ? capital / invested : 0;
           const annualRate = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 1 }).format(values.rendement);
+          const capitalAmount = formatMoney(capital).replace(/\s?€$/, "");
 
           summary.innerHTML = `
             <article class="tool-result-card tool-result-editorial">
               <div class="capital-heading">
                 <div>
-                  <span>Capital final</span>
-                  <strong>${formatMoney(capital)}</strong>
-                </div>
-                <div class="capital-multiple">
-                  <span>Multiple obtenu</span>
-                  <strong>× ${multiple.toFixed(2)}</strong>
+                  <span>Capital final estimé</span>
+                  <strong class="capital-amount"><span>${capitalAmount}</span><span class="capital-currency">€</span></strong>
                 </div>
               </div>
               <div class="capital-breakdown" aria-label="Répartition du capital final">
                 <div style="width:${investedShare}%"></div>
                 <div style="width:${interestsShare}%"></div>
+              </div>
+              <div class="capital-breakdown-labels">
+                <span class="capital-metric-invested">Sommes investies</span>
+                <span class="capital-metric-interest">Intérêts gagnés</span>
               </div>
               <div class="capital-metrics">
                 <span class="capital-metric-invested"><small>Sommes investies</small><strong>${formatMoney(invested)}</strong></span>

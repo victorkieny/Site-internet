@@ -897,10 +897,12 @@ h3 {
 }
 
 .tool-overview {
+  justify-self: center;
   display: grid;
   grid-template-columns: minmax(320px, 360px) minmax(0, 600px);
-  justify-content: center;
-  gap: clamp(12px, 1.45vw, 18px);
+  width: fit-content;
+  max-width: 100%;
+  gap: clamp(10px, 1.15vw, 16px);
   align-items: stretch;
   min-width: 0;
   padding: clamp(10px, 1.15vw, 16px);
@@ -959,6 +961,7 @@ h3 {
 .tool-result-editorial {
   align-content: start;
   gap: clamp(14px, 1.65vw, 20px);
+  padding-top: 34px;
 }
 
 .tool-result-multiple {
@@ -1013,14 +1016,46 @@ h3 {
 
 .capital-heading > div {
   display: grid;
-  gap: 8px;
+  gap: clamp(14px, 1.6vw, 22px);
 }
 
 .capital-heading > div:first-child strong {
-  color: var(--ink);
-  font-size: clamp(2.25rem, 3.8vw, 3.58rem);
-  font-weight: 550;
-  line-height: 1.02;
+  color: rgba(43, 37, 30, 0.94);
+}
+
+.capital-amount {
+  position: relative;
+  display: inline-flex;
+  width: max-content;
+  align-items: baseline;
+  gap: 0.42em;
+  padding-bottom: 8px;
+  font-family: var(--serif);
+  font-size: clamp(2.18rem, 3.5vw, 3.22rem);
+  font-weight: 400;
+  line-height: 0.95;
+  letter-spacing: 0;
+  transform: scaleX(1.05);
+  transform-origin: left center;
+}
+
+.capital-amount::after {
+  content: "";
+  position: absolute;
+  left: 2px;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(185, 151, 97, 0.72), rgba(185, 151, 97, 0));
+}
+
+.capital-currency {
+  color: rgba(43, 37, 30, 0.94);
+  font-family: inherit;
+  font-size: 1em;
+  font-weight: inherit;
+  letter-spacing: inherit;
+  transform: none;
 }
 
 .capital-multiple {
@@ -1066,10 +1101,10 @@ h3 {
 .capital-breakdown {
   overflow: hidden;
   display: flex;
-  height: 20px;
+  height: 14px;
   border-radius: 999px;
   background: rgba(43, 37, 30, 0.07);
-  box-shadow: inset 0 1px 2px rgba(43, 37, 30, 0.12);
+  box-shadow: inset 0 1px 2px rgba(43, 37, 30, 0.12), 0 10px 24px rgba(43, 37, 30, 0.06);
 }
 
 .capital-breakdown div:first-child {
@@ -1078,6 +1113,22 @@ h3 {
 
 .capital-breakdown div:last-child {
   background: linear-gradient(90deg, var(--interest-gold), #dfcba8);
+}
+
+.capital-breakdown-labels {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: -12px;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.capital-breakdown-labels span:last-child {
+  text-align: right;
 }
 
 .capital-legend,
@@ -1233,7 +1284,7 @@ h3 {
   align-items: center;
   justify-content: space-between;
   gap: 14px;
-  padding: 18px 18px 0;
+  padding: 0;
 }
 
 .tool-card-title h2,
@@ -1391,32 +1442,39 @@ h3 {
 
 .tool-params {
   display: grid;
-  gap: 14px;
-  padding: 16px;
+  gap: 18px;
+  padding: 34px clamp(18px, 2vw, 24px) clamp(18px, 2vw, 24px);
   background:
-    linear-gradient(180deg, rgba(255, 253, 250, 0.9), rgba(246, 241, 232, 0.68)),
-    radial-gradient(circle at 0% 0%, rgba(199, 174, 137, 0.22), transparent 40%);
+    linear-gradient(180deg, rgba(255, 253, 250, 0.84), rgba(246, 241, 232, 0.58)),
+    radial-gradient(circle at 0% 0%, rgba(199, 174, 137, 0.16), transparent 42%);
 }
 
 .tool-fields {
   display: grid;
-  gap: 10px;
+  gap: 0;
 }
 
 .tool-field {
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: 8px 16px;
-  padding: 11px 13px 12px;
-  border: 1px solid rgba(43, 37, 30, 0.08);
-  border-radius: 16px;
-  background:
-    linear-gradient(180deg, rgba(255, 253, 250, 0.62), rgba(255, 253, 250, 0.38));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.68);
+  gap: 11px 20px;
+  padding: 14px 2px 17px;
+  border: 0;
+  border-bottom: 1px solid rgba(43, 37, 30, 0.065);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.tool-field:last-child {
+  border-bottom: 0;
 }
 
 .tool-field > span {
-  color: rgba(43, 37, 30, 0.68);
+  color: rgba(43, 37, 30, 0.62);
+  font-size: 0.9rem;
+  font-weight: 520;
+  letter-spacing: 0.01em;
 }
 
 .tool-input-wrap {
@@ -1437,7 +1495,7 @@ h3 {
 }
 
 .tool-input-wrap input {
-  width: clamp(70px, 7vw, 96px);
+  width: clamp(74px, 7vw, 104px);
   min-height: 28px;
   padding: 0;
   border: 0;
@@ -1445,7 +1503,8 @@ h3 {
   background: transparent;
   appearance: textfield;
   color: var(--ink);
-  font-size: 1.02rem;
+  font-size: 1.12rem;
+  font-variant-numeric: tabular-nums;
   font-weight: 560;
   text-align: right;
 }
@@ -1457,51 +1516,55 @@ h3 {
 }
 
 .tool-input-wrap small {
-  padding-left: 10px;
+  padding-left: 12px;
   color: var(--muted);
-  font-size: 0.78rem;
+  font-size: 0.76rem;
+  font-weight: 520;
 }
 
 .tool-range {
   grid-column: 1 / -1;
   width: 100%;
-  height: 12px;
-  margin: 0;
+  height: 16px;
+  margin: 3px 0 0;
   appearance: none;
   background: transparent;
   cursor: pointer;
+  --range-progress: 0%;
 }
 
 .tool-range::-webkit-slider-runnable-track {
-  height: 2px;
+  height: 3px;
   border-radius: 999px;
-  background: linear-gradient(90deg, rgba(185, 151, 97, 0.78), rgba(111, 139, 167, 0.38));
+  background:
+    linear-gradient(90deg, rgba(185, 151, 97, 0.88) 0 var(--range-progress), rgba(111, 139, 167, 0.28) var(--range-progress) 100%);
 }
 
 .tool-range::-webkit-slider-thumb {
-  width: 12px;
-  height: 12px;
-  margin-top: -5px;
+  width: 14px;
+  height: 14px;
+  margin-top: -5.5px;
   border: 1px solid rgba(43, 37, 30, 0.18);
   border-radius: 50%;
   appearance: none;
   background: linear-gradient(180deg, #fffdfa, #eadfcd);
-  box-shadow: 0 6px 14px rgba(43, 37, 30, 0.16);
+  box-shadow: 0 8px 18px rgba(43, 37, 30, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 .tool-range::-moz-range-track {
-  height: 2px;
+  height: 3px;
   border-radius: 999px;
-  background: linear-gradient(90deg, rgba(185, 151, 97, 0.78), rgba(111, 139, 167, 0.38));
+  background:
+    linear-gradient(90deg, rgba(185, 151, 97, 0.88) 0 var(--range-progress), rgba(111, 139, 167, 0.28) var(--range-progress) 100%);
 }
 
 .tool-range::-moz-range-thumb {
-  width: 12px;
-  height: 12px;
+  width: 14px;
+  height: 14px;
   border: 1px solid rgba(43, 37, 30, 0.18);
   border-radius: 50%;
   background: linear-gradient(180deg, #fffdfa, #eadfcd);
-  box-shadow: 0 6px 14px rgba(43, 37, 30, 0.16);
+  box-shadow: 0 8px 18px rgba(43, 37, 30, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 .tool-switch-row {
@@ -1567,6 +1630,7 @@ h3 {
 
   .tool-overview {
     grid-template-columns: 1fr;
+    width: 100%;
   }
 
   .tool-summary {
