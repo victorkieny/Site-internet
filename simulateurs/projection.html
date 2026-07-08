@@ -101,7 +101,8 @@
       const state = {
         mode: initialMode,
         view: "chart",
-        values: structuredClone(defaults)
+        values: structuredClone(defaults),
+        previousGauge: {}
       };
 
       const modeContent = {
@@ -264,6 +265,21 @@
         return computePer(state.values.per);
       }
 
+      function parseInputNumber(value) {
+        const normalized = String(value || "")
+          .replace(/\s/g, "")
+          .replace(",", ".");
+        return Number(normalized || 0);
+      }
+
+      function formatInputNumber(value) {
+        const number = Number(value || 0);
+        if (!Number.isFinite(number)) return "";
+        const [integer, decimal] = String(number).split(".");
+        const formattedInteger = integer.replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+        return decimal ? `${formattedInteger},${decimal}` : formattedInteger;
+      }
+
       function renderFields() {
         const fields = document.querySelector("#fields");
         const values = state.values[state.mode];
@@ -277,63 +293,138 @@
           range.style.setProperty("--range-progress", `${Math.max(0, Math.min(100, progress))}%`);
         };
 
-        fieldDefinitions[state.mode].forEach((field) => {
-          if (field.dependsOn && !values[field.dependsOn]) return;
-
+        const renderNumberField = (field, options = {}) => {
           const label = document.createElement("label");
-          label.className = field.type === "checkbox" ? "tool-switch-row" : "tool-field";
+          label.className = options.mini ? "tool-fee-rate" : "tool-field";
 
           const span = document.createElement("span");
           span.textContent = field.label;
           label.append(span);
 
-          if (field.type === "checkbox") {
-            const input = document.createElement("input");
-            input.type = "checkbox";
-            input.checked = values[field.key];
-            input.addEventListener("change", () => {
-              values[field.key] = input.checked;
-              render();
-            });
-            label.append(input);
-          } else {
-            const control = document.createElement("div");
-            control.className = "tool-input-wrap";
-            const input = document.createElement("input");
-            input.type = "number";
-            input.min = field.min;
-            input.max = field.max;
-            input.step = field.step;
-            input.value = values[field.key];
-            const range = document.createElement("input");
-            range.className = "tool-range";
-            range.type = "range";
-            range.min = field.min;
-            range.max = field.max;
-            range.step = field.step;
+          const control = document.createElement("div");
+          control.className = "tool-input-wrap";
+          const input = document.createElement("input");
+          input.type = "text";
+          input.inputMode = "decimal";
+          input.min = field.min;
+          input.max = field.max;
+          input.step = field.step;
+          input.value = formatInputNumber(values[field.key]);
+          const range = document.createElement("input");
+          range.className = options.mini ? "tool-range tool-range-mini" : "tool-range";
+          range.type = "range";
+          range.min = field.min;
+          range.max = field.max;
+          range.step = field.step;
+          range.value = values[field.key];
+          updateRangeProgress(range);
+          input.addEventListener("input", () => {
+            values[field.key] = parseInputNumber(input.value);
             range.value = values[field.key];
             updateRangeProgress(range);
-            input.addEventListener("input", () => {
-              values[field.key] = Number(input.value || 0);
-              range.value = values[field.key];
-              updateRangeProgress(range);
+            renderOutputs();
+          });
+          input.addEventListener("blur", () => {
+            input.value = formatInputNumber(values[field.key]);
+          });
+          range.addEventListener("input", () => {
+            values[field.key] = Number(range.value || 0);
+            input.value = formatInputNumber(values[field.key]);
+            updateRangeProgress(range);
+            renderOutputs();
+          });
+          const suffix = document.createElement("small");
+          suffix.textContent = field.suffix;
+          control.append(input, suffix);
+          label.append(control);
+          label.append(range);
+          return label;
+        };
+
+        const renderFees = () => {
+          const feeGroup = document.createElement("div");
+          feeGroup.className = "tool-fee-group";
+
+          [
+            {
+              toggleKey: "fraisEntreeActifs",
+              valueKey: "fraisEntree",
+              label: "Droits d'entrée",
+              rateLabel: "Taux",
+              max: 4.8
+            },
+            {
+              toggleKey: "fraisActifs",
+              valueKey: "frais",
+              label: "Frais de gestion",
+              rateLabel: "Taux annuel",
+              max: 3
+            }
+          ].forEach((fee) => {
+            const card = document.createElement("div");
+            card.className = "tool-fee-card";
+            const toggle = document.createElement("label");
+            toggle.className = "tool-fee-toggle";
+            const title = document.createElement("span");
+            title.textContent = fee.label;
+            const input = document.createElement("input");
+            input.type = "checkbox";
+            input.checked = values[fee.toggleKey];
+            input.addEventListener("change", () => {
+              values[fee.toggleKey] = input.checked;
+              renderFields();
               renderOutputs();
             });
-            range.addEventListener("input", () => {
-              values[field.key] = Number(range.value || 0);
-              input.value = values[field.key];
-              updateRangeProgress(range);
-              renderOutputs();
-            });
-            const suffix = document.createElement("small");
-            suffix.textContent = field.suffix;
-            control.append(input, suffix);
-            label.append(control);
-            label.append(range);
+            toggle.append(title, input);
+            card.append(toggle);
+
+            if (values[fee.toggleKey]) {
+              card.append(renderNumberField({
+                key: fee.valueKey,
+                label: fee.rateLabel,
+                type: "number",
+                min: 0,
+                max: fee.max,
+                step: 0.1,
+                suffix: "%"
+              }, { mini: true }));
+            }
+
+            feeGroup.append(card);
+          });
+
+          fields.append(feeGroup);
+        };
+
+        fieldDefinitions[state.mode].forEach((field) => {
+          if (field.dependsOn && !values[field.dependsOn]) return;
+          if (state.mode === "av" && ["fraisEntreeActifs", "fraisEntree", "fraisActifs", "frais"].includes(field.key)) return;
+
+          if (field.type !== "checkbox") {
+            fields.append(renderNumberField(field));
+            return;
           }
+
+          const label = document.createElement("label");
+          label.className = "tool-switch-row";
+
+          const span = document.createElement("span");
+          span.textContent = field.label;
+          label.append(span);
+
+          const input = document.createElement("input");
+          input.type = "checkbox";
+          input.checked = values[field.key];
+          input.addEventListener("change", () => {
+            values[field.key] = input.checked;
+            render();
+          });
+          label.append(input);
 
           fields.append(label);
         });
+
+        if (state.mode === "av") renderFees();
       }
 
       function renderSummary(rows) {
@@ -347,6 +438,7 @@
           const interests = last.interetsCumules || 0;
           const investedShare = capital > 0 ? Math.max(0, Math.min(100, (invested / capital) * 100)) : 0;
           const interestsShare = Math.max(0, 100 - investedShare);
+          const previousGauge = state.previousGauge.av || { investedShare, interestsShare };
           const multiple = invested > 0 ? capital / invested : 0;
           const annualRate = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 1 }).format(values.rendement);
           const capitalAmount = formatMoney(capital).replace(/\s?€$/, "");
@@ -356,24 +448,26 @@
               <div class="capital-heading">
                 <div>
                   <span>Capital final estimé</span>
-                  <strong class="capital-amount"><span>${capitalAmount}</span><span class="capital-currency">€</span></strong>
+                  <strong class="capital-amount value-update"><span>${capitalAmount}</span><span class="capital-currency">€</span></strong>
                 </div>
               </div>
-              <div class="capital-breakdown" aria-label="Répartition du capital final">
-                <div style="width:${investedShare}%"></div>
-                <div style="width:${interestsShare}%"></div>
-              </div>
-              <div class="capital-breakdown-labels">
-                <span class="capital-metric-invested">Sommes investies</span>
-                <span class="capital-metric-interest">Intérêts gagnés</span>
+              <div class="capital-gauge">
+                <div class="capital-breakdown-labels">
+                  <span class="capital-metric-invested">Sommes investies</span>
+                  <span class="capital-metric-interest">Intérêts gagnés</span>
+                </div>
+                <div class="capital-breakdown" aria-label="Répartition du capital final">
+                  <div style="width:${previousGauge.investedShare}%"></div>
+                  <div style="width:${previousGauge.interestsShare}%"></div>
+                </div>
               </div>
               <div class="capital-metrics">
-                <span class="capital-metric-invested"><small>Sommes investies</small><strong>${formatMoney(invested)}</strong></span>
-                <span class="capital-metric-interest"><small>Intérêts gagnés</small><strong>${formatMoney(interests)}</strong></span>
+                <span class="capital-metric-invested"><small>Sommes investies</small><strong class="value-update">${formatMoney(invested)}</strong></span>
+                <span class="capital-metric-interest"><small>Intérêts gagnés</small><strong class="value-update">${formatMoney(interests)}</strong></span>
               </div>
               <div class="capital-shares">
-                <span><small>Multiple obtenu</small><strong>× ${multiple.toFixed(2)}</strong></span>
-                <span><small>Part des intérêts gagnés</small><strong>${formatNumber(interestsShare)} %</strong></span>
+                <span><small>Multiple obtenu</small><strong class="value-update">× ${multiple.toFixed(2)}</strong></span>
+                <span><small>Part des intérêts gagnés</small><strong class="value-update">${formatNumber(interestsShare)} %</strong></span>
               </div>
               <div class="capital-insight">
                 <div class="capital-visual" aria-label="Répartition visuelle du capital projeté">
@@ -388,6 +482,13 @@
               </div>
             </article>
           `;
+          state.previousGauge.av = { investedShare, interestsShare };
+          requestAnimationFrame(() => {
+            const [investedBar, interestsBar] = summary.querySelectorAll(".capital-breakdown > div");
+            if (!investedBar || !interestsBar) return;
+            investedBar.style.width = `${investedShare}%`;
+            interestsBar.style.width = `${interestsShare}%`;
+          });
           return;
         }
 

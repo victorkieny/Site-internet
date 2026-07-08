@@ -1098,33 +1098,55 @@ h3 {
   text-align: center;
 }
 
+.capital-gauge {
+  display: grid;
+  gap: 8px;
+  padding: 2px 0 4px;
+}
+
 .capital-breakdown {
   overflow: hidden;
   display: flex;
-  height: 14px;
+  height: 11px;
   border-radius: 999px;
-  background: rgba(43, 37, 30, 0.07);
-  box-shadow: inset 0 1px 2px rgba(43, 37, 30, 0.12), 0 10px 24px rgba(43, 37, 30, 0.06);
+  background: rgba(43, 37, 30, 0.055);
+  box-shadow:
+    inset 0 1px 1px rgba(43, 37, 30, 0.14),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.58),
+    0 10px 24px rgba(43, 37, 30, 0.055);
 }
 
 .capital-breakdown div:first-child {
-  background: linear-gradient(90deg, var(--invested-blue), #9eb2c4);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0)),
+    linear-gradient(90deg, #6f8ba7, #9eb2c4);
+  transition: width 360ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .capital-breakdown div:last-child {
-  background: linear-gradient(90deg, var(--interest-gold), #dfcba8);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0)),
+    linear-gradient(90deg, #b99761, #dfcba8);
+  transition: width 360ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .capital-breakdown-labels {
   display: flex;
   justify-content: space-between;
   gap: 16px;
-  margin-top: -12px;
   color: var(--muted);
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
+  font-size: 0.74rem;
+  font-weight: 650;
+  letter-spacing: 0.035em;
   text-transform: uppercase;
+}
+
+.capital-breakdown-labels .capital-metric-invested {
+  color: var(--invested-blue);
+}
+
+.capital-breakdown-labels .capital-metric-interest {
+  color: var(--interest-gold);
 }
 
 .capital-breakdown-labels span:last-child {
@@ -1210,6 +1232,10 @@ h3 {
   color: rgba(43, 37, 30, 0.66);
   font-size: clamp(0.98rem, 1.2vw, 1.14rem);
   font-weight: 560;
+}
+
+.value-update {
+  animation: valueUpdate 260ms ease both;
 }
 
 .capital-insight {
@@ -1567,6 +1593,92 @@ h3 {
   box-shadow: 0 8px 18px rgba(43, 37, 30, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
+.tool-fee-group {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(43, 37, 30, 0.065);
+}
+
+.tool-fee-card {
+  display: grid;
+  align-content: start;
+  gap: 9px;
+  min-width: 0;
+  padding: 10px 11px 11px;
+  border: 1px solid rgba(43, 37, 30, 0.07);
+  border-radius: 15px;
+  background: rgba(255, 253, 250, 0.34);
+}
+
+.tool-fee-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: rgba(43, 37, 30, 0.62);
+  font-size: 0.78rem;
+  font-weight: 560;
+  line-height: 1.22;
+}
+
+.tool-fee-toggle input {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  accent-color: var(--button);
+}
+
+.tool-fee-rate {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 7px 10px;
+  min-width: 0;
+}
+
+.tool-fee-rate > span {
+  color: rgba(43, 37, 30, 0.5);
+  font-size: 0.72rem;
+  font-weight: 520;
+}
+
+.tool-fee-rate .tool-input-wrap input {
+  width: 44px;
+  min-height: 22px;
+  font-size: 0.86rem;
+}
+
+.tool-fee-rate .tool-input-wrap small {
+  padding-left: 5px;
+  font-size: 0.66rem;
+}
+
+.tool-range-mini {
+  height: 12px;
+  margin-top: 0;
+}
+
+.tool-range-mini::-webkit-slider-runnable-track {
+  height: 2px;
+}
+
+.tool-range-mini::-webkit-slider-thumb {
+  width: 11px;
+  height: 11px;
+  margin-top: -4.5px;
+}
+
+.tool-range-mini::-moz-range-track {
+  height: 2px;
+}
+
+.tool-range-mini::-moz-range-thumb {
+  width: 11px;
+  height: 11px;
+}
+
 .tool-switch-row {
   display: flex;
   align-items: center;
@@ -1595,6 +1707,18 @@ h3 {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes valueUpdate {
+  from {
+    opacity: 0.62;
+    filter: brightness(1.08);
+  }
+
+  to {
+    opacity: 1;
+    filter: brightness(1);
   }
 }
 
@@ -1658,6 +1782,10 @@ h3 {
 }
 
 @media (max-width: 660px) {
+  .tool-fee-group {
+    grid-template-columns: 1fr;
+  }
+
   .simulator-choice {
     min-height: 150px;
     padding: 24px;
