@@ -27,16 +27,29 @@
 
         <section class="tool-detail" aria-label="Projection détaillée">
           <div class="tool-view-toggle" aria-label="Affichage des résultats">
-            <button class="is-active" type="button" data-view="chart">Graphique</button>
-            <button type="button" data-view="table">Calendrier</button>
+            <button class="is-active" type="button" data-view="chart" aria-label="Graphique" title="Graphique">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4v16h16"></path><path d="M7 15l4-5 3 3 5-6"></path></svg>
+            </button>
+            <button type="button" data-view="pie" aria-label="Camembert" title="Camembert">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></svg>
+            </button>
+            <button type="button" data-view="table" aria-label="Calendrier" title="Calendrier">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg>
+            </button>
           </div>
 
           <div class="tool-chart-card" id="chart-panel">
             <div class="tool-card-title">
               <h2>Projection</h2>
-              <span id="projection-label"></span>
             </div>
             <div class="line-chart" id="chart" aria-label="Graphique de projection"></div>
+          </div>
+          <div class="tool-pie-card" id="pie-panel" hidden>
+            <div class="tool-card-title">
+              <h2>Répartition</h2>
+              <span id="pie-note"></span>
+            </div>
+            <div class="pie-chart" id="pie" aria-label="Répartition du capital final"></div>
           </div>
           <div class="tool-table-card" id="table-panel" hidden>
             <div class="tool-card-title">
@@ -61,6 +74,45 @@
       const formatNumber = (value) => new Intl.NumberFormat("fr-FR", {
         maximumFractionDigits: 0
       }).format(Math.round(value || 0));
+
+      const roundToHundred = (value) => Math.round((value || 0) / 100) * 100;
+
+      function niceStep(range, targetCount) {
+        const rawStep = range / Math.max(1, targetCount);
+        if (!Number.isFinite(rawStep) || rawStep <= 0) return 1;
+        const magnitude = Math.pow(10, Math.floor(Math.log10(rawStep)));
+        const residual = rawStep / magnitude;
+        let niceResidual;
+        if (residual < 1.5) niceResidual = 1;
+        else if (residual < 3) niceResidual = 2;
+        else if (residual < 7) niceResidual = 5;
+        else niceResidual = 10;
+        return niceResidual * magnitude;
+      }
+
+      // Round, "speakable" axis labels (100 000 / 200 000 / 300 000, année 1 / 5 / 10...)
+      // rather than exact fractions of the data — the curve itself stays exact and can
+      // simply run a bit past the last labeled gridline.
+      function niceValueTicks(max, targetCount = 4) {
+        if (!Number.isFinite(max) || max <= 0) return [];
+        const step = niceStep(max, targetCount);
+        const ticks = [];
+        for (let value = step; value <= max + step * 0.001; value += step) {
+          ticks.push(Math.round(value));
+        }
+        return ticks;
+      }
+
+      function niceYearTicks(totalYears) {
+        if (totalYears <= 1) return [1];
+        const step = niceStep(totalYears, 6);
+        const ticks = new Set([1]);
+        for (let value = step; value < totalYears; value += step) {
+          ticks.add(Math.round(value));
+        }
+        ticks.add(totalYears);
+        return Array.from(ticks).sort((a, b) => a - b);
+      }
 
       const defaults = {
         scpi: {
@@ -280,6 +332,53 @@
         return decimal ? `${formattedInteger},${decimal}` : formattedInteger;
       }
 
+      function withHeightTransition(el, mutate) {
+        if (!el) {
+          mutate();
+          return;
+        }
+        const token = (el._heightTransitionToken = (el._heightTransitionToken || 0) + 1);
+
+        // Undo any leftover inline sizing from a previous run that never
+        // reached its cleanup step (e.g. interrupted mid-flight), so this
+        // run always starts from the element's true natural/stretched size.
+        el.style.transition = "none";
+        el.style.height = "";
+        el.style.overflow = "";
+        const startHeight = el.getBoundingClientRect().height;
+
+        mutate();
+        const endHeight = el.getBoundingClientRect().height;
+
+        if (Math.abs(endHeight - startHeight) < 1) return;
+
+        el.style.overflow = "hidden";
+        el.style.height = `${startHeight}px`;
+        el.getBoundingClientRect();
+
+        requestAnimationFrame(() => {
+          if (el._heightTransitionToken !== token) return;
+          el.style.transition = "height 320ms cubic-bezier(0.22, 1, 0.36, 1)";
+          el.style.height = `${endHeight}px`;
+        });
+
+        const cleanup = () => {
+          el.removeEventListener("transitionend", onEnd);
+          if (el._heightTransitionToken !== token) return;
+          el.style.transition = "";
+          el.style.height = "";
+          el.style.overflow = "";
+        };
+        const onEnd = (event) => {
+          if (event.target !== el || event.propertyName !== "height") return;
+          cleanup();
+        };
+        el.addEventListener("transitionend", onEnd);
+        // Safety net: guarantees cleanup even if transitionend never fires
+        // (e.g. the transition gets interrupted by another toggle).
+        window.setTimeout(cleanup, 420);
+      }
+
       function renderFields() {
         const fields = document.querySelector("#fields");
         const values = state.values[state.mode];
@@ -372,8 +471,10 @@
             input.checked = values[fee.toggleKey];
             input.addEventListener("change", () => {
               values[fee.toggleKey] = input.checked;
-              renderFields();
-              renderOutputs();
+              withHeightTransition(document.querySelector(".tool-params"), () => {
+                renderFields();
+                renderOutputs();
+              });
             });
             toggle.append(title, input);
             card.append(toggle);
@@ -417,7 +518,7 @@
           input.checked = values[field.key];
           input.addEventListener("change", () => {
             values[field.key] = input.checked;
-            render();
+            withHeightTransition(document.querySelector(".tool-params"), render);
           });
           label.append(input);
 
@@ -477,7 +578,7 @@
                 <p>
                   En plaçant ${formatMoney(values.capitalInitial)} aujourd'hui, puis ${formatMoney(values.versementMensuel)}
                   chaque mois pendant ${formatNumber(values.dureeTotale)} ans, à un rendement annuel moyen de
-                  ${annualRate} %, votre capital atteindrait ${formatMoney(capital)}.
+                  ${annualRate} %, votre assurance vie atteindrait ${formatMoney(capital)}.
                 </p>
               </div>
             </article>
@@ -529,51 +630,222 @@
       function renderChart(rows) {
         const chart = document.querySelector("#chart");
         const width = 960;
-        const height = 360;
-        const pad = { top: 24, right: 28, bottom: 42, left: 64 };
-        const max = Math.max(...rows.flatMap((row) => [
-          row.capital || 0,
-          row.versementsCumules || 0,
-          row.interetsCumules || row.revenusCumules || row.gainsCumules || 0
-        ]), 1);
-        const x = (index) => pad.left + (index / Math.max(rows.length - 1, 1)) * (width - pad.left - pad.right);
-        const y = (value) => height - pad.bottom - (value / max) * (height - pad.top - pad.bottom);
+        const height = 436;
+        const pad = { top: 28, right: 36, bottom: 54, left: 128 };
         const metric = state.mode === "scpi" ? "revenusCumules" : state.mode === "av" ? "interetsCumules" : "gainsCumules";
         const metricLabel = state.mode === "scpi" ? "Revenus cumulés" : state.mode === "av" ? "Intérêts gagnés" : "Gains cumulés";
-        const pointsFor = (key) => rows.map((row, index) => `${x(index)},${y(row[key] || 0)}`).join(" ");
-        const grid = [0.25, 0.5, 0.75, 1].map((ratio) => {
-          const value = max * ratio;
+
+        const investedSeries = rows.map((row) => Math.max(0, row.versementsCumules || 0));
+        const capitalSeries = rows.map((row, i) => Math.max(investedSeries[i], row.capital || 0));
+        const max = Math.max(...capitalSeries, 1);
+
+        const x = (index) => pad.left + (index / Math.max(rows.length - 1, 1)) * (width - pad.left - pad.right);
+        const y = (value) => height - pad.bottom - (value / max) * (height - pad.top - pad.bottom);
+        const pointsFor = (series) => series.map((value, index) => `${x(index)},${y(value)}`).join(" ");
+        const areaPath = (lowerSeries, upperSeries) => {
+          const top = upperSeries.map((value, index) => `${x(index)},${y(value)}`);
+          const bottom = lowerSeries.map((value, index) => `${x(index)},${y(value)}`).reverse();
+          return `M${top.join(" L")} L${bottom.join(" L")} Z`;
+        };
+        const zeroSeries = rows.map(() => 0);
+
+        const grid = niceValueTicks(max, 4).map((value) => {
           const lineY = y(value);
           return `
             <g>
               <line x1="${pad.left}" y1="${lineY}" x2="${width - pad.right}" y2="${lineY}" />
-              <text x="${pad.left - 12}" y="${lineY + 4}">${formatMoney(value)}</text>
+              <text x="${pad.left - 16}" y="${lineY + 5}">${formatMoney(value)}</text>
             </g>
           `;
         }).join("");
-        const tickEvery = Math.max(1, Math.ceil(rows.length / 8));
-        const ticks = rows.filter((row) => row.annee === 1 || row.annee === rows.length || row.annee % tickEvery === 0).map((row) => {
-          const tickX = x(row.annee - 1);
-          return `<text x="${tickX}" y="${height - 10}">${row.annee}</text>`;
+        const ticks = niceYearTicks(rows.length).map((annee) => {
+          const tickX = x(annee - 1);
+          return `<text x="${tickX}" y="${height - 10}">${annee}</text>`;
         }).join("");
 
         chart.innerHTML = `
           <div class="chart-totals">
             <span>Capital final <strong>${formatMoney(rows.at(-1)?.capital)}</strong></span>
-            <span>${metricLabel} <strong>${formatMoney(rows.at(-1)?.[metric])}</strong></span>
-            <span>Sommes investies <strong>${formatMoney(rows.at(-1)?.versementsCumules)}</strong></span>
+            <span class="capital-metric-invested">Sommes investies <strong>${formatMoney(rows.at(-1)?.versementsCumules)}</strong></span>
+            <span class="capital-metric-interest">${metricLabel} <strong>${formatMoney(rows.at(-1)?.[metric])}</strong></span>
           </div>
-          <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Evolution annuelle du capital, des intérêts et des sommes investies">
-            <g class="chart-grid">${grid}</g>
-            <polyline class="chart-line chart-line-capital" points="${pointsFor("capital")}"></polyline>
-            <polyline class="chart-line chart-line-gains" points="${pointsFor(metric)}"></polyline>
-            <polyline class="chart-line chart-line-invested" points="${pointsFor("versementsCumules")}"></polyline>
-            <g class="chart-axis">${ticks}</g>
-          </svg>
+          <div class="chart-canvas">
+            <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Evolution annuelle du capital, des intérêts et des sommes investies">
+              <defs>
+                <linearGradient id="chartAreaInvested" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#6f8ba7" stop-opacity="0.5"></stop>
+                  <stop offset="100%" stop-color="#6f8ba7" stop-opacity="0.05"></stop>
+                </linearGradient>
+                <linearGradient id="chartAreaGains" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#b99761" stop-opacity="0.55"></stop>
+                  <stop offset="100%" stop-color="#b99761" stop-opacity="0.08"></stop>
+                </linearGradient>
+              </defs>
+              <g class="chart-grid">${grid}</g>
+              <path class="chart-area chart-area-invested" d="${areaPath(zeroSeries, investedSeries)}"></path>
+              <path class="chart-area chart-area-gains" d="${areaPath(investedSeries, capitalSeries)}"></path>
+              <polyline class="chart-line chart-line-invested" points="${pointsFor(investedSeries)}"></polyline>
+              <polyline class="chart-line chart-line-capital" points="${pointsFor(capitalSeries)}"></polyline>
+              <g class="chart-axis">${ticks}</g>
+              <g class="chart-hover">
+                <line class="chart-hover-line" x1="0" y1="${pad.top}" x2="0" y2="${height - pad.bottom}"></line>
+                <circle class="chart-hover-dot chart-hover-dot-invested" r="4"></circle>
+                <circle class="chart-hover-dot chart-hover-dot-capital" r="4"></circle>
+              </g>
+            </svg>
+            <div class="chart-tooltip">
+              <span class="chart-tooltip-year"></span>
+              <div class="chart-tooltip-row chart-tooltip-capital"><small>Capital</small><strong></strong></div>
+              <div class="chart-tooltip-row chart-tooltip-gains"><small>${metricLabel}</small><strong></strong></div>
+              <div class="chart-tooltip-row chart-tooltip-invested"><small>Sommes investies</small><strong></strong></div>
+            </div>
+          </div>
           <div class="chart-legend">
             <span><i class="legend-capital"></i>Capital final</span>
             <span><i class="legend-gains"></i>${metricLabel}</span>
             <span><i class="legend-invested"></i>Sommes investies</span>
+          </div>
+        `;
+
+        setupChartHover(chart, rows, { x, y, pad, width, height, investedSeries, capitalSeries, metric });
+      }
+
+      function setupChartHover(chart, rows, ctx) {
+        const svg = chart.querySelector("svg");
+        const canvas = chart.querySelector(".chart-canvas");
+        const hoverGroup = chart.querySelector(".chart-hover");
+        const hoverLine = chart.querySelector(".chart-hover-line");
+        const hoverDotCapital = chart.querySelector(".chart-hover-dot-capital");
+        const hoverDotInvested = chart.querySelector(".chart-hover-dot-invested");
+        const tooltip = chart.querySelector(".chart-tooltip");
+        const tooltipYear = chart.querySelector(".chart-tooltip-year");
+        const tooltipCapital = chart.querySelector(".chart-tooltip-capital strong");
+        const tooltipGains = chart.querySelector(".chart-tooltip-gains strong");
+        const tooltipInvested = chart.querySelector(".chart-tooltip-invested strong");
+        if (!svg || !rows.length) return;
+
+        hoverGroup.style.display = "none";
+        tooltip.hidden = true;
+
+        const updateAt = (clientX, clientY) => {
+          const point = svg.createSVGPoint();
+          point.x = clientX;
+          point.y = clientY;
+          const ctm = svg.getScreenCTM();
+          if (!ctm) return;
+          const local = point.matrixTransform(ctm.inverse());
+          const ratio = (local.x - ctx.pad.left) / (ctx.width - ctx.pad.left - ctx.pad.right);
+          const index = Math.max(0, Math.min(rows.length - 1, Math.round(ratio * (rows.length - 1))));
+          const row = rows[index];
+          const px = ctx.x(index);
+          const capitalY = ctx.y(ctx.capitalSeries[index]);
+          const investedY = ctx.y(ctx.investedSeries[index]);
+
+          hoverGroup.style.display = "";
+          hoverLine.setAttribute("x1", px);
+          hoverLine.setAttribute("x2", px);
+          hoverDotCapital.setAttribute("cx", px);
+          hoverDotCapital.setAttribute("cy", capitalY);
+          hoverDotInvested.setAttribute("cx", px);
+          hoverDotInvested.setAttribute("cy", investedY);
+
+          tooltipYear.textContent = `Année ${row.annee}`;
+          tooltipCapital.textContent = formatMoney(roundToHundred(row.capital));
+          tooltipGains.textContent = formatMoney(roundToHundred(row[ctx.metric]));
+          tooltipInvested.textContent = formatMoney(roundToHundred(row.versementsCumules));
+
+          const screenPoint = svg.createSVGPoint();
+          screenPoint.x = px;
+          screenPoint.y = capitalY;
+          const screenPos = screenPoint.matrixTransform(ctm);
+          const canvasRect = canvas.getBoundingClientRect();
+          tooltip.hidden = false;
+          tooltip.style.left = `${screenPos.x - canvasRect.left}px`;
+          tooltip.style.top = `${screenPos.y - canvasRect.top}px`;
+        };
+
+        const hide = () => {
+          hoverGroup.style.display = "none";
+          tooltip.hidden = true;
+        };
+
+        svg.addEventListener("mousemove", (event) => updateAt(event.clientX, event.clientY));
+        svg.addEventListener("mouseleave", hide);
+        svg.addEventListener("touchmove", (event) => {
+          const touch = event.touches[0];
+          if (touch) updateAt(touch.clientX, touch.clientY);
+        }, { passive: true });
+        svg.addEventListener("touchend", hide);
+      }
+
+      function renderPie(rows) {
+        const panel = document.querySelector("#pie");
+        const last = rows.at(-1) || {};
+        const metric = state.mode === "scpi" ? "revenusCumules" : state.mode === "av" ? "interetsCumules" : "gainsCumules";
+        const metricLabel = state.mode === "scpi" ? "Revenus cumulés" : state.mode === "av" ? "Intérêts gagnés" : "Gains cumulés";
+
+        const invested = Math.max(0, last.versementsCumules || 0);
+        const gains = Math.max(0, last[metric] || 0);
+        const total = invested + gains || 1;
+        const investedShare = (invested / total) * 100;
+        const gainsShare = 100 - investedShare;
+
+        const size = 340;
+        const strokeWidth = 40;
+        const radius = (size - strokeWidth) / 2;
+        const circumference = 2 * Math.PI * radius;
+        const segmentGap = 8;
+        const investedFull = (investedShare / 100) * circumference;
+        const gainsFull = circumference - investedFull;
+        const investedDrawn = Math.max(0, investedFull - segmentGap);
+        const gainsDrawn = Math.max(0, gainsFull - segmentGap);
+        const investedOffset = segmentGap / 2;
+        const gainsOffset = investedFull + segmentGap / 2;
+        const capitalAmount = formatMoney(last.capital).replace(/\s?€$/, "");
+
+        panel.innerHTML = `
+          <div class="pie-layout">
+            <div class="pie-canvas">
+              <svg viewBox="0 0 ${size} ${size}" role="img" aria-label="Répartition du capital final entre sommes investies et ${metricLabel.toLowerCase()}">
+                <defs>
+                  <linearGradient id="pieInvested" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#6f8ba7"></stop>
+                    <stop offset="100%" stop-color="#9eb2c4"></stop>
+                  </linearGradient>
+                  <linearGradient id="pieGains" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#b99761"></stop>
+                    <stop offset="100%" stop-color="#dfcba8"></stop>
+                  </linearGradient>
+                </defs>
+                <circle class="pie-track" cx="${size / 2}" cy="${size / 2}" r="${radius}" stroke-width="${strokeWidth}"></circle>
+                <circle class="pie-segment pie-segment-invested" cx="${size / 2}" cy="${size / 2}" r="${radius}" stroke-width="${strokeWidth}"
+                  stroke-dasharray="${investedDrawn} ${circumference - investedDrawn}" stroke-dashoffset="${-investedOffset}"></circle>
+                <circle class="pie-segment pie-segment-gains" cx="${size / 2}" cy="${size / 2}" r="${radius}" stroke-width="${strokeWidth}"
+                  stroke-dasharray="${gainsDrawn} ${circumference - gainsDrawn}" stroke-dashoffset="${-gainsOffset}"></circle>
+              </svg>
+              <div class="pie-center">
+                <span>Capital final</span>
+                <strong><span>${capitalAmount}</span><small>€</small></strong>
+              </div>
+            </div>
+            <div class="pie-legend">
+              <div class="pie-legend-row pie-legend-invested">
+                <i></i>
+                <div class="pie-legend-copy">
+                  <span>Sommes investies</span>
+                  <strong>${formatMoney(invested)}</strong>
+                </div>
+                <small>${formatNumber(investedShare)} %</small>
+              </div>
+              <div class="pie-legend-row pie-legend-gains">
+                <i></i>
+                <div class="pie-legend-copy">
+                  <span>${metricLabel}</span>
+                  <strong>${formatMoney(gains)}</strong>
+                </div>
+                <small>${formatNumber(gainsShare)} %</small>
+              </div>
+            </div>
           </div>
         `;
       }
@@ -605,10 +877,11 @@
         document.title = `${content.title} | Simulateur`;
         document.querySelector("#tool-page-title").textContent = content.title;
         document.querySelector(".tool-card-title h2").textContent = content.chartTitle;
-        document.querySelector("#projection-label").textContent = content.label;
         document.querySelector("#table-note").textContent = `${rows.length} années`;
+        document.querySelector("#pie-note").textContent = `Année ${rows.length}`;
         renderSummary(rows);
         renderChart(rows);
+        renderPie(rows);
         renderTable(rows);
       }
 
@@ -624,6 +897,7 @@
             item.classList.toggle("is-active", item === button);
           });
           document.querySelector("#chart-panel").hidden = state.view !== "chart";
+          document.querySelector("#pie-panel").hidden = state.view !== "pie";
           document.querySelector("#table-panel").hidden = state.view !== "table";
         });
       });
