@@ -8,8 +8,11 @@
   </head>
   <body class="tool-body">
     <main class="tool-page" aria-labelledby="tool-page-title">
+      <nav class="main-nav" aria-label="Navigation principale">
+        <a href="../index.html">Accueil</a>
+        <a href="../simulateurs.html" aria-current="page">Simulateurs</a>
+      </nav>
       <nav class="tool-nav" aria-label="Navigation du simulateur">
-        <a href="../simulateurs.html">← Simulateurs</a>
         <h1 id="tool-page-title">Assurance Vie</h1>
       </nav>
 
@@ -18,6 +21,10 @@
           <aside class="tool-params" aria-label="Hypothèses">
             <div class="tool-params-title">
               <h2>Hypothèses</h2>
+              <button type="button" id="reset-fields" class="tool-reset">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 1 2.64 6.36"></path><path d="M3 21v-6h6"></path></svg>
+                Réinitialiser
+              </button>
             </div>
             <div id="fields" class="tool-fields"></div>
           </aside>
@@ -38,26 +45,26 @@
             </button>
           </div>
 
-          <div class="tool-chart-card" id="chart-panel">
-            <div class="tool-card-title">
-              <h2>Projection</h2>
+          <div class="tool-detail-panels">
+            <div class="tool-chart-card" id="chart-panel">
+              <div class="tool-card-title">
+                <h2>Projection</h2>
+              </div>
+              <div class="line-chart" id="chart" aria-label="Graphique de projection"></div>
             </div>
-            <div class="line-chart" id="chart" aria-label="Graphique de projection"></div>
-          </div>
-          <div class="tool-pie-card" id="pie-panel" hidden>
-            <div class="tool-card-title">
-              <h2>Répartition</h2>
-              <span id="pie-note"></span>
+            <div class="tool-pie-card" id="pie-panel" hidden>
+              <div class="tool-card-title">
+                <h2>Répartition</h2>
+              </div>
+              <div class="pie-chart" id="pie" aria-label="Répartition du capital final"></div>
             </div>
-            <div class="pie-chart" id="pie" aria-label="Répartition du capital final"></div>
-          </div>
-          <div class="tool-table-card" id="table-panel" hidden>
-            <div class="tool-card-title">
-              <h2>Calendrier annuel</h2>
-              <span id="table-note"></span>
-            </div>
-            <div class="tool-table-wrap">
-              <table id="projection-table"></table>
+            <div class="tool-table-card" id="table-panel" hidden>
+              <div class="tool-card-title">
+                <h2>Calendrier annuel</h2>
+              </div>
+              <div class="tool-table-wrap">
+                <table id="projection-table"></table>
+              </div>
             </div>
           </div>
         </section>
@@ -291,7 +298,7 @@
         av: [
           { key: "capitalInitial", label: "Versement initial", type: "number", min: 0, max: 500000, step: 1000, suffix: "€" },
           { key: "versementMensuel", label: "Versement mensuel", type: "number", min: 0, max: 10000, step: 50, suffix: "€" },
-          { key: "rendement", label: "Taux d'intérêt annuel", type: "number", min: 0, max: 15, step: 0.1, suffix: "%" },
+          { key: "rendement", label: "Rendement annuel", type: "number", min: 0, max: 15, step: 0.1, suffix: "%" },
           { key: "dureeTotale", label: "Durée totale", type: "number", min: 1, max: 60, step: 1, suffix: "ans" },
           { key: "fraisEntreeActifs", label: "Droits d'entrée", type: "checkbox" },
           { key: "fraisEntree", label: "Taux des droits d'entrée", type: "number", min: 0, max: 4.8, step: 0.1, suffix: "%", dependsOn: "fraisEntreeActifs" },
@@ -630,7 +637,7 @@
       function renderChart(rows) {
         const chart = document.querySelector("#chart");
         const width = 960;
-        const height = 436;
+        const height = 380;
         const pad = { top: 28, right: 36, bottom: 54, left: 128 };
         const metric = state.mode === "scpi" ? "revenusCumules" : state.mode === "av" ? "interetsCumules" : "gainsCumules";
         const metricLabel = state.mode === "scpi" ? "Revenus cumulés" : state.mode === "av" ? "Intérêts gagnés" : "Gains cumulés";
@@ -877,8 +884,6 @@
         document.title = `${content.title} | Simulateur`;
         document.querySelector("#tool-page-title").textContent = content.title;
         document.querySelector(".tool-card-title h2").textContent = content.chartTitle;
-        document.querySelector("#table-note").textContent = `${rows.length} années`;
-        document.querySelector("#pie-note").textContent = `Année ${rows.length}`;
         renderSummary(rows);
         renderChart(rows);
         renderPie(rows);
@@ -890,15 +895,30 @@
         renderOutputs();
       }
 
+      document.querySelector("#reset-fields").addEventListener("click", () => {
+        const values = state.values[state.mode];
+        fieldDefinitions[state.mode].forEach((field) => {
+          if (field.type === "number") values[field.key] = 0;
+        });
+        withHeightTransition(document.querySelector(".tool-params"), render);
+      });
+
       document.querySelectorAll(".tool-view-toggle button").forEach((button) => {
         button.addEventListener("click", () => {
-          state.view = button.dataset.view;
-          document.querySelectorAll(".tool-view-toggle button").forEach((item) => {
-            item.classList.toggle("is-active", item === button);
-          });
-          document.querySelector("#chart-panel").hidden = state.view !== "chart";
-          document.querySelector("#pie-panel").hidden = state.view !== "pie";
-          document.querySelector("#table-panel").hidden = state.view !== "table";
+          const applyView = () => {
+            state.view = button.dataset.view;
+            document.querySelectorAll(".tool-view-toggle button").forEach((item) => {
+              item.classList.toggle("is-active", item === button);
+            });
+            document.querySelector("#chart-panel").hidden = state.view !== "chart";
+            document.querySelector("#pie-panel").hidden = state.view !== "pie";
+            document.querySelector("#table-panel").hidden = state.view !== "table";
+          };
+          if (document.startViewTransition) {
+            document.startViewTransition(applyView);
+          } else {
+            applyView();
+          }
         });
       });
 
