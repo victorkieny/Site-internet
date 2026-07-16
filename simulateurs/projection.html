@@ -17,16 +17,7 @@
       </nav>
       <nav class="tool-nav" aria-label="Navigation du simulateur">
         <h1 id="tool-page-title">Assurance Vie</h1>
-        <div class="tool-export">
-          <input type="text" id="client-name" class="tool-export-client" placeholder="Nom du client (optionnel)" autocomplete="off">
-          <button type="button" id="export-pdf" class="tool-export-pdf">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"></path><path d="M7 10l5 5 5-5"></path><path d="M5 21h14"></path></svg>
-            Exporter en PDF
-          </button>
-        </div>
       </nav>
-
-      <div id="print-report" class="print-report" aria-hidden="true"></div>
 
       <section class="tool-layout">
         <section class="tool-overview" aria-label="Synthèse et hypothèses">
@@ -900,7 +891,6 @@
         renderChart(rows);
         renderPie(rows);
         renderTable(rows);
-        renderPrintReport(rows);
       }
 
       function render() {
@@ -933,14 +923,6 @@
             applyView();
           }
         });
-      });
-
-      document.querySelector("#client-name").addEventListener("input", () => {
-        renderPrintReport(rowsForMode());
-      });
-
-      document.querySelector("#export-pdf").addEventListener("click", () => {
-        window.print();
       });
 
       render();
