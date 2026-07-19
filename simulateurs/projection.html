@@ -46,6 +46,9 @@
             <button type="button" data-view="table" aria-label="Calendrier" title="Calendrier">
               <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg>
             </button>
+            <button type="button" data-view="fiscal" id="fiscal-view-button" aria-label="Fiscalité" title="Fiscalité" hidden>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="19" y1="5" x2="5" y2="19"></line><circle cx="7" cy="7" r="2.4"></circle><circle cx="17" cy="17" r="2.4"></circle></svg>
+            </button>
           </div>
 
           <div class="tool-detail-panels">
@@ -69,6 +72,12 @@
                 <table id="projection-table"></table>
               </div>
             </div>
+            <div class="tool-fiscal-card" id="fiscal-panel" hidden>
+              <div class="tool-card-title">
+                <h2>Fiscalité des loyers</h2>
+              </div>
+              <div class="fiscal-view" id="fiscal" aria-label="Impact de la fiscalité selon l'origine des parts"></div>
+            </div>
           </div>
         </section>
       </section>
@@ -86,6 +95,10 @@
       }).format(Math.round(value || 0));
 
       const roundToHundred = (value) => Math.round((value || 0) / 100) * 100;
+
+      const formatPercent = (value) => new Intl.NumberFormat("fr-FR", {
+        maximumFractionDigits: 1
+      }).format(value || 0);
 
       function niceStep(range, targetCount) {
         const rawStep = range / Math.max(1, targetCount);
@@ -131,7 +144,8 @@
           versementMensuel: 750,
           dureeVersements: 25,
           dureeTotale: 50,
-          reinvestir: false
+          reinvestir: false,
+          tmi: 30
         },
         av: {
           capitalInitial: 10000,
@@ -164,7 +178,8 @@
         mode: initialMode,
         view: "chart",
         values: structuredClone(defaults),
-        previousGauge: {}
+        previousGauge: {},
+        scpiShowCapital: false
       };
 
       const modeContent = {
@@ -177,8 +192,8 @@
         scpi: {
           label: "SCPI",
           title: "SCPI",
-          description: "Projection du capital investi et des revenus potentiels générés par les parts.",
-          chartTitle: "Capital et revenus"
+          description: "Projection des loyers perçus par mois et par an, et de leur progression dans le temps.",
+          chartTitle: "Loyers perçus"
         },
         per: {
           label: "PER",
@@ -224,6 +239,24 @@
           });
         }
         return rows;
+      }
+
+      // Argent réellement apporté par l'investisseur (hors loyers réinvestis), pour
+      // pouvoir comparer "ce qu'il a versé" à "ce que la SCPI lui a rapporté".
+      function scpiApportsSeries(values, rows) {
+        let cumule = 0;
+        return rows.map((row, index) => {
+          cumule += (index === 0 ? values.versementInitial : 0) + row.versementAnnuel;
+          return cumule;
+        });
+      }
+
+      // Première année où les loyers cumulés remboursent la totalité des apports.
+      function scpiBreakEvenYear(rows, apportsSeries) {
+        for (let index = 0; index < rows.length; index++) {
+          if (rows[index].revenusCumules >= apportsSeries[index]) return rows[index].annee;
+        }
+        return null;
       }
 
       function computeAssuranceVie(values) {
@@ -291,12 +324,12 @@
 
       const fieldDefinitions = {
         scpi: [
-          { key: "rendement", label: "Taux de rendement", type: "number", min: 0, max: 15, step: 0.1, suffix: "%" },
+          { key: "rendement", label: "Taux de distribution", type: "number", min: 0, max: 15, step: 0.1, suffix: "%" },
           { key: "versementInitial", label: "Versement initial", type: "number", min: 0, max: 500000, step: 1000, suffix: "€" },
-          { key: "versementMensuel", label: "Versement mensuel", type: "number", min: 0, max: 10000, step: 50, suffix: "€" },
+          { key: "versementMensuel", label: "Versement mensuel", type: "number", min: 0, max: 5000, step: 50, suffix: "€", note: (values) => `Versement annuel : ${formatMoney(values.versementMensuel * 12)}` },
           { key: "dureeVersements", label: "Durée des versements", type: "number", min: 1, max: 50, step: 1, suffix: "ans" },
-          { key: "dureeTotale", label: "Durée totale", type: "number", min: 1, max: 60, step: 1, suffix: "ans" },
-          { key: "reinvestir", label: "Réinvestir les loyers", type: "checkbox" }
+          { key: "dureeTotale", label: "Durée totale", type: "number", min: 1, max: 80, step: 1, suffix: "ans" },
+          { key: "reinvestir", label: "Réinvestir les loyers", type: "checkbox", checkedNote: "Les loyers sont réinjectés dans le capital chaque année." }
         ],
         av: [
           { key: "capitalInitial", label: "Versement initial", type: "number", min: 0, max: 500000, step: 1000, suffix: "€" },
@@ -427,10 +460,25 @@
           range.step = field.step;
           range.value = values[field.key];
           updateRangeProgress(range);
+
+          const note = field.note ? document.createElement("small") : null;
+          const updateNote = () => {
+            if (!note) return;
+            note.textContent = typeof field.note === "function" ? field.note(values) : field.note;
+          };
+          const updatePresets = () => {
+            if (!presetRow) return;
+            presetRow.querySelectorAll(".tool-preset").forEach((button) => {
+              button.classList.toggle("is-active", values[field.key] === Number(button.dataset.value));
+            });
+          };
+
           input.addEventListener("input", () => {
             values[field.key] = parseInputNumber(input.value);
             range.value = values[field.key];
             updateRangeProgress(range);
+            updateNote();
+            updatePresets();
             renderOutputs();
           });
           input.addEventListener("blur", () => {
@@ -440,13 +488,48 @@
             values[field.key] = Number(range.value || 0);
             input.value = formatInputNumber(values[field.key]);
             updateRangeProgress(range);
+            updateNote();
+            updatePresets();
             renderOutputs();
           });
           const suffix = document.createElement("small");
           suffix.textContent = field.suffix;
           control.append(input, suffix);
           label.append(control);
+
+          let presetRow = null;
+          if (field.presets) {
+            presetRow = document.createElement("div");
+            presetRow.className = "tool-presets";
+            field.presets.forEach((preset) => {
+              const button = document.createElement("button");
+              button.type = "button";
+              button.className = "tool-preset";
+              button.dataset.value = preset;
+              button.textContent = `${preset} ${field.suffix}`;
+              button.classList.toggle("is-active", values[field.key] === preset);
+              button.addEventListener("click", () => {
+                values[field.key] = preset;
+                input.value = formatInputNumber(values[field.key]);
+                range.value = values[field.key];
+                updateRangeProgress(range);
+                updateNote();
+                updatePresets();
+                renderOutputs();
+              });
+              presetRow.append(button);
+            });
+            label.append(presetRow);
+          }
+
           label.append(range);
+
+          if (note) {
+            note.className = "tool-field-note";
+            updateNote();
+            label.append(note);
+          }
+
           return label;
         };
 
@@ -533,6 +616,13 @@
           label.append(input);
 
           fields.append(label);
+
+          if (field.checkedNote && values[field.key]) {
+            const note = document.createElement("small");
+            note.className = "tool-field-note";
+            note.textContent = field.checkedNote;
+            fields.append(note);
+          }
         });
 
         if (state.mode === "av") renderFees();
@@ -603,31 +693,79 @@
           return;
         }
 
-        let items;
-
         if (state.mode === "scpi") {
-          items = [
-            ["Capital final", formatMoney(last.capital)],
-            ["Versements cumulés", formatMoney(last.versementsCumules)],
-            ["Revenus cumulés", formatMoney(last.revenusCumules)],
-            [`Revenu mensuel an ${state.values.scpi.dureeTotale}`, formatMoney(last.revenuMensuel)]
-          ];
-        } else if (state.mode === "av") {
-          const ratio = last.versementsCumules > 0 ? (last.capital / last.versementsCumules).toFixed(2) : "—";
-          items = [
-            ["Capital final", formatMoney(last.capital)],
-            ["Versements cumulés", formatMoney(last.versementsCumules)],
-            ["Intérêts cumulés", formatMoney(last.interetsCumules)],
-            ["Capital / versements", `× ${ratio}`]
-          ];
-        } else {
-          items = [
-            ["Capital final", formatMoney(last.capital)],
-            ["Versements cumulés", formatMoney(last.versementsCumules)],
-            ["Gains cumulés", formatMoney(last.gainsCumules)],
-            [state.values.per.renteActive ? "Rente mensuelle estimée" : `Gains an ${state.values.per.dureeTotale}`, formatMoney(state.values.per.renteActive ? last.renteMensuelle : last.gainsAnnuels)]
-          ];
+          const values = state.values.scpi;
+          const loyerMensuelFin = last.revenuMensuel || 0;
+          const totalLoyers = last.revenusCumules || 0;
+          const effortMensuel = values.versementMensuel;
+          const total = effortMensuel + loyerMensuelFin || 1;
+          const effortShare = Math.max(0, Math.min(100, (effortMensuel / total) * 100));
+          const revenuShare = Math.max(0, 100 - effortShare);
+          const previousGauge = state.previousGauge.scpi || { effortShare, revenuShare };
+          const multiple = effortMensuel > 0 ? loyerMensuelFin / effortMensuel : 0;
+          const annualRate = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 1 }).format(values.rendement);
+          const loyerAmount = formatMoney(loyerMensuelFin).replace(/\s?€$/, "");
+
+          summary.innerHTML = `
+            <article class="tool-result-card tool-result-editorial">
+              <div class="capital-heading">
+                <div>
+                  <span>Revenu mensuel viager</span>
+                  <strong class="capital-amount value-update"><span>${loyerAmount}</span><span class="capital-currency">€/mois</span></strong>
+                </div>
+                <div class="capital-multiple">
+                  <span>Vs. effort mensuel</span>
+                  <strong class="value-update">× ${multiple.toFixed(2)}</strong>
+                </div>
+              </div>
+              <div class="capital-gauge">
+                <div class="capital-breakdown-labels">
+                  <span class="capital-metric-invested">Effort d'épargne</span>
+                  <span class="capital-metric-interest">Revenu viager obtenu</span>
+                </div>
+                <div class="capital-breakdown" aria-label="Comparaison entre l'effort d'épargne et le revenu viager obtenu">
+                  <div style="width:${previousGauge.effortShare}%"></div>
+                  <div style="width:${previousGauge.revenuShare}%"></div>
+                </div>
+              </div>
+              <div class="capital-metrics">
+                <span class="capital-metric-invested"><small>Effort d'épargne (${values.dureeVersements} ans)</small><strong class="value-update">${formatMoney(effortMensuel)} / mois</strong></span>
+                <span class="capital-metric-interest"><small>Revenu viager obtenu</small><strong class="value-update">${formatMoney(loyerMensuelFin)} / mois</strong></span>
+              </div>
+              <div class="capital-shares">
+                <span><small>Part du revenu viager</small><strong class="value-update">${formatNumber(revenuShare)} %</strong></span>
+                <span><small>Total des loyers perçus</small><strong class="value-update">${formatMoney(totalLoyers)}</strong></span>
+              </div>
+              <div class="capital-insight">
+                <div class="capital-visual" aria-label="Répartition visuelle entre l'effort d'épargne et le revenu viager">
+                  <span style="width:${effortShare}%"></span>
+                  <span style="width:${revenuShare}%"></span>
+                </div>
+                <p>
+                  En épargnant ${formatMoney(values.versementInitial)} aujourd'hui puis ${formatMoney(effortMensuel)}
+                  par mois pendant ${formatNumber(values.dureeVersements)} ans, à un taux de distribution de ${annualRate} %,
+                  vous vous constituez en année ${values.dureeTotale} un complément de revenu mensuel viager d'environ
+                  ${formatMoney(loyerMensuelFin)}, soit ${multiple.toFixed(2)}× votre effort d'épargne mensuel.
+                </p>
+              </div>
+            </article>
+          `;
+          state.previousGauge.scpi = { effortShare, revenuShare };
+          requestAnimationFrame(() => {
+            const [effortBar, revenuBar] = summary.querySelectorAll(".capital-breakdown > div");
+            if (!effortBar || !revenuBar) return;
+            effortBar.style.width = `${effortShare}%`;
+            revenuBar.style.width = `${revenuShare}%`;
+          });
+          return;
         }
+
+        const items = [
+          ["Capital final", formatMoney(last.capital)],
+          ["Versements cumulés", formatMoney(last.versementsCumules)],
+          ["Gains cumulés", formatMoney(last.gainsCumules)],
+          [state.values.per.renteActive ? "Rente mensuelle estimée" : `Gains an ${state.values.per.dureeTotale}`, formatMoney(state.values.per.renteActive ? last.renteMensuelle : last.gainsAnnuels)]
+        ];
 
         summary.innerHTML = items.map(([label, value]) => `
           <article class="tool-result-card">
@@ -637,13 +775,215 @@
         `).join("");
       }
 
-      function renderChart(rows) {
+      function renderBreakEvenChart(rows) {
         const chart = document.querySelector("#chart");
         const width = 960;
         const height = 380;
         const pad = { top: 28, right: 36, bottom: 54, left: 128 };
-        const metric = state.mode === "scpi" ? "revenusCumules" : state.mode === "av" ? "interetsCumules" : "gainsCumules";
-        const metricLabel = state.mode === "scpi" ? "Revenus cumulés" : state.mode === "av" ? "Intérêts gagnés" : "Gains cumulés";
+        const values = state.values.scpi;
+
+        const apportsSeries = scpiApportsSeries(values, rows);
+        const loyersSeries = rows.map((row) => row.revenusCumules || 0);
+        const capitalSeries = rows.map((row) => row.capital || 0);
+        const breakEvenYear = scpiBreakEvenYear(rows, apportsSeries);
+        const breakEvenIndex = breakEvenYear ? rows.findIndex((row) => row.annee === breakEvenYear) : -1;
+
+        const scaleSeries = state.scpiShowCapital ? [...apportsSeries, ...loyersSeries, ...capitalSeries] : [...apportsSeries, ...loyersSeries];
+        const max = Math.max(...scaleSeries, 1);
+        const x = (index) => pad.left + (index / Math.max(rows.length - 1, 1)) * (width - pad.left - pad.right);
+        const y = (value) => height - pad.bottom - (value / max) * (height - pad.top - pad.bottom);
+        const pointsFor = (series) => series.map((value, index) => `${x(index)},${y(value)}`).join(" ");
+        const areaBetween = (lowerSeries, upperSeries, from, to) => {
+          if (to <= from) return "";
+          const top = [];
+          const bottom = [];
+          for (let i = from; i <= to; i++) top.push(`${x(i)},${y(upperSeries[i])}`);
+          for (let i = to; i >= from; i--) bottom.push(`${x(i)},${y(lowerSeries[i])}`);
+          return `M${top.join(" L")} L${bottom.join(" L")} Z`;
+        };
+
+        const splitAt = breakEvenIndex >= 0 ? breakEvenIndex : rows.length - 1;
+        const deficitPath = areaBetween(loyersSeries, apportsSeries, 0, splitAt);
+        const surplusPath = breakEvenIndex >= 0 ? areaBetween(apportsSeries, loyersSeries, splitAt, rows.length - 1) : "";
+
+        const grid = niceValueTicks(max, 4).map((value) => {
+          const lineY = y(value);
+          return `
+            <g>
+              <line x1="${pad.left}" y1="${lineY}" x2="${width - pad.right}" y2="${lineY}" />
+              <text x="${pad.left - 16}" y="${lineY + 5}">${formatMoney(value)}</text>
+            </g>
+          `;
+        }).join("");
+        const ticks = niceYearTicks(rows.length).map((annee) => {
+          const tickX = x(annee - 1);
+          return `<text x="${tickX}" y="${height - 10}">${annee}</text>`;
+        }).join("");
+
+        let marker = "";
+        if (breakEvenIndex >= 0) {
+          const markerX = x(breakEvenIndex);
+          const markerY = y(loyersSeries[breakEvenIndex]);
+          const plotWidth = width - pad.left - pad.right;
+          const labelAnchor = (markerX - pad.left) > plotWidth / 2 ? "end" : "start";
+          const labelX = markerX + (labelAnchor === "end" ? -10 : 10);
+          marker = `
+            <g class="chart-marker">
+              <line class="chart-marker-line" x1="${markerX}" y1="${pad.top}" x2="${markerX}" y2="${height - pad.bottom}"></line>
+              <circle class="chart-marker-dot" cx="${markerX}" cy="${markerY}" r="5"></circle>
+              <text class="chart-marker-label" x="${labelX}" y="${pad.top + 14}" text-anchor="${labelAnchor}">Point de bascule — année ${breakEvenYear}</text>
+            </g>
+          `;
+        }
+
+        const last = rows.at(-1) || {};
+
+        chart.innerHTML = `
+          <div class="chart-totals">
+            <span>Point de bascule <strong>${breakEvenYear ? `Année ${breakEvenYear}` : "Non atteint"}</strong></span>
+            <span class="capital-metric-invested">Total versé <strong>${formatMoney(apportsSeries.at(-1))}</strong></span>
+            <span class="capital-metric-interest">Total des loyers perçus <strong>${formatMoney(last.revenusCumules)}</strong></span>
+          </div>
+          <div class="chart-toggle">
+            <label>
+              <input type="checkbox" id="toggle-capital-line" ${state.scpiShowCapital ? "checked" : ""}>
+              <span>Afficher la valeur du capital</span>
+            </label>
+          </div>
+          <div class="chart-canvas">
+            <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Comparaison entre le total versé et le total des loyers perçus">
+              <defs>
+                <linearGradient id="chartAreaInvested" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#6f8ba7" stop-opacity="0.5"></stop>
+                  <stop offset="100%" stop-color="#6f8ba7" stop-opacity="0.05"></stop>
+                </linearGradient>
+                <linearGradient id="chartAreaGains" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#b99761" stop-opacity="0.55"></stop>
+                  <stop offset="100%" stop-color="#b99761" stop-opacity="0.08"></stop>
+                </linearGradient>
+              </defs>
+              <g class="chart-grid">${grid}</g>
+              <path class="chart-area chart-area-invested" d="${deficitPath}"></path>
+              <path class="chart-area chart-area-gains" d="${surplusPath}"></path>
+              <polyline class="chart-line chart-line-invested" points="${pointsFor(apportsSeries)}"></polyline>
+              <polyline class="chart-line chart-line-gains" points="${pointsFor(loyersSeries)}"></polyline>
+              ${state.scpiShowCapital ? `<polyline class="chart-line chart-line-capital" points="${pointsFor(capitalSeries)}"></polyline>` : ""}
+              <g class="chart-axis">${ticks}</g>
+              ${marker}
+              <g class="chart-hover">
+                <line class="chart-hover-line" x1="0" y1="${pad.top}" x2="0" y2="${height - pad.bottom}"></line>
+                <circle class="chart-hover-dot chart-hover-dot-invested" r="4"></circle>
+                <circle class="chart-hover-dot chart-hover-dot-gains" r="4"></circle>
+                ${state.scpiShowCapital ? `<circle class="chart-hover-dot chart-hover-dot-capital" r="4"></circle>` : ""}
+              </g>
+            </svg>
+            <div class="chart-tooltip">
+              <span class="chart-tooltip-year"></span>
+              <div class="chart-tooltip-row chart-tooltip-invested"><small>Total versé</small><strong></strong></div>
+              <div class="chart-tooltip-row chart-tooltip-gains"><small>Total loyers perçus</small><strong></strong></div>
+              ${state.scpiShowCapital ? `<div class="chart-tooltip-row chart-tooltip-capital"><small>Valeur du capital</small><strong></strong></div>` : ""}
+            </div>
+          </div>
+          <div class="chart-legend">
+            <span><i class="legend-invested"></i>Total versé</span>
+            <span><i class="legend-gains"></i>Total des loyers perçus</span>
+            ${state.scpiShowCapital ? `<span><i class="legend-capital"></i>Valeur du capital</span>` : ""}
+          </div>
+        `;
+
+        chart.querySelector("#toggle-capital-line").addEventListener("change", (event) => {
+          state.scpiShowCapital = event.target.checked;
+          renderBreakEvenChart(rows);
+        });
+
+        setupBreakEvenHover(chart, rows, { x, y, pad, width, apportsSeries, loyersSeries, capitalSeries });
+      }
+
+      function setupBreakEvenHover(chart, rows, ctx) {
+        const svg = chart.querySelector("svg");
+        const canvas = chart.querySelector(".chart-canvas");
+        const hoverGroup = chart.querySelector(".chart-hover");
+        const hoverLine = chart.querySelector(".chart-hover-line");
+        const hoverDotApports = chart.querySelector(".chart-hover-dot-invested");
+        const hoverDotLoyers = chart.querySelector(".chart-hover-dot-gains");
+        const hoverDotCapital = chart.querySelector(".chart-hover-dot-capital");
+        const tooltip = chart.querySelector(".chart-tooltip");
+        const tooltipYear = chart.querySelector(".chart-tooltip-year");
+        const tooltipApports = chart.querySelector(".chart-tooltip-invested strong");
+        const tooltipLoyers = chart.querySelector(".chart-tooltip-gains strong");
+        const tooltipCapital = chart.querySelector(".chart-tooltip-capital strong");
+        if (!svg || !rows.length) return;
+
+        hoverGroup.style.display = "none";
+        tooltip.hidden = true;
+
+        const updateAt = (clientX, clientY) => {
+          const point = svg.createSVGPoint();
+          point.x = clientX;
+          point.y = clientY;
+          const ctm = svg.getScreenCTM();
+          if (!ctm) return;
+          const local = point.matrixTransform(ctm.inverse());
+          const ratio = (local.x - ctx.pad.left) / (ctx.width - ctx.pad.left - ctx.pad.right);
+          const index = Math.max(0, Math.min(rows.length - 1, Math.round(ratio * (rows.length - 1))));
+          const row = rows[index];
+          const px = ctx.x(index);
+          const apportsY = ctx.y(ctx.apportsSeries[index]);
+          const loyersY = ctx.y(ctx.loyersSeries[index]);
+
+          hoverGroup.style.display = "";
+          hoverLine.setAttribute("x1", px);
+          hoverLine.setAttribute("x2", px);
+          hoverDotApports.setAttribute("cx", px);
+          hoverDotApports.setAttribute("cy", apportsY);
+          hoverDotLoyers.setAttribute("cx", px);
+          hoverDotLoyers.setAttribute("cy", loyersY);
+          if (hoverDotCapital) {
+            hoverDotCapital.setAttribute("cx", px);
+            hoverDotCapital.setAttribute("cy", ctx.y(ctx.capitalSeries[index]));
+          }
+
+          tooltipYear.textContent = `Année ${row.annee}`;
+          tooltipApports.textContent = formatMoney(roundToHundred(ctx.apportsSeries[index]));
+          tooltipLoyers.textContent = formatMoney(roundToHundred(ctx.loyersSeries[index]));
+          if (tooltipCapital) tooltipCapital.textContent = formatMoney(roundToHundred(ctx.capitalSeries[index]));
+
+          const screenPoint = svg.createSVGPoint();
+          screenPoint.x = px;
+          screenPoint.y = Math.min(apportsY, loyersY);
+          const screenPos = screenPoint.matrixTransform(ctm);
+          const canvasRect = canvas.getBoundingClientRect();
+          tooltip.hidden = false;
+          tooltip.style.left = `${screenPos.x - canvasRect.left}px`;
+          tooltip.style.top = `${screenPos.y - canvasRect.top}px`;
+        };
+
+        const hide = () => {
+          hoverGroup.style.display = "none";
+          tooltip.hidden = true;
+        };
+
+        svg.addEventListener("mousemove", (event) => updateAt(event.clientX, event.clientY));
+        svg.addEventListener("mouseleave", hide);
+        svg.addEventListener("touchmove", (event) => {
+          const touch = event.touches[0];
+          if (touch) updateAt(touch.clientX, touch.clientY);
+        }, { passive: true });
+        svg.addEventListener("touchend", hide);
+      }
+
+      function renderChart(rows) {
+        if (state.mode === "scpi") {
+          renderBreakEvenChart(rows);
+          return;
+        }
+
+        const chart = document.querySelector("#chart");
+        const width = 960;
+        const height = 380;
+        const pad = { top: 28, right: 36, bottom: 54, left: 128 };
+        const metric = state.mode === "av" ? "interetsCumules" : "gainsCumules";
+        const metricLabel = state.mode === "av" ? "Intérêts gagnés" : "Gains cumulés";
 
         const investedSeries = rows.map((row) => Math.max(0, row.versementsCumules || 0));
         const capitalSeries = rows.map((row, i) => Math.max(investedSeries[i], row.capital || 0));
@@ -792,7 +1132,7 @@
         const panel = document.querySelector("#pie");
         const last = rows.at(-1) || {};
         const metric = state.mode === "scpi" ? "revenusCumules" : state.mode === "av" ? "interetsCumules" : "gainsCumules";
-        const metricLabel = state.mode === "scpi" ? "Revenus cumulés" : state.mode === "av" ? "Intérêts gagnés" : "Gains cumulés";
+        const metricLabel = state.mode === "scpi" ? "Loyers cumulés" : state.mode === "av" ? "Intérêts gagnés" : "Gains cumulés";
 
         const invested = Math.max(0, last.versementsCumules || 0);
         const gains = Math.max(0, last[metric] || 0);
@@ -860,13 +1200,19 @@
         `;
       }
 
+      const SCPI_TABLE_YEARS = [1, 2, 3, 4, 5, 10, 15, 20, 30, 40, 50, 60, 70, 80];
+
       function renderTable(rows) {
         const table = document.querySelector("#projection-table");
         let headers;
         let mapper;
+        let displayRows = rows;
         if (state.mode === "scpi") {
-          headers = ["Année", "Versements", "Revenu mensuel", "Revenus cumulés", "Capital"];
-          mapper = (row) => [row.annee, formatMoney(row.versementsCumules), formatMoney(row.revenuMensuel), formatMoney(row.revenusCumules), formatMoney(row.capital)];
+          headers = ["Année", "Versements", "Loyer mensuel", "Loyer annuel", "Loyers cumulés", "Capital"];
+          mapper = (row) => [row.annee, formatMoney(row.versementsCumules), formatMoney(row.revenuMensuel), formatMoney(row.revenuAnnuel), formatMoney(row.revenusCumules), formatMoney(row.capital)];
+          const milestones = new Set(SCPI_TABLE_YEARS.filter((year) => year <= rows.length));
+          if (rows.length) milestones.add(rows.length);
+          displayRows = rows.filter((row) => milestones.has(row.annee));
         } else if (state.mode === "av") {
           headers = ["Année", "Versements", "Intérêts annuels", "Intérêts cumulés", "Capital"];
           mapper = (row) => [row.annee, formatMoney(row.versementsCumules), formatMoney(row.interetsAnnuels), formatMoney(row.interetsCumules), formatMoney(row.capital)];
@@ -877,8 +1223,127 @@
 
         table.innerHTML = `
           <thead><tr>${headers.map((head) => `<th>${head}</th>`).join("")}</tr></thead>
-          <tbody>${rows.map((row) => `<tr>${mapper(row).map((cell) => `<td>${cell}</td>`).join("")}</tr>`).join("")}</tbody>
+          <tbody>${displayRows.map((row) => `<tr>${mapper(row).map((cell) => `<td>${cell}</td>`).join("")}</tr>`).join("")}</tbody>
         `;
+      }
+
+      const PS_RATE = 17.2;
+      const TMI_BRACKETS = [0, 11, 30, 41, 45];
+
+      function computeFiscalImpact(revenuAnnuelBrut, tmi) {
+        const irAmount = revenuAnnuelBrut * (tmi / 100);
+        const psAmount = revenuAnnuelBrut * (PS_RATE / 100);
+        return {
+          francaise: {
+            irShare: tmi,
+            psShare: PS_RATE,
+            irAmount,
+            psAmount,
+            totalRate: tmi + PS_RATE,
+            net: revenuAnnuelBrut - irAmount - psAmount
+          },
+          etrangere: {
+            irShare: tmi,
+            psShare: 0,
+            irAmount,
+            psAmount: 0,
+            totalRate: tmi,
+            net: revenuAnnuelBrut - irAmount
+          }
+        };
+      }
+
+      function fiscalDonut(irShare, psShare, label) {
+        const size = 176;
+        const strokeWidth = 22;
+        const radius = (size - strokeWidth) / 2;
+        const circumference = 2 * Math.PI * radius;
+        const gap = 5;
+        let cursor = 0;
+        const parts = [
+          { share: irShare, className: "fiscal-donut-ir" },
+          { share: psShare, className: "fiscal-donut-ps" }
+        ];
+        const circles = parts.map((part) => {
+          if (part.share <= 0) return "";
+          const full = (part.share / 100) * circumference;
+          const hasGap = part.share < 100;
+          const drawn = Math.max(0, full - (hasGap ? gap : 0));
+          const offset = cursor + (hasGap ? gap / 2 : 0);
+          cursor += full;
+          return `<circle class="fiscal-donut-segment ${part.className}" cx="${size / 2}" cy="${size / 2}" r="${radius}" stroke-width="${strokeWidth}" stroke-dasharray="${drawn} ${circumference - drawn}" stroke-dashoffset="${-offset}"></circle>`;
+        }).join("");
+        return `
+          <svg viewBox="0 0 ${size} ${size}" class="fiscal-donut" role="img" aria-label="${label}">
+            <circle class="fiscal-donut-track" cx="${size / 2}" cy="${size / 2}" r="${radius}" stroke-width="${strokeWidth}"></circle>
+            ${circles}
+          </svg>
+        `;
+      }
+
+      function fiscalCard(title, data, hasPS) {
+        return `
+          <div class="fiscal-card${hasPS ? "" : " fiscal-card-foreign"}">
+            <h3>${title}</h3>
+            <div class="fiscal-donut-wrap">
+              ${fiscalDonut(data.irShare, data.psShare, `Taux d'imposition : ${formatPercent(data.totalRate)} %`)}
+              <div class="fiscal-donut-center">
+                <strong>${formatPercent(data.totalRate)} %</strong>
+                <span>imposition</span>
+              </div>
+            </div>
+            <ul class="fiscal-breakdown">
+              <li class="fiscal-line-ir"><span>Impôt sur le revenu (${formatPercent(data.irShare)} %)</span><strong>${formatMoney(data.irAmount)}</strong></li>
+              <li class="fiscal-line-ps${hasPS ? "" : " fiscal-line-void"}"><span>Prélèvements sociaux${hasPS ? ` (${formatPercent(PS_RATE)} %)` : ""}</span><strong>${hasPS ? formatMoney(data.psAmount) : "Supprimés"}</strong></li>
+              <li class="fiscal-line-net"><span>Loyer net</span><strong>${formatMoney(data.net)}</strong></li>
+            </ul>
+          </div>
+        `;
+      }
+
+      function renderFiscal(rows) {
+        const panel = document.querySelector("#fiscal");
+        const values = state.values.scpi;
+        const last = rows.at(-1) || {};
+        const revenuAnnuelBrut = last.revenuAnnuel || 0;
+        const impact = computeFiscalImpact(revenuAnnuelBrut, values.tmi);
+        const gainAnnuel = impact.francaise.psAmount;
+
+        panel.innerHTML = `
+          <p class="fiscal-intro">
+            Illustration sur le loyer annuel brut de l'année ${rows.length} (${formatMoney(revenuAnnuelBrut)}), selon votre tranche marginale d'imposition.
+          </p>
+          <div class="fiscal-tmi">
+            <span>Tranche marginale d'imposition (TMI)</span>
+            <div class="tool-presets">
+              ${TMI_BRACKETS.map((t) => `<button type="button" class="tool-preset${values.tmi === t ? " is-active" : ""}" data-tmi="${t}">${t} %</button>`).join("")}
+            </div>
+          </div>
+          <div class="fiscal-compare">
+            ${fiscalCard("SCPI françaises", impact.francaise, true)}
+            ${fiscalCard("SCPI européennes / étrangères", impact.etrangere, false)}
+          </div>
+          <div class="fiscal-gain">
+            <p>
+              En optant pour des SCPI de sources étrangères (zone européenne, via convention fiscale), vous économiseriez environ
+              <strong>${formatMoney(gainAnnuel)}</strong> par an de prélèvements sociaux sur ce loyer, soit
+              <strong>${formatMoney(gainAnnuel / 12)}</strong> de plus par mois dans votre poche, à rendement égal.
+            </p>
+          </div>
+          <p class="fiscal-disclaimer">
+            Simplification illustrative du mécanisme du taux effectif applicable à certaines SCPI investies hors de France
+            (Allemagne, Pays-Bas, Espagne…) : selon la convention fiscale applicable, les prélèvements sociaux ne s'appliquent
+            pas aux revenus fonciers de source étrangère, seul l'impôt sur le revenu reste dû. Cette estimation ne remplace
+            pas une étude fiscale personnalisée.
+          </p>
+        `;
+
+        panel.querySelectorAll(".tool-preset").forEach((button) => {
+          button.addEventListener("click", () => {
+            values.tmi = Number(button.dataset.tmi);
+            renderFiscal(rows);
+          });
+        });
       }
 
       function renderOutputs() {
@@ -891,6 +1356,7 @@
         renderChart(rows);
         renderPie(rows);
         renderTable(rows);
+        if (state.mode === "scpi") renderFiscal(rows);
       }
 
       function render() {
@@ -906,6 +1372,10 @@
         withHeightTransition(document.querySelector(".tool-params"), render);
       });
 
+      if (state.mode === "scpi") {
+        document.querySelector("#fiscal-view-button").hidden = false;
+      }
+
       document.querySelectorAll(".tool-view-toggle button").forEach((button) => {
         button.addEventListener("click", () => {
           const applyView = () => {
@@ -916,6 +1386,7 @@
             document.querySelector("#chart-panel").hidden = state.view !== "chart";
             document.querySelector("#pie-panel").hidden = state.view !== "pie";
             document.querySelector("#table-panel").hidden = state.view !== "table";
+            document.querySelector("#fiscal-panel").hidden = state.view !== "fiscal";
           };
           if (document.startViewTransition) {
             document.startViewTransition(applyView);
