@@ -1369,6 +1369,10 @@ h3 {
   margin-top: calc(12px - clamp(14px, 1.65vw, 20px));
 }
 
+.scpi-flow + .capital-shares {
+  margin-top: 0;
+}
+
 .capital-shares span {
   padding-block: 10px;
   background: rgba(255, 253, 250, 0.34);
@@ -1423,6 +1427,135 @@ h3 {
 
 .capital-visual span:last-child {
   background: linear-gradient(90deg, rgba(185, 151, 97, 0.88), rgba(223, 203, 168, 0.78));
+}
+
+.scpi-flow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.scpi-flow-step {
+  position: relative;
+  flex: 1;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 7px;
+  padding: 14px 14px;
+  border: 1px solid rgba(43, 37, 30, 0.07);
+  border-radius: 20px;
+  box-shadow: 0 16px 32px rgba(43, 37, 30, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.75);
+  text-align: center;
+}
+
+.scpi-flow-effort {
+  background:
+    linear-gradient(160deg, rgba(255, 253, 250, 0.7), rgba(111, 139, 167, 0.16)),
+    radial-gradient(circle at 0% 0%, rgba(111, 139, 167, 0.14), transparent 60%);
+}
+
+.scpi-flow-revenu {
+  background:
+    linear-gradient(160deg, rgba(255, 253, 250, 0.78), rgba(223, 203, 168, 0.4)),
+    radial-gradient(circle at 100% 0%, rgba(199, 174, 137, 0.3), transparent 62%);
+}
+
+.scpi-flow-label {
+  font-size: 0.8rem;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.scpi-flow-effort .scpi-flow-label {
+  color: var(--invested-blue);
+}
+
+.scpi-flow-revenu .scpi-flow-label {
+  color: var(--interest-gold);
+}
+
+.scpi-flow-duration {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 550;
+}
+
+.scpi-flow-forever {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--interest-gold);
+  font-size: 0.8rem;
+  font-weight: 560;
+}
+
+.scpi-infinity {
+  font-family: var(--serif);
+  font-size: 1.5em;
+  font-weight: 400;
+  line-height: 0;
+  transform: translateY(2px);
+}
+
+.scpi-flow-amount {
+  position: relative;
+  padding-bottom: 9px;
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: clamp(1.6rem, 2.9vw, 2.15rem);
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.scpi-flow-amount::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 52px;
+  height: 1px;
+  transform: translateX(-50%);
+}
+
+.scpi-flow-effort .scpi-flow-amount::after {
+  background: linear-gradient(90deg, rgba(111, 139, 167, 0), rgba(111, 139, 167, 0.65), rgba(111, 139, 167, 0));
+}
+
+.scpi-flow-revenu .scpi-flow-amount::after {
+  background: linear-gradient(90deg, rgba(185, 151, 97, 0), rgba(185, 151, 97, 0.8), rgba(185, 151, 97, 0));
+}
+
+.scpi-flow-amount small {
+  margin-left: 3px;
+  color: var(--muted);
+  font-family: var(--sans);
+  font-size: 0.56em;
+  font-weight: 500;
+}
+
+.scpi-flow-arrow {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #fffdfa, #eadfcd);
+  box-shadow: 0 8px 18px rgba(43, 37, 30, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  color: var(--button);
+}
+
+.scpi-flow-arrow svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .tool-view-toggle {
@@ -2576,6 +2709,14 @@ h3 {
 
   .capital-multiple span {
     transform-origin: left center;
+  }
+
+  .scpi-flow {
+    flex-direction: column;
+  }
+
+  .scpi-flow-arrow svg {
+    transform: rotate(90deg);
   }
 
   .tool-result-main {

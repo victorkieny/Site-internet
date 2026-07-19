@@ -141,8 +141,8 @@
         scpi: {
           rendement: 5,
           versementInitial: 10000,
-          versementMensuel: 750,
-          dureeVersements: 25,
+          versementMensuel: 300,
+          dureeVersements: 30,
           dureeTotale: 50,
           reinvestir: false,
           tmi: 30
@@ -223,7 +223,7 @@
           const revenuMensuel = revenuAnnuel / 12;
           revenusCumules += revenuAnnuel;
 
-          if (values.reinvestir) {
+          if (values.reinvestir && annee <= values.dureeVersements) {
             capital += revenuAnnuel;
             versementsCumules += revenuAnnuel;
           }
@@ -326,10 +326,10 @@
         scpi: [
           { key: "rendement", label: "Taux de distribution", type: "number", min: 0, max: 15, step: 0.1, suffix: "%" },
           { key: "versementInitial", label: "Versement initial", type: "number", min: 0, max: 500000, step: 1000, suffix: "€" },
-          { key: "versementMensuel", label: "Versement mensuel", type: "number", min: 0, max: 5000, step: 50, suffix: "€", note: (values) => `Versement annuel : ${formatMoney(values.versementMensuel * 12)}` },
+          { key: "versementMensuel", label: "Versement mensuel", type: "number", min: 0, max: 5000, step: 50, suffix: "€" },
           { key: "dureeVersements", label: "Durée des versements", type: "number", min: 1, max: 50, step: 1, suffix: "ans" },
           { key: "dureeTotale", label: "Durée totale", type: "number", min: 1, max: 80, step: 1, suffix: "ans" },
-          { key: "reinvestir", label: "Réinvestir les loyers", type: "checkbox", checkedNote: "Les loyers sont réinjectés dans le capital chaque année." }
+          { key: "reinvestir", label: "Réinvestir les loyers", type: "checkbox", checkedNote: "Les loyers sont réinjectés dans le capital pendant la période de versement, puis vous sont versés." }
         ],
         av: [
           { key: "capitalInitial", label: "Versement initial", type: "number", min: 0, max: 500000, step: 1000, suffix: "€" },
@@ -698,11 +698,6 @@
           const loyerMensuelFin = last.revenuMensuel || 0;
           const totalLoyers = last.revenusCumules || 0;
           const effortMensuel = values.versementMensuel;
-          const total = effortMensuel + loyerMensuelFin || 1;
-          const effortShare = Math.max(0, Math.min(100, (effortMensuel / total) * 100));
-          const revenuShare = Math.max(0, 100 - effortShare);
-          const previousGauge = state.previousGauge.scpi || { effortShare, revenuShare };
-          const multiple = effortMensuel > 0 ? loyerMensuelFin / effortMensuel : 0;
           const annualRate = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 1 }).format(values.rendement);
           const loyerAmount = formatMoney(loyerMensuelFin).replace(/\s?€$/, "");
 
@@ -713,50 +708,36 @@
                   <span>Revenu mensuel viager</span>
                   <strong class="capital-amount value-update"><span>${loyerAmount}</span><span class="capital-currency">€/mois</span></strong>
                 </div>
-                <div class="capital-multiple">
-                  <span>Vs. effort mensuel</span>
-                  <strong class="value-update">× ${multiple.toFixed(2)}</strong>
-                </div>
               </div>
-              <div class="capital-gauge">
-                <div class="capital-breakdown-labels">
-                  <span class="capital-metric-invested">Effort d'épargne</span>
-                  <span class="capital-metric-interest">Revenu viager obtenu</span>
+              <div class="scpi-flow" aria-label="De l'effort d'épargne au revenu viager">
+                <div class="scpi-flow-step scpi-flow-effort">
+                  <span class="scpi-flow-label">Épargne</span>
+                  <strong class="scpi-flow-amount value-update">${formatMoney(effortMensuel)}<small>/mois</small></strong>
+                  <span class="scpi-flow-duration">pendant ${values.dureeVersements} ans</span>
                 </div>
-                <div class="capital-breakdown" aria-label="Comparaison entre l'effort d'épargne et le revenu viager obtenu">
-                  <div style="width:${previousGauge.effortShare}%"></div>
-                  <div style="width:${previousGauge.revenuShare}%"></div>
+                <div class="scpi-flow-arrow" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M5 12h14"></path><path d="M13 6l6 6-6 6"></path></svg>
                 </div>
-              </div>
-              <div class="capital-metrics">
-                <span class="capital-metric-invested"><small>Effort d'épargne (${values.dureeVersements} ans)</small><strong class="value-update">${formatMoney(effortMensuel)} / mois</strong></span>
-                <span class="capital-metric-interest"><small>Revenu viager obtenu</small><strong class="value-update">${formatMoney(loyerMensuelFin)} / mois</strong></span>
+                <div class="scpi-flow-step scpi-flow-revenu">
+                  <span class="scpi-flow-label">Revenu viager</span>
+                  <strong class="scpi-flow-amount value-update">${formatMoney(loyerMensuelFin)}<small>/mois</small></strong>
+                  <span class="scpi-flow-forever"><span class="scpi-infinity" aria-hidden="true">∞</span> à vie</span>
+                </div>
               </div>
               <div class="capital-shares">
-                <span><small>Part du revenu viager</small><strong class="value-update">${formatNumber(revenuShare)} %</strong></span>
+                <span><small>Patrimoine immobilier final</small><strong class="value-update">${formatMoney(last.capital)}</strong></span>
                 <span><small>Total des loyers perçus</small><strong class="value-update">${formatMoney(totalLoyers)}</strong></span>
               </div>
               <div class="capital-insight">
-                <div class="capital-visual" aria-label="Répartition visuelle entre l'effort d'épargne et le revenu viager">
-                  <span style="width:${effortShare}%"></span>
-                  <span style="width:${revenuShare}%"></span>
-                </div>
                 <p>
                   En épargnant ${formatMoney(values.versementInitial)} aujourd'hui puis ${formatMoney(effortMensuel)}
                   par mois pendant ${formatNumber(values.dureeVersements)} ans, à un taux de distribution de ${annualRate} %,
-                  vous vous constituez en année ${values.dureeTotale} un complément de revenu mensuel viager d'environ
-                  ${formatMoney(loyerMensuelFin)}, soit ${multiple.toFixed(2)}× votre effort d'épargne mensuel.
+                  vous vous constituez un complément de revenu mensuel viager d'environ ${formatMoney(loyerMensuelFin)}
+                  dès la fin de vos versements — et qui continue, sans nouvel effort, tant que vous détenez vos parts.
                 </p>
               </div>
             </article>
           `;
-          state.previousGauge.scpi = { effortShare, revenuShare };
-          requestAnimationFrame(() => {
-            const [effortBar, revenuBar] = summary.querySelectorAll(".capital-breakdown > div");
-            if (!effortBar || !revenuBar) return;
-            effortBar.style.width = `${effortShare}%`;
-            revenuBar.style.width = `${revenuShare}%`;
-          });
           return;
         }
 
@@ -1365,10 +1346,7 @@
       }
 
       document.querySelector("#reset-fields").addEventListener("click", () => {
-        const values = state.values[state.mode];
-        fieldDefinitions[state.mode].forEach((field) => {
-          if (field.type === "number") values[field.key] = 0;
-        });
+        state.values[state.mode] = structuredClone(defaults[state.mode]);
         withHeightTransition(document.querySelector(".tool-params"), render);
       });
 
