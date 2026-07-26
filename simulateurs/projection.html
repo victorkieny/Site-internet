@@ -197,7 +197,8 @@
 
       const params = new URLSearchParams(window.location.search);
       const requestedMode = params.get("mode");
-      const initialMode = ["av", "scpi", "per"].includes(requestedMode) ? requestedMode : "av";
+      if (requestedMode === "per") window.location.replace("../simulateurs.html");
+      const initialMode = ["av", "scpi"].includes(requestedMode) ? requestedMode : "av";
 
       const state = {
         mode: initialMode,

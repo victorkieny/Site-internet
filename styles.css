@@ -3951,6 +3951,12 @@ body[data-mode="av"] .av-result .tool-hero {
 
 body[data-mode="av"] .av-result .tool-hero-panel {
   min-height: 158px;
+  justify-items: center;
+  text-align: center;
+}
+
+body[data-mode="av"] .av-result .tool-hero-amount {
+  margin-left: 0;
 }
 
 body[data-mode="av"] .av-result .capital-gauge {
@@ -5100,6 +5106,17 @@ body[data-mode="scpi"] .tool-field[data-field="dureeTotale"] .tool-input-wrap in
   .capital-multiple span {
     transform-origin: left center;
   }
+
+  body[data-mode="av"] .av-result .capital-metrics > span,
+  body[data-mode="av"] .av-result .capital-shares > span {
+    border-right: 0;
+    border-bottom: 1px solid rgba(43, 37, 30, 0.07);
+  }
+
+  body[data-mode="av"] .av-result .capital-metrics > span:last-child,
+  body[data-mode="av"] .av-result .capital-shares > span:last-child {
+    border-bottom: 0;
+  }
 }
 
 @media (max-width: 660px) {
@@ -5114,6 +5131,24 @@ body[data-mode="scpi"] .tool-field[data-field="dureeTotale"] .tool-input-wrap in
 
   .tool-fee-group {
     grid-template-columns: 1fr;
+  }
+
+  body[data-mode="av"] .tool-fee-card + .tool-fee-card {
+    padding-left: 2px;
+    border-left: 0;
+  }
+
+  body[data-mode="av"] .av-result .tool-hero-panel {
+    min-height: 126px;
+  }
+
+  body[data-mode="av"] #chart-panel .chart-totals > span {
+    border-right: 0;
+    border-bottom: 1px solid rgba(43, 37, 30, 0.07);
+  }
+
+  body[data-mode="av"] #chart-panel .chart-totals > span:last-child {
+    border-bottom: 0;
   }
 
   .simulator-choice-grid {
