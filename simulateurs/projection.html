@@ -1159,7 +1159,7 @@
         }).join("");
 
         chart.innerHTML = `
-          <div class="chart-totals">
+          <div class="chart-totals" style="--chart-pad-left:0%; --chart-pad-right:${pad.right / width * 100}%">
             <span>Capital final <strong>${formatMoney(rows.at(-1)?.capital)}</strong></span>
             <span class="capital-metric-invested">Sommes investies <strong>${formatMoney(rows.at(-1)?.versementsCumules)}</strong></span>
             <span class="capital-metric-interest">${metricLabel} <strong>${formatMoney(rows.at(-1)?.[metric])}</strong></span>
@@ -1201,6 +1201,19 @@
             <span><i class="legend-invested"></i>Sommes investies</span>
           </div>
         `;
+
+        const alignTotalsWithYAxisLabel = () => {
+          const totals = chart.querySelector(".chart-totals");
+          const yAxisLabels = chart.querySelectorAll(".chart-grid text");
+          const topYAxisLabel = yAxisLabels[yAxisLabels.length - 1];
+          if (!totals || !topYAxisLabel) return;
+
+          const labelStart = topYAxisLabel.getBBox().x;
+          totals.style.setProperty("--chart-pad-left", `${Math.max(0, labelStart / width * 100)}%`);
+        };
+
+        requestAnimationFrame(alignTotalsWithYAxisLabel);
+        document.fonts?.ready.then(alignTotalsWithYAxisLabel);
 
         setupChartHover(chart, rows, { x, y, pad, width, height, investedSeries, capitalSeries, metric });
       }
