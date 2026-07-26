@@ -49,6 +49,9 @@
             <button type="button" data-view="fiscal" id="fiscal-view-button" aria-label="Fiscalité" title="Fiscalité" hidden>
               <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="19" y1="5" x2="5" y2="19"></line><circle cx="7" cy="7" r="2.4"></circle><circle cx="17" cy="17" r="2.4"></circle></svg>
             </button>
+            <button type="button" data-view="compare" id="compare-view-button" aria-label="Comparaison Livret A" title="Comparaison Livret A" hidden>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="6" height="10"></rect><rect x="14" y="4" width="6" height="16"></rect></svg>
+            </button>
           </div>
 
           <div class="tool-detail-panels">
@@ -78,6 +81,12 @@
               </div>
               <div class="fiscal-view" id="fiscal" aria-label="Impact de la fiscalité selon l'origine des parts"></div>
             </div>
+            <div class="tool-compare-card" id="compare-panel" hidden>
+              <div class="tool-card-title">
+                <h2>Livret A vs Assurance Vie</h2>
+              </div>
+              <div class="line-chart" id="compare" aria-label="Comparaison entre un Livret A et votre assurance vie"></div>
+            </div>
           </div>
         </section>
       </section>
@@ -99,6 +108,27 @@
       const formatPercent = (value) => new Intl.NumberFormat("fr-FR", {
         maximumFractionDigits: 1
       }).format(value || 0);
+
+      // En dessous de 10€/mois, le montant mensuel devient peu lisible : on affiche alors
+      // l'équivalent annuel s'il reste significatif. Au-dessus, le revenu mensuel reste
+      // toujours prioritaire afin de montrer immédiatement ce que gagne l'investisseur.
+      function scpiFlowRevenu(monthly) {
+        const annual = monthly * 12;
+        if (monthly >= 10) return { value: monthly, unit: "/mois", annual, showAnnual: monthly < 100 };
+        if (annual >= 100) return { value: annual, unit: "/an", annual, showAnnual: false };
+        return null;
+      }
+
+      // Pour le versement initial uniquement : l'annuel est prioritaire sous
+      // 100 €/mois, tandis que l'équivalent mensuel reste visible en dessous.
+      function scpiImmediateFlowRevenu(monthly) {
+        if (!Number.isFinite(monthly) || monthly <= 0) return null;
+        const annual = monthly * 12;
+        if (monthly < 100) {
+          return { value: annual, unit: "/an", secondaryValue: monthly, secondaryPeriod: "par mois" };
+        }
+        return { value: monthly, unit: "/mois", secondaryValue: annual, secondaryPeriod: "par an" };
+      }
 
       function niceStep(range, targetCount) {
         const rawStep = range / Math.max(1, targetCount);
@@ -155,18 +185,13 @@
           frais: 0.6,
           fraisActifs: false,
           fraisEntree: 0,
-          fraisEntreeActifs: false
+          fraisEntreeActifs: false,
+          tauxLivretA: 1.7
         },
         per: {
-          capitalInitial: 5000,
-          versementMensuel: 400,
-          dureeVersements: 25,
-          dureeTotale: 30,
-          rendement: 4,
-          renteActive: false,
-          tauxConversion: 4,
-          fraisEntree: 0,
-          fraisEntreeActifs: false
+          revenuNet: 40000,
+          versementPER: 4100,
+          parts: 1
         }
       };
 
@@ -179,8 +204,9 @@
         view: "chart",
         values: structuredClone(defaults),
         previousGauge: {},
-        scpiShowCapital: false
+        compareView: "ecart"
       };
+      document.body.dataset.mode = state.mode;
 
       const modeContent = {
         av: {
@@ -193,13 +219,13 @@
           label: "SCPI",
           title: "SCPI",
           description: "Projection des loyers perçus par mois et par an, et de leur progression dans le temps.",
-          chartTitle: "Loyers perçus"
+          chartTitle: "Évolution des loyers perçus"
         },
         per: {
           label: "PER",
           title: "PER",
-          description: "Base de projection dédiée au PER, prête à recevoir le volet fiscal.",
-          chartTitle: "Capital retraite"
+          description: "Estimation de l'économie d'impôt liée à un versement déductible sur un PER.",
+          chartTitle: "Impôt avant et après PER"
         }
       };
 
@@ -241,24 +267,6 @@
         return rows;
       }
 
-      // Argent réellement apporté par l'investisseur (hors loyers réinvestis), pour
-      // pouvoir comparer "ce qu'il a versé" à "ce que la SCPI lui a rapporté".
-      function scpiApportsSeries(values, rows) {
-        let cumule = 0;
-        return rows.map((row, index) => {
-          cumule += (index === 0 ? values.versementInitial : 0) + row.versementAnnuel;
-          return cumule;
-        });
-      }
-
-      // Première année où les loyers cumulés remboursent la totalité des apports.
-      function scpiBreakEvenYear(rows, apportsSeries) {
-        for (let index = 0; index < rows.length; index++) {
-          if (rows[index].revenusCumules >= apportsSeries[index]) return rows[index].annee;
-        }
-        return null;
-      }
-
       function computeAssuranceVie(values) {
         const rows = [];
         const rendementNet = Math.max(
@@ -292,34 +300,80 @@
         return rows;
       }
 
-      function computePer(values) {
+      // Même effort d'épargne (versement initial + mensuel) que l'assurance vie,
+      // mais placé sur un Livret A : sert de point de comparaison "sans risque".
+      function computeLivretA(values) {
         const rows = [];
-        const entreeNet = 1 - (values.fraisEntreeActifs ? values.fraisEntree / 100 : 0);
         let versementsCumules = 0;
-        let gainsCumules = 0;
         let capital = 0;
 
         for (let annee = 1; annee <= values.dureeTotale; annee++) {
-          const versementAnnuel = (annee <= values.dureeVersements ? values.versementMensuel * 12 : 0) * entreeNet;
+          const versementAnnuel = values.versementMensuel * 12;
           if (annee === 1) {
-            const capitalInitialNet = values.capitalInitial * entreeNet;
-            versementsCumules = capitalInitialNet + versementAnnuel;
-            const gainsAnnuels = capitalInitialNet * (values.rendement / 100);
-            gainsCumules += gainsAnnuels;
-            capital = capitalInitialNet + versementAnnuel + gainsAnnuels;
-            rows.push({ annee, versementsCumules, versementAnnuel, gainsAnnuels, gainsCumules, capital });
+            versementsCumules = values.capitalInitial + versementAnnuel;
+            const interetsAnnuels = values.capitalInitial * (values.tauxLivretA / 100);
+            capital = values.capitalInitial + versementAnnuel + interetsAnnuels;
+            rows.push({ annee, versementsCumules, capital });
           } else {
             versementsCumules += versementAnnuel;
-            const gainsAnnuels = capital * (values.rendement / 100);
-            gainsCumules += gainsAnnuels;
-            capital = capital + versementAnnuel + gainsAnnuels;
-            const renteMensuelle = values.renteActive && annee === values.dureeTotale
-              ? capital * (values.tauxConversion / 100) / 12
-              : undefined;
-            rows.push({ annee, versementsCumules, versementAnnuel, gainsAnnuels, gainsCumules, capital, renteMensuelle });
+            const interetsAnnuels = capital * (values.tauxLivretA / 100);
+            capital = capital + versementAnnuel + interetsAnnuels;
+            rows.push({ annee, versementsCumules, capital });
           }
         }
         return rows;
+      }
+
+      const IR_BRACKETS_2026 = [
+        { min: 0, max: 11600, rate: 0 },
+        { min: 11600, max: 29580, rate: 0.11 },
+        { min: 29580, max: 84578, rate: 0.30 },
+        { min: 84578, max: 169156, rate: 0.41 },
+        { min: 169156, max: Infinity, rate: 0.45 }
+      ];
+
+      function perAllowance(revenuNet) {
+        return Math.min(Math.max(revenuNet * 0.10, 504), 14426);
+      }
+
+      function computeIncomeTax(revenuImposable, parts) {
+        const quotient = revenuImposable / Math.max(0.5, parts);
+        let taxPerPart = 0;
+        let tmi = 0;
+        for (const bracket of IR_BRACKETS_2026) {
+          if (quotient <= bracket.min) break;
+          taxPerPart += (Math.min(quotient, bracket.max) - bracket.min) * bracket.rate;
+          tmi = bracket.rate;
+        }
+        return { tax: Math.round(taxPerPart * parts), tmi };
+      }
+
+      function computePerResult(values, versement = values.versementPER) {
+        const allowance = perAllowance(values.revenuNet);
+        const beforeIncome = Math.max(0, values.revenuNet - allowance);
+        const deductible = Math.max(0, versement);
+        const afterIncome = Math.max(0, beforeIncome - deductible);
+        const before = computeIncomeTax(beforeIncome, values.parts);
+        const after = computeIncomeTax(afterIncome, values.parts);
+        return {
+          versement,
+          deductible,
+          allowance,
+          beforeIncome: Math.round(beforeIncome),
+          afterIncome: Math.round(afterIncome),
+          taxBefore: before.tax,
+          taxAfter: after.tax,
+          gain: before.tax - after.tax,
+          tmiBefore: before.tmi,
+          tmiAfter: after.tmi
+        };
+      }
+
+      function computePer(values) {
+        const candidates = [0, 1000, 2000, 3000, values.versementPER];
+        return [...new Set(candidates.map((value) => Math.max(0, value)))]
+          .sort((a, b) => a - b)
+          .map((versement) => computePerResult(values, versement));
       }
 
       const fieldDefinitions = {
@@ -329,7 +383,7 @@
           { key: "versementMensuel", label: "Versement mensuel", type: "number", min: 0, max: 5000, step: 50, suffix: "€" },
           { key: "dureeVersements", label: "Durée des versements", type: "number", min: 1, max: 50, step: 1, suffix: "ans" },
           { key: "dureeTotale", label: "Durée totale", type: "number", min: 1, max: 80, step: 1, suffix: "ans" },
-          { key: "reinvestir", label: "Réinvestir les loyers", type: "checkbox", checkedNote: "Les loyers sont réinjectés dans le capital pendant la période de versement, puis vous sont versés." }
+          { key: "reinvestir", label: "Réinvestir les loyers", type: "checkbox", checkedNote: "Les loyers sont réinjectés dans le capital pendant la période de versement, puis vous sont versés.\nCe calcul réinvestit les loyers bruts, avant fiscalité." }
         ],
         av: [
           { key: "capitalInitial", label: "Versement initial", type: "number", min: 0, max: 500000, step: 1000, suffix: "€" },
@@ -342,15 +396,9 @@
           { key: "frais", label: "Taux de frais de gestion", type: "number", min: 0, max: 3, step: 0.1, suffix: "%", dependsOn: "fraisActifs" }
         ],
         per: [
-          { key: "rendement", label: "Taux de rentabilité", type: "number", min: 0, max: 15, step: 0.1, suffix: "%" },
-          { key: "capitalInitial", label: "Capital initial", type: "number", min: 0, max: 500000, step: 1000, suffix: "€" },
-          { key: "versementMensuel", label: "Versement mensuel", type: "number", min: 0, max: 10000, step: 50, suffix: "€" },
-          { key: "dureeVersements", label: "Durée des versements", type: "number", min: 1, max: 50, step: 1, suffix: "ans" },
-          { key: "dureeTotale", label: "Durée totale", type: "number", min: 1, max: 60, step: 1, suffix: "ans" },
-          { key: "fraisEntreeActifs", label: "Frais d'entrée", type: "checkbox" },
-          { key: "fraisEntree", label: "Taux de frais d'entrée", type: "number", min: 0, max: 4.8, step: 0.1, suffix: "%", dependsOn: "fraisEntreeActifs" },
-          { key: "renteActive", label: "Sortie en rente", type: "checkbox" },
-          { key: "tauxConversion", label: "Taux de conversion", type: "number", min: 1, max: 10, step: 0.1, suffix: "%", dependsOn: "renteActive" }
+          { key: "revenuNet", label: "Revenu net annuel avant IR", type: "number", min: 0, max: 800000, step: 500, suffix: "€" },
+          { key: "versementPER", label: "Versement PER annuel", type: "number", min: 0, max: 50000, step: 100, suffix: "€" },
+          { key: "parts", label: "Nombre de parts fiscales", type: "select", options: [1, 1.5, 2, 2.5, 3], suffix: "part(s)" }
         ]
       };
 
@@ -425,6 +473,7 @@
       function renderFields() {
         const fields = document.querySelector("#fields");
         const values = state.values[state.mode];
+        const fieldRefreshers = [];
         fields.innerHTML = "";
 
         const updateRangeProgress = (range) => {
@@ -438,9 +487,10 @@
         const renderNumberField = (field, options = {}) => {
           const label = document.createElement("label");
           label.className = options.mini ? "tool-fee-rate" : "tool-field";
+          label.dataset.field = field.key;
 
           const span = document.createElement("span");
-          span.textContent = field.label;
+          span.textContent = typeof field.label === "function" ? field.label(values) : field.label;
           label.append(span);
 
           const control = document.createElement("div");
@@ -466,6 +516,12 @@
             if (!note) return;
             note.textContent = typeof field.note === "function" ? field.note(values) : field.note;
           };
+          const refreshField = () => {
+            span.textContent = typeof field.label === "function" ? field.label(values) : field.label;
+            updateNote();
+          };
+          fieldRefreshers.push(refreshField);
+          const refreshDependentFields = () => fieldRefreshers.forEach((refresh) => refresh());
           const updatePresets = () => {
             if (!presetRow) return;
             presetRow.querySelectorAll(".tool-preset").forEach((button) => {
@@ -477,7 +533,7 @@
             values[field.key] = parseInputNumber(input.value);
             range.value = values[field.key];
             updateRangeProgress(range);
-            updateNote();
+            refreshDependentFields();
             updatePresets();
             renderOutputs();
           });
@@ -488,7 +544,7 @@
             values[field.key] = Number(range.value || 0);
             input.value = formatInputNumber(values[field.key]);
             updateRangeProgress(range);
-            updateNote();
+            refreshDependentFields();
             updatePresets();
             renderOutputs();
           });
@@ -513,7 +569,7 @@
                 input.value = formatInputNumber(values[field.key]);
                 range.value = values[field.key];
                 updateRangeProgress(range);
-                updateNote();
+                refreshDependentFields();
                 updatePresets();
                 renderOutputs();
               });
@@ -530,6 +586,34 @@
             label.append(note);
           }
 
+          return label;
+        };
+
+        const renderSelectField = (field) => {
+          const label = document.createElement("label");
+          label.className = "tool-field tool-select-field";
+
+          const span = document.createElement("span");
+          span.textContent = typeof field.label === "function" ? field.label(values) : field.label;
+
+          const control = document.createElement("div");
+          control.className = "tool-select-wrap";
+          const select = document.createElement("select");
+          select.setAttribute("aria-label", span.textContent);
+          field.options.forEach((optionValue) => {
+            const option = document.createElement("option");
+            option.value = optionValue;
+            const unit = optionValue === 1 ? "part" : "parts";
+            option.textContent = `${formatInputNumber(optionValue)} ${unit}`;
+            option.selected = values[field.key] === optionValue;
+            select.append(option);
+          });
+          select.addEventListener("change", () => {
+            values[field.key] = Number(select.value);
+            renderOutputs();
+          });
+          control.append(select);
+          label.append(span, control);
           return label;
         };
 
@@ -594,6 +678,11 @@
           if (field.dependsOn && !values[field.dependsOn]) return;
           if (state.mode === "av" && ["fraisEntreeActifs", "fraisEntree", "fraisActifs", "frais"].includes(field.key)) return;
 
+          if (field.type === "select") {
+            fields.append(renderSelectField(field));
+            return;
+          }
+
           if (field.type !== "checkbox") {
             fields.append(renderNumberField(field));
             return;
@@ -603,7 +692,7 @@
           label.className = "tool-switch-row";
 
           const span = document.createElement("span");
-          span.textContent = field.label;
+          span.textContent = typeof field.label === "function" ? field.label(values) : field.label;
           label.append(span);
 
           const input = document.createElement("input");
@@ -642,20 +731,22 @@
           const previousGauge = state.previousGauge.av || { investedShare, interestsShare };
           const multiple = invested > 0 ? capital / invested : 0;
           const annualRate = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 1 }).format(values.rendement);
-          const capitalAmount = formatMoney(capital).replace(/\s?€$/, "");
 
           summary.innerHTML = `
-            <article class="tool-result-card tool-result-editorial">
-              <div class="capital-heading">
-                <div>
-                  <span>Capital final estimé</span>
-                  <strong class="capital-amount value-update"><span>${capitalAmount}</span><span class="capital-currency">€</span></strong>
+            <article class="tool-result-card tool-result-editorial av-result">
+              <div class="tool-summary-title">
+                <h2>Projection</h2>
+              </div>
+              <div class="tool-hero tool-hero-single">
+                <div class="tool-hero-panel tool-hero-panel-blue">
+                  <span class="tool-hero-label">Capital final estimé</span>
+                  <strong class="tool-hero-amount value-update">${formatMoney(capital)}</strong>
                 </div>
               </div>
               <div class="capital-gauge">
                 <div class="capital-breakdown-labels">
-                  <span class="capital-metric-invested">Sommes investies</span>
-                  <span class="capital-metric-interest">Intérêts gagnés</span>
+                  <span class="capital-metric-invested"><em>Sommes investies</em><strong>${formatNumber(investedShare)} %</strong></span>
+                  <span class="capital-metric-interest"><em>Intérêts gagnés</em><strong>${formatNumber(interestsShare)} %</strong></span>
                 </div>
                 <div class="capital-breakdown" aria-label="Répartition du capital final">
                   <div style="width:${previousGauge.investedShare}%"></div>
@@ -698,94 +789,187 @@
           const loyerMensuelFin = last.revenuMensuel || 0;
           const totalLoyers = last.revenusCumules || 0;
           const effortMensuel = values.versementMensuel;
-          const annualRate = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 1 }).format(values.rendement);
-          const loyerAmount = formatMoney(loyerMensuelFin).replace(/\s?€$/, "");
+          const capitalFinal = last.capital || 0;
+          const partInitiale = capitalFinal > 0 ? values.versementInitial / capitalFinal : 0;
+          const revenuInitial = loyerMensuelFin * partInitiale;
+          const revenuEffort = loyerMensuelFin - revenuInitial;
+          const immediateFlow = scpiImmediateFlowRevenu(revenuInitial);
+          const viagerFlow = scpiFlowRevenu(revenuEffort);
+          const moneyMarkup = (amount) => `<span class="scpi-money-value">${formatMoney(amount).replace(/\s?€$/, "")}</span><small class="scpi-money-unit">€</small>`;
+          const flowSecondaryMarkup = (flow) => {
+            if (flow.secondaryValue !== undefined) {
+              return `<span class="scpi-flow-annual"><span>soit </span>${moneyMarkup(flow.secondaryValue)}<span> ${flow.secondaryPeriod}</span></span>`;
+            }
+            if (flow.showAnnual) return `<span class="scpi-flow-annual">${moneyMarkup(flow.annual)}<span> par an</span></span>`;
+            return "";
+          };
+          const flowAmountMarkup = (flow) => `
+            <strong class="scpi-flow-amount value-update">${moneyMarkup(flow.value)}<small class="scpi-flow-period">${flow.unit}</small></strong>
+            ${flowSecondaryMarkup(flow)}
+          `;
 
           summary.innerHTML = `
             <article class="tool-result-card tool-result-editorial">
-              <div class="capital-heading">
-                <div>
-                  <span>Revenu mensuel viager</span>
-                  <strong class="capital-amount value-update"><span>${loyerAmount}</span><span class="capital-currency">€/mois</span></strong>
+              <div class="tool-summary-title">
+                <h2>Projection</h2>
+              </div>
+              <div class="tool-hero">
+                <div class="tool-hero-panel tool-hero-panel-blue">
+                  <span class="tool-hero-label">Patrimoine immobilier final</span>
+                  <strong class="tool-hero-amount value-update">${moneyMarkup(last.capital)}</strong>
+                </div>
+                <div class="tool-hero-panel tool-hero-panel-gold">
+                  <span class="tool-hero-label">Loyer mensuel viager</span>
+                  <strong class="tool-hero-amount value-update">${moneyMarkup(loyerMensuelFin)}<small class="tool-hero-currency">/mois<span class="tool-hero-lifetime">—&nbsp;à vie</span></small></strong>
                 </div>
               </div>
-              <div class="scpi-flow" aria-label="De l'effort d'épargne au revenu viager">
+              <div class="scpi-flow-grid">
+              ${immediateFlow ? `
+              <div class="scpi-flow is-open" data-flow="immediate" aria-label="Mécanique du versement initial : capital versé aujourd'hui, loyer généré dès le premier mois">
                 <div class="scpi-flow-step scpi-flow-effort">
-                  <span class="scpi-flow-label">Épargne</span>
-                  <strong class="scpi-flow-amount value-update">${formatMoney(effortMensuel)}<small>/mois</small></strong>
+                  <span class="scpi-flow-label">Versement initial</span>
+                  <strong class="scpi-flow-amount value-update">${moneyMarkup(values.versementInitial)}</strong>
+                </div>
+                <div class="scpi-flow-reveal" id="scpi-reveal-immediate">
+                  <div class="scpi-flow-step scpi-flow-revenu">
+                    <span class="scpi-flow-label">Loyer perçu immédiatement</span>
+                    ${flowAmountMarkup(immediateFlow)}
+                  </div>
+                </div>
+              </div>
+              ` : ""}
+              ${viagerFlow ? `
+              <div class="scpi-flow is-open" data-flow="viager" aria-label="Mécanique du versement programmé : effort mensuel pendant la phase d'épargne, loyer viager ensuite">
+                <div class="scpi-flow-step scpi-flow-effort">
+                  <span class="scpi-flow-label">Versement programmé</span>
+                  <strong class="scpi-flow-amount value-update">${moneyMarkup(effortMensuel)}<small class="scpi-flow-period">/mois</small></strong>
                   <span class="scpi-flow-duration">pendant ${values.dureeVersements} ans</span>
                 </div>
-                <div class="scpi-flow-arrow" aria-hidden="true">
-                  <svg viewBox="0 0 24 24"><path d="M5 12h14"></path><path d="M13 6l6 6-6 6"></path></svg>
-                </div>
-                <div class="scpi-flow-step scpi-flow-revenu">
-                  <span class="scpi-flow-label">Revenu viager</span>
-                  <strong class="scpi-flow-amount value-update">${formatMoney(loyerMensuelFin)}<small>/mois</small></strong>
-                  <span class="scpi-flow-forever"><span class="scpi-infinity" aria-hidden="true">∞</span> à vie</span>
+                <div class="scpi-flow-reveal" id="scpi-reveal-viager">
+                  <div class="scpi-flow-step scpi-flow-revenu">
+                    <span class="scpi-flow-label">Loyer perçu<br>à terme</span>
+                    ${flowAmountMarkup(viagerFlow)}
+                  </div>
                 </div>
               </div>
-              <div class="capital-shares">
-                <span><small>Patrimoine immobilier final</small><strong class="value-update">${formatMoney(last.capital)}</strong></span>
-                <span><small>Total des loyers perçus</small><strong class="value-update">${formatMoney(totalLoyers)}</strong></span>
+              ` : ""}
               </div>
-              <div class="capital-insight">
-                <p>
-                  En épargnant ${formatMoney(values.versementInitial)} aujourd'hui puis ${formatMoney(effortMensuel)}
-                  par mois pendant ${formatNumber(values.dureeVersements)} ans, à un taux de distribution de ${annualRate} %,
-                  vous vous constituez un complément de revenu mensuel viager d'environ ${formatMoney(loyerMensuelFin)}
-                  dès la fin de vos versements — et qui continue, sans nouvel effort, tant que vous détenez vos parts.
-                </p>
+              <div class="scpi-summary-row">
+                <div class="capital-shares">
+                  <span><small>Total des loyers perçus</small><strong class="value-update">${moneyMarkup(totalLoyers)}</strong></span>
+                </div>
+                <div class="capital-insight">
+                  <p>
+                    Ce loyer de <strong class="scpi-insight-income">${moneyMarkup(loyerMensuelFin)}<small class="scpi-flow-period">/mois</small></strong> continue à vie, sans nouvel effort de votre part, tant que vous détenez vos parts.
+                  </p>
+                </div>
               </div>
             </article>
           `;
+
           return;
         }
 
-        const items = [
-          ["Capital final", formatMoney(last.capital)],
-          ["Versements cumulés", formatMoney(last.versementsCumules)],
-          ["Gains cumulés", formatMoney(last.gainsCumules)],
-          [state.values.per.renteActive ? "Rente mensuelle estimée" : `Gains an ${state.values.per.dureeTotale}`, formatMoney(state.values.per.renteActive ? last.renteMensuelle : last.gainsAnnuels)]
-        ];
-
-        summary.innerHTML = items.map(([label, value]) => `
-          <article class="tool-result-card">
-            <span>${label}</span>
-            <strong>${value}</strong>
+        const values = state.values.per;
+        const result = computePerResult(values);
+        const effectiveCost = Math.max(0, result.deductible - result.gain);
+        const gainRate = result.deductible > 0 ? result.gain / result.deductible * 100 : 0;
+        const change = result.tmiBefore !== result.tmiAfter;
+        summary.innerHTML = `
+          <article class="tool-result-card tool-result-editorial per-result">
+            <div class="per-result-hero">
+              <div class="per-result-main-value">
+                <small>Votre économie d'impôt estimée</small>
+                <strong class="value-update">${formatMoney(result.gain)}</strong>
+              </div>
+              <div class="per-real-cost">
+                <small>Votre versement de ${formatMoney(result.deductible)}</small>
+                <span>vous coûte réellement</span>
+                <strong>${formatMoney(effectiveCost)}</strong>
+              </div>
+            </div>
+            <div class="per-tax-flow" aria-label="Comparaison de l'impôt avant et après versement PER">
+              <div><small>Imposition actuelle</small><strong>${formatMoney(result.taxBefore)}</strong></div>
+              <div><small>Imposition après versement PER</small><strong>${formatMoney(result.taxAfter)}</strong></div>
+              <div class="per-tax-saving"><small>Économie d'impôt</small><strong>${formatMoney(result.gain)}</strong></div>
+            </div>
+            <div class="per-key-metrics">
+              <div>
+                <small>Montant épargné <i>vs</i> effort d'épargne réel</small>
+                <strong>${formatMoney(result.deductible)} <i>→</i> ${formatMoney(effectiveCost)}</strong>
+              </div>
+              <div>
+                <small>TMI avant <i>/</i> TMI après</small>
+                <strong>${formatNumber(result.tmiBefore * 100)} % <i>→</i> ${formatNumber(result.tmiAfter * 100)} %</strong>
+                ${change ? '<em>Tranche réduite</em>' : '<em>TMI stable</em>'}
+              </div>
+            </div>
+            <div class="capital-insight per-insight">
+              <p>
+                Chaque euro versé vous procure ici environ ${formatPercent(gainRate)} centimes d'économie d'impôt.
+                Votre effort net est ramené à ${formatMoney(effectiveCost)} pour ${formatMoney(result.deductible)} investis sur votre PER.
+              </p>
+            </div>
+            <p class="per-disclaimer">Calcul indicatif selon le barème IR 2026, hors décote, plafonnement du quotient familial et dispositifs spécifiques.</p>
           </article>
-        `).join("");
+        `;
       }
 
-      function renderBreakEvenChart(rows) {
+      // Le graphique ne compare plus "versé" et "loyers perçus" (une course qui semble
+      // perdue tant que le point de bascule n'est pas atteint) : il montre uniquement la
+      // progression du loyer mensuel lui-même, avec des jalons chiffrés à quelques années
+      // clés. Le total versé reste visible en contexte, mais en retrait.
+      function renderRentGrowthChart(rows) {
         const chart = document.querySelector("#chart");
+        const animateBars = chart.dataset.initialized !== "true";
         const width = 960;
-        const height = 380;
-        const pad = { top: 28, right: 36, bottom: 54, left: 128 };
+        const height = 400;
+        const pad = { top: 72, right: 36, bottom: 54, left: 128 };
         const values = state.values.scpi;
 
-        const apportsSeries = scpiApportsSeries(values, rows);
-        const loyersSeries = rows.map((row) => row.revenusCumules || 0);
-        const capitalSeries = rows.map((row) => row.capital || 0);
-        const breakEvenYear = scpiBreakEvenYear(rows, apportsSeries);
-        const breakEvenIndex = breakEvenYear ? rows.findIndex((row) => row.annee === breakEvenYear) : -1;
+        const rentSeries = rows.map((row) => row.revenuMensuel || 0);
+        const lastYear = rows.length;
+        const hasIncomePhase = values.dureeVersements < lastYear;
 
-        const scaleSeries = state.scpiShowCapital ? [...apportsSeries, ...loyersSeries, ...capitalSeries] : [...apportsSeries, ...loyersSeries];
-        const max = Math.max(...scaleSeries, 1);
+        // Un jalon tous les 10 ans d'investissement, jusqu'à l'année où les versements
+        // s'arrêtent : au-delà, le loyer ne bouge plus (il devient viager), donc la
+        // série de jalons s'arrête là plutôt que de continuer à afficher des décennies
+        // qui répéteraient le même montant. Ce jalon final devient le loyer viager.
+        const viagerYear = values.dureeVersements >= 1 && values.dureeVersements < rows.length
+          ? values.dureeVersements
+          : null;
+        const finalMilestoneYear = viagerYear !== null ? viagerYear : lastYear;
+
+        const candidateYears = new Set();
+        for (let annee = 10; annee <= finalMilestoneYear; annee += 10) candidateYears.add(annee);
+        candidateYears.add(finalMilestoneYear);
+        const milestoneYears = Array.from(candidateYears).sort((a, b) => a - b);
+
+        const max = Math.max(...rentSeries, 1);
+        const scaleMax = max * 1.08;
+        const plotWidth = width - pad.left - pad.right;
         const x = (index) => pad.left + (index / Math.max(rows.length - 1, 1)) * (width - pad.left - pad.right);
-        const y = (value) => height - pad.bottom - (value / max) * (height - pad.top - pad.bottom);
-        const pointsFor = (series) => series.map((value, index) => `${x(index)},${y(value)}`).join(" ");
-        const areaBetween = (lowerSeries, upperSeries, from, to) => {
-          if (to <= from) return "";
-          const top = [];
-          const bottom = [];
-          for (let i = from; i <= to; i++) top.push(`${x(i)},${y(upperSeries[i])}`);
-          for (let i = to; i >= from; i--) bottom.push(`${x(i)},${y(lowerSeries[i])}`);
-          return `M${top.join(" L")} L${bottom.join(" L")} Z`;
-        };
+        const y = (value) => height - pad.bottom - (value / scaleMax) * (height - pad.top - pad.bottom);
+        const baseline = height - pad.bottom;
 
-        const splitAt = breakEvenIndex >= 0 ? breakEvenIndex : rows.length - 1;
-        const deficitPath = areaBetween(loyersSeries, apportsSeries, 0, splitAt);
-        const surplusPath = breakEvenIndex >= 0 ? areaBetween(apportsSeries, loyersSeries, splitAt, rows.length - 1) : "";
+        // Barres plutôt que courbe lissée : effet "relevé de compte qui grossit chaque
+        // année", plus parlant qu'une simple diagonale. Les jalons se détachent en couleur
+        // pleine (le dernier en encre) sur le fond dégradé des barres courantes.
+        const barSlot = plotWidth / Math.max(rows.length, 1);
+        const barWidth = Math.max(2, barSlot * 0.62);
+        const barRadius = Math.min(4, barWidth / 2);
+        const bars = rentSeries.map((value, index) => {
+          const annee = index + 1;
+          const topY = y(value);
+          const barHeight = Math.max(0, baseline - topY);
+          const phaseClass = annee <= values.dureeVersements ? "chart-bar-investment" : "chart-bar-income";
+          const classes = ["chart-bar", phaseClass];
+          if (animateBars) classes.push("chart-bar-enter");
+          if (milestoneYears.includes(annee)) classes.push("chart-bar-milestone");
+          if (annee === finalMilestoneYear) classes.push("chart-bar-final");
+          const animationStyle = animateBars ? ` style="--bar-delay: ${index * 9}ms"` : "";
+          return `<rect class="${classes.join(" ")}"${animationStyle} x="${(x(index) - barWidth / 2).toFixed(2)}" y="${topY.toFixed(2)}" width="${barWidth.toFixed(2)}" height="${barHeight.toFixed(2)}" rx="${barRadius.toFixed(2)}"></rect>`;
+        }).join("");
 
         const grid = niceValueTicks(max, 4).map((value) => {
           const lineY = y(value);
@@ -801,98 +985,70 @@
           return `<text x="${tickX}" y="${height - 10}">${annee}</text>`;
         }).join("");
 
-        let marker = "";
-        if (breakEvenIndex >= 0) {
-          const markerX = x(breakEvenIndex);
-          const markerY = y(loyersSeries[breakEvenIndex]);
-          const plotWidth = width - pad.left - pad.right;
-          const labelAnchor = (markerX - pad.left) > plotWidth / 2 ? "end" : "start";
-          const labelX = markerX + (labelAnchor === "end" ? -10 : 10);
-          marker = `
-            <g class="chart-marker">
-              <line class="chart-marker-line" x1="${markerX}" y1="${pad.top}" x2="${markerX}" y2="${height - pad.bottom}"></line>
-              <circle class="chart-marker-dot" cx="${markerX}" cy="${markerY}" r="5"></circle>
-              <text class="chart-marker-label" x="${labelX}" y="${pad.top + 14}" text-anchor="${labelAnchor}">Point de bascule — année ${breakEvenYear}</text>
-            </g>
+        // Jalons affichés en cartouches sous le graphique plutôt qu'en texte flottant
+        // sur les barres : lisible à toutes les tailles, sans risque de chevauchement.
+        const milestoneChips = milestoneYears.map((annee) => {
+          const value = rentSeries[annee - 1];
+          const isFinal = annee === finalMilestoneYear;
+          const label = annee === viagerYear ? `Année ${annee} · Loyer viager` : `Année ${annee}`;
+          return `
+            <div class="chart-milestone-chip${isFinal ? " chart-milestone-chip-final" : ""}">
+              <span>${label}</span>
+              <strong>${formatMoney(value)}<small>/mois</small></strong>
+            </div>
           `;
-        }
-
-        const last = rows.at(-1) || {};
+        }).join("");
 
         chart.innerHTML = `
-          <div class="chart-totals">
-            <span>Point de bascule <strong>${breakEvenYear ? `Année ${breakEvenYear}` : "Non atteint"}</strong></span>
-            <span class="capital-metric-invested">Total versé <strong>${formatMoney(apportsSeries.at(-1))}</strong></span>
-            <span class="capital-metric-interest">Total des loyers perçus <strong>${formatMoney(last.revenusCumules)}</strong></span>
-          </div>
-          <div class="chart-toggle">
-            <label>
-              <input type="checkbox" id="toggle-capital-line" ${state.scpiShowCapital ? "checked" : ""}>
-              <span>Afficher la valeur du capital</span>
-            </label>
-          </div>
+          <div class="chart-milestone-strip" style="grid-template-columns: repeat(${milestoneYears.length}, 1fr)">${milestoneChips}</div>
           <div class="chart-canvas">
-            <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Comparaison entre le total versé et le total des loyers perçus">
+            <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Évolution du loyer mensuel perçu au fil des années">
               <defs>
-                <linearGradient id="chartAreaInvested" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stop-color="#6f8ba7" stop-opacity="0.5"></stop>
-                  <stop offset="100%" stop-color="#6f8ba7" stop-opacity="0.05"></stop>
-                </linearGradient>
                 <linearGradient id="chartAreaGains" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stop-color="#b99761" stop-opacity="0.55"></stop>
-                  <stop offset="100%" stop-color="#b99761" stop-opacity="0.08"></stop>
+                  <stop offset="0%" stop-color="#ad8143" stop-opacity="0.98"></stop>
+                  <stop offset="52%" stop-color="#c29a60" stop-opacity="0.9"></stop>
+                  <stop offset="100%" stop-color="#6f879d" stop-opacity="0.68"></stop>
+                </linearGradient>
+                <linearGradient id="chartAreaIncome" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#a97836" stop-opacity="0.98"></stop>
+                  <stop offset="55%" stop-color="#caa466" stop-opacity="0.9"></stop>
+                  <stop offset="100%" stop-color="#e5cfaa" stop-opacity="0.72"></stop>
                 </linearGradient>
               </defs>
               <g class="chart-grid">${grid}</g>
-              <path class="chart-area chart-area-invested" d="${deficitPath}"></path>
-              <path class="chart-area chart-area-gains" d="${surplusPath}"></path>
-              <polyline class="chart-line chart-line-invested" points="${pointsFor(apportsSeries)}"></polyline>
-              <polyline class="chart-line chart-line-gains" points="${pointsFor(loyersSeries)}"></polyline>
-              ${state.scpiShowCapital ? `<polyline class="chart-line chart-line-capital" points="${pointsFor(capitalSeries)}"></polyline>` : ""}
+              <g class="chart-bars">${bars}</g>
               <g class="chart-axis">${ticks}</g>
-              ${marker}
               <g class="chart-hover">
                 <line class="chart-hover-line" x1="0" y1="${pad.top}" x2="0" y2="${height - pad.bottom}"></line>
-                <circle class="chart-hover-dot chart-hover-dot-invested" r="4"></circle>
                 <circle class="chart-hover-dot chart-hover-dot-gains" r="4"></circle>
-                ${state.scpiShowCapital ? `<circle class="chart-hover-dot chart-hover-dot-capital" r="4"></circle>` : ""}
               </g>
             </svg>
             <div class="chart-tooltip">
               <span class="chart-tooltip-year"></span>
-              <div class="chart-tooltip-row chart-tooltip-invested"><small>Total versé</small><strong></strong></div>
-              <div class="chart-tooltip-row chart-tooltip-gains"><small>Total loyers perçus</small><strong></strong></div>
-              ${state.scpiShowCapital ? `<div class="chart-tooltip-row chart-tooltip-capital"><small>Valeur du capital</small><strong></strong></div>` : ""}
+              <div class="chart-tooltip-row chart-tooltip-gains"><small>Loyer</small><strong></strong></div>
             </div>
           </div>
           <div class="chart-legend">
-            <span><i class="legend-invested"></i>Total versé</span>
-            <span><i class="legend-gains"></i>Total des loyers perçus</span>
-            ${state.scpiShowCapital ? `<span><i class="legend-capital"></i>Valeur du capital</span>` : ""}
+            <span><i class="legend-investment-phase"></i>Phase d’investissement</span>
+            ${hasIncomePhase ? '<span><i class="legend-income-phase"></i>Phase de rente</span>' : ""}
           </div>
         `;
 
-        chart.querySelector("#toggle-capital-line").addEventListener("change", (event) => {
-          state.scpiShowCapital = event.target.checked;
-          renderBreakEvenChart(rows);
-        });
-
-        setupBreakEvenHover(chart, rows, { x, y, pad, width, apportsSeries, loyersSeries, capitalSeries });
+        chart.dataset.initialized = "true";
+        setupRentGrowthHover(chart, rows, { x, y, pad, width, height, rentSeries, hoverScaleY: 1.08 });
       }
 
-      function setupBreakEvenHover(chart, rows, ctx) {
+      function setupRentGrowthHover(chart, rows, ctx) {
         const svg = chart.querySelector("svg");
         const canvas = chart.querySelector(".chart-canvas");
         const hoverGroup = chart.querySelector(".chart-hover");
         const hoverLine = chart.querySelector(".chart-hover-line");
-        const hoverDotApports = chart.querySelector(".chart-hover-dot-invested");
-        const hoverDotLoyers = chart.querySelector(".chart-hover-dot-gains");
-        const hoverDotCapital = chart.querySelector(".chart-hover-dot-capital");
+        const hoverDot = chart.querySelector(".chart-hover-dot-gains");
         const tooltip = chart.querySelector(".chart-tooltip");
         const tooltipYear = chart.querySelector(".chart-tooltip-year");
-        const tooltipApports = chart.querySelector(".chart-tooltip-invested strong");
-        const tooltipLoyers = chart.querySelector(".chart-tooltip-gains strong");
-        const tooltipCapital = chart.querySelector(".chart-tooltip-capital strong");
+        const tooltipRent = chart.querySelector(".chart-tooltip-gains strong");
+        const barElements = chart.querySelectorAll(".chart-bar");
+        let activeBar = null;
         if (!svg || !rows.length) return;
 
         hoverGroup.style.display = "none";
@@ -909,29 +1065,30 @@
           const index = Math.max(0, Math.min(rows.length - 1, Math.round(ratio * (rows.length - 1))));
           const row = rows[index];
           const px = ctx.x(index);
-          const apportsY = ctx.y(ctx.apportsSeries[index]);
-          const loyersY = ctx.y(ctx.loyersSeries[index]);
+          const py = ctx.y(ctx.rentSeries[index]);
+          const baseline = ctx.height - ctx.pad.bottom;
+          const visualPy = baseline - (baseline - py) * ctx.hoverScaleY;
+
+          if (activeBar !== barElements[index]) {
+            activeBar?.classList.remove("is-hovered");
+            activeBar = barElements[index];
+            activeBar?.classList.add("is-hovered");
+          }
 
           hoverGroup.style.display = "";
           hoverLine.setAttribute("x1", px);
           hoverLine.setAttribute("x2", px);
-          hoverDotApports.setAttribute("cx", px);
-          hoverDotApports.setAttribute("cy", apportsY);
-          hoverDotLoyers.setAttribute("cx", px);
-          hoverDotLoyers.setAttribute("cy", loyersY);
-          if (hoverDotCapital) {
-            hoverDotCapital.setAttribute("cx", px);
-            hoverDotCapital.setAttribute("cy", ctx.y(ctx.capitalSeries[index]));
-          }
+          hoverDot.setAttribute("cx", px);
+          hoverDot.setAttribute("cy", visualPy);
 
           tooltipYear.textContent = `Année ${row.annee}`;
-          tooltipApports.textContent = formatMoney(roundToHundred(ctx.apportsSeries[index]));
-          tooltipLoyers.textContent = formatMoney(roundToHundred(ctx.loyersSeries[index]));
-          if (tooltipCapital) tooltipCapital.textContent = formatMoney(roundToHundred(ctx.capitalSeries[index]));
+          tooltipRent.textContent = `${formatMoney(ctx.rentSeries[index])}/mois`;
 
           const screenPoint = svg.createSVGPoint();
           screenPoint.x = px;
-          screenPoint.y = Math.min(apportsY, loyersY);
+          // L'infobulle reste ancrée au sommet de la ligne de repère : seule sa
+          // position horizontale suit la barre survolée.
+          screenPoint.y = ctx.pad.top;
           const screenPos = screenPoint.matrixTransform(ctm);
           const canvasRect = canvas.getBoundingClientRect();
           tooltip.hidden = false;
@@ -940,6 +1097,8 @@
         };
 
         const hide = () => {
+          activeBar?.classList.remove("is-hovered");
+          activeBar = null;
           hoverGroup.style.display = "none";
           tooltip.hidden = true;
         };
@@ -955,7 +1114,11 @@
 
       function renderChart(rows) {
         if (state.mode === "scpi") {
-          renderBreakEvenChart(rows);
+          renderRentGrowthChart(rows);
+          return;
+        }
+        if (state.mode === "per") {
+          renderPerChart();
           return;
         }
 
@@ -1041,6 +1204,34 @@
         setupChartHover(chart, rows, { x, y, pad, width, height, investedSeries, capitalSeries, metric });
       }
 
+      function renderPerChart() {
+        const chart = document.querySelector("#chart");
+        const result = computePerResult(state.values.per);
+        const max = Math.max(result.taxBefore, 1);
+        const beforeHeight = result.taxBefore / max * 100;
+        const afterHeight = result.taxAfter / max * 100;
+        chart.innerHTML = `
+          <div class="chart-totals per-chart-totals">
+            <span>Revenu imposable avant <strong>${formatMoney(result.beforeIncome)}</strong></span>
+            <span>Revenu imposable après <strong>${formatMoney(result.afterIncome)}</strong></span>
+            <span class="capital-metric-interest">Gain fiscal <strong>${formatMoney(result.gain)}</strong></span>
+          </div>
+          <div class="per-bars" role="img" aria-label="Comparaison de l'impôt estimé avant et après versement PER">
+            <div class="per-bar-column">
+              <strong>${formatMoney(result.taxBefore)}</strong>
+              <div class="per-bar-track"><span class="per-bar-before" style="height:${beforeHeight}%"></span></div>
+              <small>Avant PER</small>
+            </div>
+            <div class="per-bar-saving"><span>− ${formatMoney(result.gain)}</span><small>économie</small></div>
+            <div class="per-bar-column">
+              <strong>${formatMoney(result.taxAfter)}</strong>
+              <div class="per-bar-track"><span class="per-bar-after" style="height:${afterHeight}%"></span></div>
+              <small>Après PER</small>
+            </div>
+          </div>
+        `;
+      }
+
       function setupChartHover(chart, rows, ctx) {
         const svg = chart.querySelector("svg");
         const canvas = chart.querySelector(".chart-canvas");
@@ -1111,6 +1302,24 @@
 
       function renderPie(rows) {
         const panel = document.querySelector("#pie");
+        if (state.mode === "per") {
+          const result = computePerResult(state.values.per);
+          const cost = Math.max(0, result.deductible - result.gain);
+          const total = result.deductible || 1;
+          const savingShare = result.gain / total * 100;
+          const costShare = 100 - savingShare;
+          panel.innerHTML = `
+            <div class="per-effort-layout">
+              <div class="per-effort-ring" style="--saving-share:${savingShare * 3.6}deg">
+                <div><span>Versement PER</span><strong>${formatMoney(result.deductible)}</strong></div>
+              </div>
+              <div class="pie-legend">
+                <div class="pie-legend-row pie-legend-invested"><i></i><div class="pie-legend-copy"><span>Effort réel</span><strong>${formatMoney(cost)}</strong></div><small>${formatNumber(costShare)} %</small></div>
+                <div class="pie-legend-row pie-legend-gains"><i></i><div class="pie-legend-copy"><span>Économie d'impôt</span><strong>${formatMoney(result.gain)}</strong></div><small>${formatNumber(savingShare)} %</small></div>
+              </div>
+            </div>`;
+          return;
+        }
         const last = rows.at(-1) || {};
         const metric = state.mode === "scpi" ? "revenusCumules" : state.mode === "av" ? "interetsCumules" : "gainsCumules";
         const metricLabel = state.mode === "scpi" ? "Loyers cumulés" : state.mode === "av" ? "Intérêts gagnés" : "Gains cumulés";
@@ -1198,8 +1407,14 @@
           headers = ["Année", "Versements", "Intérêts annuels", "Intérêts cumulés", "Capital"];
           mapper = (row) => [row.annee, formatMoney(row.versementsCumules), formatMoney(row.interetsAnnuels), formatMoney(row.interetsCumules), formatMoney(row.capital)];
         } else {
-          headers = ["Année", "Versements", "Gains annuels", "Gains cumulés", "Capital"];
-          mapper = (row) => [row.annee, formatMoney(row.versementsCumules), formatMoney(row.gainsAnnuels), formatMoney(row.gainsCumules), formatMoney(row.capital)];
+          headers = ["Versement PER", "Revenu imposable", "Impôt estimé", "Gain fiscal", "TMI"];
+          mapper = (row) => [
+            `${formatMoney(row.versement)} (${formatMoney(row.versement / 12)}/mois)`,
+            formatMoney(row.afterIncome),
+            formatMoney(row.taxAfter),
+            row.gain > 0 ? formatMoney(row.gain) : "—",
+            `${formatNumber(row.tmiAfter * 100)} %`
+          ];
         }
 
         table.innerHTML = `
@@ -1327,17 +1542,290 @@
         });
       }
 
+      function setupCompareHover(chart, avRows, ctx) {
+        const svg = chart.querySelector("svg");
+        const canvas = chart.querySelector(".chart-canvas");
+        const hoverGroup = chart.querySelector(".chart-hover");
+        const hoverLine = chart.querySelector(".chart-hover-line");
+        const hoverDotAv = chart.querySelector(".chart-hover-dot-capital");
+        const hoverDotLivret = chart.querySelector(".chart-hover-dot-invested");
+        const tooltip = chart.querySelector(".chart-tooltip");
+        const tooltipYear = chart.querySelector(".chart-tooltip-year");
+        const tooltipAv = chart.querySelector(".chart-tooltip-capital strong");
+        const tooltipLivret = chart.querySelector(".chart-tooltip-invested strong");
+        if (!svg || !avRows.length) return;
+
+        hoverGroup.style.display = "none";
+        tooltip.hidden = true;
+
+        const updateAt = (clientX, clientY) => {
+          const point = svg.createSVGPoint();
+          point.x = clientX;
+          point.y = clientY;
+          const ctm = svg.getScreenCTM();
+          if (!ctm) return;
+          const local = point.matrixTransform(ctm.inverse());
+          const ratio = (local.x - ctx.pad.left) / (ctx.width - ctx.pad.left - ctx.pad.right);
+          const index = Math.max(0, Math.min(avRows.length - 1, Math.round(ratio * (avRows.length - 1))));
+          const row = avRows[index];
+          const px = ctx.x(index);
+          const avY = ctx.y(ctx.avSeries[index]);
+          const livretY = ctx.y(ctx.livretSeries[index]);
+
+          hoverGroup.style.display = "";
+          hoverLine.setAttribute("x1", px);
+          hoverLine.setAttribute("x2", px);
+          hoverDotAv.setAttribute("cx", px);
+          hoverDotAv.setAttribute("cy", avY);
+          hoverDotLivret.setAttribute("cx", px);
+          hoverDotLivret.setAttribute("cy", livretY);
+
+          tooltipYear.textContent = `Année ${row.annee}`;
+          tooltipAv.textContent = formatMoney(roundToHundred(ctx.avSeries[index]));
+          tooltipLivret.textContent = formatMoney(roundToHundred(ctx.livretSeries[index]));
+
+          const screenPoint = svg.createSVGPoint();
+          screenPoint.x = px;
+          screenPoint.y = Math.min(avY, livretY);
+          const screenPos = screenPoint.matrixTransform(ctm);
+          const canvasRect = canvas.getBoundingClientRect();
+          tooltip.hidden = false;
+          tooltip.style.left = `${screenPos.x - canvasRect.left}px`;
+          tooltip.style.top = `${screenPos.y - canvasRect.top}px`;
+        };
+
+        const hide = () => {
+          hoverGroup.style.display = "none";
+          tooltip.hidden = true;
+        };
+
+        svg.addEventListener("mousemove", (event) => updateAt(event.clientX, event.clientY));
+        svg.addEventListener("mouseleave", hide);
+        svg.addEventListener("touchmove", (event) => {
+          const touch = event.touches[0];
+          if (touch) updateAt(touch.clientX, touch.clientY);
+        }, { passive: true });
+        svg.addEventListener("touchend", hide);
+      }
+
+      const LIVRET_A_PRESETS = [1.7, 2, 2.4, 3];
+
+      function animateValue(el, from, to, duration = 700) {
+        const token = (el._animateToken = (el._animateToken || 0) + 1);
+        const start = performance.now();
+        const step = (now) => {
+          if (el._animateToken !== token) return;
+          const progress = Math.min(1, (now - start) / duration);
+          const eased = 1 - Math.pow(1 - progress, 3);
+          el.textContent = formatMoney(from + (to - from) * eased).replace(/\s?€$/, "");
+          if (progress < 1) requestAnimationFrame(step);
+        };
+        requestAnimationFrame(step);
+      }
+
+      function renderCompareSubtabs() {
+        return `
+          <div class="tool-presets">
+            <button type="button" class="tool-preset${state.compareView === "ecart" ? " is-active" : ""}" data-subview="ecart">Manque à gagner</button>
+            <button type="button" class="tool-preset${state.compareView === "evolution" ? " is-active" : ""}" data-subview="evolution">Évolution dans le temps</button>
+          </div>
+        `;
+      }
+
+      function renderLivretRateControl(values) {
+        return `
+          <div class="fiscal-tmi">
+            <span>Taux net du Livret A retenu</span>
+            <div class="tool-presets">
+              ${LIVRET_A_PRESETS.map((t) => `<button type="button" class="tool-preset${values.tauxLivretA === t ? " is-active" : ""}" data-taux="${t}">${t} %</button>`).join("")}
+            </div>
+          </div>
+        `;
+      }
+
+      function renderCompareDisclaimer() {
+        return `
+          <p class="fiscal-disclaimer">
+            Comparaison brute avant fiscalité de sortie et hors plafond de versement du Livret A (22 950 € par personne) : à ajuster selon la situation réelle du client.
+          </p>
+        `;
+      }
+
+      function renderCompareShock(chart, avSeries, livretSeries, values) {
+        const avFinal = avSeries.at(-1) || 0;
+        const livretFinal = livretSeries.at(-1) || 0;
+        const ecart = Math.max(0, avFinal - livretFinal);
+        const livretShare = avFinal > 0 ? Math.max(0, Math.min(100, (livretFinal / avFinal) * 100)) : 0;
+        const previous = state.previousGauge.compare || { ecart: 0, livretShare: 0 };
+
+        chart.innerHTML = `
+          ${renderCompareSubtabs()}
+          <div class="capital-heading">
+            <div>
+              <span>Manque à gagner sur ${formatNumber(values.dureeTotale)} ans en restant sur un Livret A</span>
+              <strong class="capital-amount value-update"><span class="compare-shock-value">${formatMoney(previous.ecart).replace(/\s?€$/, "")}</span><span class="capital-currency">€</span></strong>
+            </div>
+          </div>
+          <div class="compare-race" aria-label="Comparaison des capitaux finaux entre Livret A et assurance vie">
+            <div class="compare-race-row">
+              <div class="compare-race-head">
+                <span>Livret A <small>${values.tauxLivretA} % net</small></span>
+                <strong>${formatMoney(livretFinal)}</strong>
+              </div>
+              <div class="compare-race-track"><span class="compare-race-bar compare-race-bar-livret" style="width:${previous.livretShare}%"></span></div>
+            </div>
+            <div class="compare-race-row">
+              <div class="compare-race-head">
+                <span>Assurance Vie <small>${values.rendement} %</small></span>
+                <strong>${formatMoney(avFinal)}</strong>
+              </div>
+              <div class="compare-race-track"><span class="compare-race-bar compare-race-bar-av" style="width:100%"></span></div>
+            </div>
+          </div>
+          <p class="capital-insight">
+            En plaçant ${formatMoney(values.capitalInitial)} aujourd'hui puis ${formatMoney(values.versementMensuel)} chaque mois pendant ${formatNumber(values.dureeTotale)} ans,
+            un Livret A à ${formatPercent(values.tauxLivretA)}&nbsp;% plafonnerait à ${formatMoney(livretFinal)}, contre ${formatMoney(avFinal)} pour l'assurance vie à
+            ${formatPercent(values.rendement)}&nbsp;% : c'est ${formatMoney(ecart)} que le client laisse sur la table en restant sur un placement sans risque.
+          </p>
+          ${renderLivretRateControl(values)}
+          ${renderCompareDisclaimer()}
+        `;
+
+        state.previousGauge.compare = { ecart, livretShare };
+        requestAnimationFrame(() => {
+          const bar = chart.querySelector(".compare-race-bar-livret");
+          if (bar) bar.style.width = `${livretShare}%`;
+          const valueEl = chart.querySelector(".compare-shock-value");
+          if (valueEl) animateValue(valueEl, previous.ecart, ecart);
+        });
+      }
+
+      function renderCompareEvolution(chart, avRows, avSeries, livretSeries, values) {
+        const width = 960;
+        const height = 380;
+        const pad = { top: 28, right: 36, bottom: 54, left: 128 };
+        const avAdjusted = avSeries.map((value, i) => Math.max(value, livretSeries[i]));
+        const max = Math.max(...avSeries, ...livretSeries, 1);
+
+        const x = (index) => pad.left + (index / Math.max(avRows.length - 1, 1)) * (width - pad.left - pad.right);
+        const y = (value) => height - pad.bottom - (value / max) * (height - pad.top - pad.bottom);
+        const pointsFor = (series) => series.map((value, index) => `${x(index)},${y(value)}`).join(" ");
+        const areaPath = (lowerSeries, upperSeries) => {
+          const top = upperSeries.map((value, index) => `${x(index)},${y(value)}`);
+          const bottom = lowerSeries.map((value, index) => `${x(index)},${y(value)}`).reverse();
+          return `M${top.join(" L")} L${bottom.join(" L")} Z`;
+        };
+        const zeroSeries = avRows.map(() => 0);
+
+        const grid = niceValueTicks(max, 4).map((value) => {
+          const lineY = y(value);
+          return `
+            <g>
+              <line x1="${pad.left}" y1="${lineY}" x2="${width - pad.right}" y2="${lineY}" />
+              <text x="${pad.left - 16}" y="${lineY + 5}">${formatMoney(value)}</text>
+            </g>
+          `;
+        }).join("");
+        const ticks = niceYearTicks(avRows.length).map((annee) => {
+          const tickX = x(annee - 1);
+          return `<text x="${tickX}" y="${height - 10}">${annee}</text>`;
+        }).join("");
+
+        const avFinal = avSeries.at(-1) || 0;
+        const livretFinal = livretSeries.at(-1) || 0;
+        const ecart = Math.max(0, avFinal - livretFinal);
+
+        chart.innerHTML = `
+          ${renderCompareSubtabs()}
+          <div class="chart-totals">
+            <span class="capital-metric-invested">Livret A <strong>${formatMoney(livretFinal)}</strong></span>
+            <span class="capital-metric-interest">Assurance Vie <strong>${formatMoney(avFinal)}</strong></span>
+            <span>Manque à gagner <strong>${formatMoney(ecart)}</strong></span>
+          </div>
+          <div class="chart-canvas">
+            <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Comparaison entre un Livret A et votre assurance vie">
+              <defs>
+                <linearGradient id="chartAreaInvested" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#6f8ba7" stop-opacity="0.5"></stop>
+                  <stop offset="100%" stop-color="#6f8ba7" stop-opacity="0.05"></stop>
+                </linearGradient>
+                <linearGradient id="chartAreaGains" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#b99761" stop-opacity="0.55"></stop>
+                  <stop offset="100%" stop-color="#b99761" stop-opacity="0.08"></stop>
+                </linearGradient>
+              </defs>
+              <g class="chart-grid">${grid}</g>
+              <path class="chart-area chart-area-invested" d="${areaPath(zeroSeries, livretSeries)}"></path>
+              <path class="chart-area chart-area-gains" d="${areaPath(livretSeries, avAdjusted)}"></path>
+              <polyline class="chart-line chart-line-invested" points="${pointsFor(livretSeries)}"></polyline>
+              <polyline class="chart-line chart-line-capital" points="${pointsFor(avSeries)}"></polyline>
+              <g class="chart-axis">${ticks}</g>
+              <g class="chart-hover">
+                <line class="chart-hover-line" x1="0" y1="${pad.top}" x2="0" y2="${height - pad.bottom}"></line>
+                <circle class="chart-hover-dot chart-hover-dot-capital" r="4"></circle>
+                <circle class="chart-hover-dot chart-hover-dot-invested" r="4"></circle>
+              </g>
+            </svg>
+            <div class="chart-tooltip">
+              <span class="chart-tooltip-year"></span>
+              <div class="chart-tooltip-row chart-tooltip-capital"><small>Assurance Vie</small><strong></strong></div>
+              <div class="chart-tooltip-row chart-tooltip-invested"><small>Livret A</small><strong></strong></div>
+            </div>
+          </div>
+          <div class="chart-legend">
+            <span><i class="legend-invested"></i>Livret A</span>
+            <span><i class="legend-capital"></i>Assurance Vie</span>
+          </div>
+          ${renderLivretRateControl(values)}
+          ${renderCompareDisclaimer()}
+        `;
+
+        setupCompareHover(chart, avRows, { x, y, pad, width, avSeries, livretSeries });
+      }
+
+      function renderCompare(avRows) {
+        const chart = document.querySelector("#compare");
+        const values = state.values.av;
+        const livretRows = computeLivretA(values);
+        const avSeries = avRows.map((row) => row.capital || 0);
+        const livretSeries = livretRows.map((row) => row.capital || 0);
+
+        if (state.compareView === "evolution") {
+          renderCompareEvolution(chart, avRows, avSeries, livretSeries, values);
+        } else {
+          renderCompareShock(chart, avSeries, livretSeries, values);
+        }
+
+        chart.querySelectorAll("[data-subview]").forEach((button) => {
+          button.addEventListener("click", () => {
+            state.compareView = button.dataset.subview;
+            renderCompare(avRows);
+          });
+        });
+        chart.querySelectorAll("[data-taux]").forEach((button) => {
+          button.addEventListener("click", () => {
+            values.tauxLivretA = Number(button.dataset.taux);
+            renderCompare(avRows);
+          });
+        });
+      }
+
       function renderOutputs() {
         const rows = rowsForMode();
         const content = modeContent[state.mode];
         document.title = `${content.title} | Simulateur`;
         document.querySelector("#tool-page-title").textContent = content.title;
         document.querySelector(".tool-card-title h2").textContent = content.chartTitle;
+        if (state.mode === "per") {
+          document.querySelector("#pie-panel .tool-card-title h2").textContent = "Effort réel et avantage fiscal";
+          document.querySelector("#table-panel .tool-card-title h2").textContent = "Scénarios de versement";
+        }
         renderSummary(rows);
         renderChart(rows);
         renderPie(rows);
         renderTable(rows);
         if (state.mode === "scpi") renderFiscal(rows);
+        if (state.mode === "av") renderCompare(rows);
       }
 
       function render() {
@@ -1353,6 +1841,9 @@
       if (state.mode === "scpi") {
         document.querySelector("#fiscal-view-button").hidden = false;
       }
+      if (state.mode === "av") {
+        document.querySelector("#compare-view-button").hidden = false;
+      }
 
       document.querySelectorAll(".tool-view-toggle button").forEach((button) => {
         button.addEventListener("click", () => {
@@ -1365,6 +1856,7 @@
             document.querySelector("#pie-panel").hidden = state.view !== "pie";
             document.querySelector("#table-panel").hidden = state.view !== "table";
             document.querySelector("#fiscal-panel").hidden = state.view !== "fiscal";
+            document.querySelector("#compare-panel").hidden = state.view !== "compare";
           };
           if (document.startViewTransition) {
             document.startViewTransition(applyView);
