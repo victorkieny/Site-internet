@@ -2597,7 +2597,7 @@ body[data-mode="scpi"] #chart-panel .tool-card-title h2 {
 }
 
 body[data-mode="scpi"] #chart-panel .line-chart {
-  gap: 22px;
+  gap: 10px;
 }
 
 body[data-mode="scpi"] #chart-panel .chart-milestone-strip {
@@ -2623,7 +2623,7 @@ body[data-mode="scpi"] #chart-panel .chart-milestone-strip::before {
 
 body[data-mode="scpi"] #chart-panel .chart-milestone-chip {
   position: relative;
-  min-height: 98px;
+  min-height: 76px;
   justify-content: flex-start;
   gap: 0;
   padding: 6px 12px 0;
@@ -2734,7 +2734,7 @@ body[data-mode="scpi"] #chart-panel .chart-bar {
 }
 
 body[data-mode="scpi"] #chart-panel .chart-bar.is-hovered {
-  transform: scaleX(1.18) scaleY(1.08);
+  transform: scaleX(1.12) scaleY(1.05);
   filter: brightness(1.08) drop-shadow(0 5px 9px rgba(84, 62, 35, 0.16));
 }
 
@@ -2818,6 +2818,7 @@ body[data-mode="scpi"] #chart-panel .chart-tooltip {
     inset 0 1px 0 rgba(255, 255, 255, 0.46);
   -webkit-backdrop-filter: blur(11px) saturate(1.1);
   backdrop-filter: blur(11px) saturate(1.1);
+  transform: translate(-50%, calc(-100% - 8px));
   transform-origin: 50% 100%;
   animation: scpiTooltipIn 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
   transition: left 70ms linear, top 70ms linear;
@@ -2865,11 +2866,11 @@ body[data-mode="scpi"] #chart-panel .chart-tooltip-gains strong {
 @keyframes scpiTooltipIn {
   from {
     opacity: 0;
-    transform: translate(-50%, calc(-100% - 8px)) scale(0.96);
+    transform: translate(-50%, calc(-100% - 6px)) scale(0.96);
   }
   to {
     opacity: 1;
-    transform: translate(-50%, calc(-100% - 14px)) scale(1);
+    transform: translate(-50%, calc(-100% - 8px)) scale(1);
   }
 }
 
@@ -3968,6 +3969,14 @@ body[data-mode="av"] .av-result .capital-breakdown {
   height: 8px;
   background: rgba(43, 37, 30, 0.07);
   box-shadow: inset 0 1px 2px rgba(43, 37, 30, 0.09);
+}
+
+body[data-mode="av"] .av-result [data-av-value] {
+  font-variant-numeric: tabular-nums;
+}
+
+body[data-mode="av"] .av-result .capital-visual > span {
+  transition: width 420ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 body[data-mode="av"] .av-result .capital-breakdown-labels {

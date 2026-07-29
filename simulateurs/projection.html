@@ -471,6 +471,16 @@
         window.setTimeout(cleanup, 420);
       }
 
+      let outputsRenderFrame = 0;
+
+      function scheduleRenderOutputs() {
+        if (outputsRenderFrame) return;
+        outputsRenderFrame = requestAnimationFrame(() => {
+          outputsRenderFrame = 0;
+          renderOutputs();
+        });
+      }
+
       function renderFields() {
         const fields = document.querySelector("#fields");
         const values = state.values[state.mode];
@@ -536,7 +546,7 @@
             updateRangeProgress(range);
             refreshDependentFields();
             updatePresets();
-            renderOutputs();
+            scheduleRenderOutputs();
           });
           input.addEventListener("blur", () => {
             input.value = formatInputNumber(values[field.key]);
@@ -547,7 +557,7 @@
             updateRangeProgress(range);
             refreshDependentFields();
             updatePresets();
-            renderOutputs();
+            scheduleRenderOutputs();
           });
           const suffix = document.createElement("small");
           suffix.textContent = field.suffix;
@@ -718,6 +728,51 @@
         if (state.mode === "av") renderFees();
       }
 
+      function animateFormattedNumber(element, target, formatter, duration = 420) {
+        if (!element) return;
+
+        const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        const storedValue = Number(element.dataset.value);
+        const startValue = Number.isFinite(element._displayValue)
+          ? element._displayValue
+          : Number.isFinite(storedValue) ? storedValue : target;
+        const token = (element._valueAnimationToken = (element._valueAnimationToken || 0) + 1);
+
+        if (reducedMotion || !Number.isFinite(startValue) || Math.abs(target - startValue) < 0.001) {
+          element._displayValue = target;
+          element.dataset.value = target;
+          element.textContent = formatter(target);
+          element.classList.remove("is-number-updating");
+          return;
+        }
+
+        const startedAt = performance.now();
+        element.classList.add("is-number-updating");
+
+        const update = (now) => {
+          if (element._valueAnimationToken !== token) return;
+          const progress = Math.min(1, (now - startedAt) / duration);
+          const eased = 1 - Math.pow(1 - progress, 3);
+          const current = startValue + (target - startValue) * eased;
+
+          element._displayValue = current;
+          element.dataset.value = current;
+          element.textContent = formatter(current);
+
+          if (progress < 1) {
+            requestAnimationFrame(update);
+            return;
+          }
+
+          element._displayValue = target;
+          element.dataset.value = target;
+          element.textContent = formatter(target);
+          element.classList.remove("is-number-updating");
+        };
+
+        requestAnimationFrame(update);
+      }
+
       function renderSummary(rows) {
         const last = rows.at(-1) || {};
         const summary = document.querySelector("#summary");
@@ -729,9 +784,41 @@
           const interests = last.interetsCumules || 0;
           const investedShare = capital > 0 ? Math.max(0, Math.min(100, (invested / capital) * 100)) : 0;
           const interestsShare = Math.max(0, 100 - investedShare);
-          const previousGauge = state.previousGauge.av || { investedShare, interestsShare };
           const multiple = invested > 0 ? capital / invested : 0;
           const annualRate = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 1 }).format(values.rendement);
+          const existingResult = summary.querySelector(".av-result");
+
+          if (existingResult) {
+            const updateNumber = (key, target, formatter) => {
+              animateFormattedNumber(existingResult.querySelector(`[data-av-value="${key}"]`), target, formatter);
+            };
+            const updateCopy = (key, text) => {
+              const element = existingResult.querySelector(`[data-av-copy="${key}"]`);
+              if (element) element.textContent = text;
+            };
+
+            updateNumber("capital", capital, formatMoney);
+            updateNumber("invested-share", investedShare, (value) => `${formatNumber(value)} %`);
+            updateNumber("interests-share", interestsShare, (value) => `${formatNumber(value)} %`);
+            updateNumber("invested", invested, formatMoney);
+            updateNumber("interests", interests, formatMoney);
+            updateNumber("multiple", multiple, (value) => `× ${value.toFixed(2)}`);
+            updateNumber("interests-share-detail", interestsShare, (value) => `${formatNumber(value)} %`);
+
+            const [investedBar, interestsBar] = existingResult.querySelectorAll(".capital-breakdown > div");
+            const [investedVisual, interestsVisual] = existingResult.querySelectorAll(".capital-visual > span");
+            if (investedBar) investedBar.style.width = `${investedShare}%`;
+            if (interestsBar) interestsBar.style.width = `${interestsShare}%`;
+            if (investedVisual) investedVisual.style.width = `${investedShare}%`;
+            if (interestsVisual) interestsVisual.style.width = `${interestsShare}%`;
+
+            updateCopy("capital-initial", formatMoney(values.capitalInitial));
+            updateCopy("monthly-payment", formatMoney(values.versementMensuel));
+            updateCopy("duration", formatNumber(values.dureeTotale));
+            updateCopy("annual-rate", annualRate);
+            updateCopy("capital-final", formatMoney(capital));
+            return;
+          }
 
           summary.innerHTML = `
             <article class="tool-result-card tool-result-editorial av-result">
@@ -741,26 +828,26 @@
               <div class="tool-hero tool-hero-single">
                 <div class="tool-hero-panel tool-hero-panel-blue">
                   <span class="tool-hero-label">Capital final estimé</span>
-                  <strong class="tool-hero-amount value-update">${formatMoney(capital)}</strong>
+                  <strong class="tool-hero-amount value-update" data-av-value="capital" data-value="${capital}">${formatMoney(capital)}</strong>
                 </div>
               </div>
               <div class="capital-gauge">
                 <div class="capital-breakdown-labels">
-                  <span class="capital-metric-invested"><em>Sommes investies</em><strong>${formatNumber(investedShare)} %</strong></span>
-                  <span class="capital-metric-interest"><em>Intérêts gagnés</em><strong>${formatNumber(interestsShare)} %</strong></span>
+                  <span class="capital-metric-invested"><em>Sommes investies</em><strong data-av-value="invested-share" data-value="${investedShare}">${formatNumber(investedShare)} %</strong></span>
+                  <span class="capital-metric-interest"><em>Intérêts gagnés</em><strong data-av-value="interests-share" data-value="${interestsShare}">${formatNumber(interestsShare)} %</strong></span>
                 </div>
                 <div class="capital-breakdown" aria-label="Répartition du capital final">
-                  <div style="width:${previousGauge.investedShare}%"></div>
-                  <div style="width:${previousGauge.interestsShare}%"></div>
+                  <div style="width:${investedShare}%"></div>
+                  <div style="width:${interestsShare}%"></div>
                 </div>
               </div>
               <div class="capital-metrics">
-                <span class="capital-metric-invested"><small>Sommes investies</small><strong class="value-update">${formatMoney(invested)}</strong></span>
-                <span class="capital-metric-interest"><small>Intérêts gagnés</small><strong class="value-update">${formatMoney(interests)}</strong></span>
+                <span class="capital-metric-invested"><small>Sommes investies</small><strong class="value-update" data-av-value="invested" data-value="${invested}">${formatMoney(invested)}</strong></span>
+                <span class="capital-metric-interest"><small>Intérêts gagnés</small><strong class="value-update" data-av-value="interests" data-value="${interests}">${formatMoney(interests)}</strong></span>
               </div>
               <div class="capital-shares">
-                <span><small>Multiple obtenu</small><strong class="value-update">× ${multiple.toFixed(2)}</strong></span>
-                <span><small>Part des intérêts gagnés</small><strong class="value-update">${formatNumber(interestsShare)} %</strong></span>
+                <span><small>Multiple obtenu</small><strong class="value-update" data-av-value="multiple" data-value="${multiple}">× ${multiple.toFixed(2)}</strong></span>
+                <span><small>Part des intérêts gagnés</small><strong class="value-update" data-av-value="interests-share-detail" data-value="${interestsShare}">${formatNumber(interestsShare)} %</strong></span>
               </div>
               <div class="capital-insight">
                 <div class="capital-visual" aria-label="Répartition visuelle du capital projeté">
@@ -768,20 +855,13 @@
                   <span style="width:${interestsShare}%"></span>
                 </div>
                 <p>
-                  En plaçant ${formatMoney(values.capitalInitial)} aujourd'hui, puis ${formatMoney(values.versementMensuel)}
-                  chaque mois pendant ${formatNumber(values.dureeTotale)} ans, à un rendement annuel moyen de
-                  ${annualRate} %, votre assurance vie atteindrait ${formatMoney(capital)}.
+                  En plaçant <span data-av-copy="capital-initial">${formatMoney(values.capitalInitial)}</span> aujourd'hui, puis <span data-av-copy="monthly-payment">${formatMoney(values.versementMensuel)}</span>
+                  chaque mois pendant <span data-av-copy="duration">${formatNumber(values.dureeTotale)}</span> ans, à un rendement annuel moyen de
+                  <span data-av-copy="annual-rate">${annualRate}</span> %, votre assurance vie atteindrait <span data-av-copy="capital-final">${formatMoney(capital)}</span>.
                 </p>
               </div>
             </article>
           `;
-          state.previousGauge.av = { investedShare, interestsShare };
-          requestAnimationFrame(() => {
-            const [investedBar, interestsBar] = summary.querySelectorAll(".capital-breakdown > div");
-            if (!investedBar || !interestsBar) return;
-            investedBar.style.width = `${investedShare}%`;
-            interestsBar.style.width = `${interestsShare}%`;
-          });
           return;
         }
 
@@ -925,7 +1005,7 @@
         const animateBars = chart.dataset.initialized !== "true";
         const width = 960;
         const height = 400;
-        const pad = { top: 72, right: 36, bottom: 54, left: 128 };
+        const pad = { top: 64, right: 36, bottom: 54, left: 128 };
         const values = state.values.scpi;
 
         const rentSeries = rows.map((row) => row.revenuMensuel || 0);
@@ -1036,7 +1116,7 @@
         `;
 
         chart.dataset.initialized = "true";
-        setupRentGrowthHover(chart, rows, { x, y, pad, width, height, rentSeries, hoverScaleY: 1.08 });
+        setupRentGrowthHover(chart, rows, { x, y, pad, width, height, rentSeries, hoverScaleY: 1.05 });
       }
 
       function setupRentGrowthHover(chart, rows, ctx) {
@@ -1079,6 +1159,7 @@
           hoverGroup.style.display = "";
           hoverLine.setAttribute("x1", px);
           hoverLine.setAttribute("x2", px);
+          hoverLine.setAttribute("y1", visualPy);
           hoverDot.setAttribute("cx", px);
           hoverDot.setAttribute("cy", visualPy);
 
@@ -1087,9 +1168,9 @@
 
           const screenPoint = svg.createSVGPoint();
           screenPoint.x = px;
-          // L'infobulle reste ancrée au sommet de la ligne de repère : seule sa
-          // position horizontale suit la barre survolée.
-          screenPoint.y = ctx.pad.top;
+          // L'infobulle suit précisément le sommet visuel de la barre afin de
+          // conserver un écart court et constant avec la ligne de repère.
+          screenPoint.y = visualPy;
           const screenPos = screenPoint.matrixTransform(ctm);
           const canvasRect = canvas.getBoundingClientRect();
           tooltip.hidden = false;
