@@ -23,7 +23,7 @@
         <section class="tool-overview" aria-label="Synthèse et hypothèses">
           <aside class="tool-params" aria-label="Hypothèses">
             <div class="tool-params-title">
-              <h2>Hypothèses</h2>
+              <h2><button type="button" id="zero-fields" class="tool-zero-fields" aria-label="Hypothèses — mettre tous les curseurs à zéro" title="Mettre tous les curseurs à zéro">Hypothèses</button></h2>
               <button type="button" id="reset-fields" class="tool-reset">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 1 2.64 6.36"></path><path d="M3 21v-6h6"></path></svg>
                 Réinitialiser
@@ -58,6 +58,19 @@
             <div class="tool-chart-card" id="chart-panel">
               <div class="tool-card-title">
                 <h2>Projection</h2>
+                <button
+                  type="button"
+                  class="scpi-reinvest-control"
+                  id="scpi-chart-reinvest"
+                  aria-pressed="false"
+                  hidden
+                >
+                  <span class="scpi-reinvest-copy">
+                    <small>Réinvestissement</small>
+                    <strong>Loyers non réinvestis</strong>
+                  </span>
+                  <span class="scpi-reinvest-switch" aria-hidden="true"><i></i></span>
+                </button>
               </div>
               <div class="line-chart" id="chart" aria-label="Graphique de projection"></div>
             </div>
@@ -382,15 +395,15 @@
           { key: "rendement", label: "Taux de distribution", type: "number", min: 0, max: 15, step: 0.1, suffix: "%" },
           { key: "versementInitial", label: "Versement initial", type: "number", min: 0, max: 500000, step: 1000, suffix: "€" },
           { key: "versementMensuel", label: "Versement mensuel", type: "number", min: 0, max: 5000, step: 50, suffix: "€" },
-          { key: "dureeVersements", label: "Durée des versements", type: "number", min: 1, max: 50, step: 1, suffix: "ans" },
-          { key: "dureeTotale", label: "Durée totale", type: "number", min: 1, max: 80, step: 1, suffix: "ans" },
+          { key: "dureeVersements", label: "Durée des versements", type: "number", min: 0, max: 50, step: 1, suffix: "ans" },
+          { key: "dureeTotale", label: "Durée totale", type: "number", min: 0, max: 80, step: 1, suffix: "ans" },
           { key: "reinvestir", label: "Réinvestir les loyers", type: "checkbox", checkedNote: "Les loyers sont réinjectés dans le capital pendant la période de versement, puis vous sont versés.\nCe calcul réinvestit les loyers bruts, avant fiscalité." }
         ],
         av: [
           { key: "capitalInitial", label: "Versement initial", type: "number", min: 0, max: 500000, step: 1000, suffix: "€" },
           { key: "versementMensuel", label: "Versement mensuel", type: "number", min: 0, max: 10000, step: 50, suffix: "€" },
           { key: "rendement", label: "Rendement annuel", type: "number", min: 0, max: 15, step: 0.1, suffix: "%" },
-          { key: "dureeTotale", label: "Durée totale", type: "number", min: 1, max: 60, step: 1, suffix: "ans" },
+          { key: "dureeTotale", label: "Durée totale", type: "number", min: 0, max: 60, step: 1, suffix: "ans" },
           { key: "fraisEntreeActifs", label: "Droits d'entrée", type: "checkbox" },
           { key: "fraisEntree", label: "Taux des droits d'entrée", type: "number", min: 0, max: 4.8, step: 0.1, suffix: "%", dependsOn: "fraisEntreeActifs" },
           { key: "fraisActifs", label: "Frais de gestion annuels", type: "checkbox" },
@@ -471,10 +484,65 @@
         window.setTimeout(cleanup, 420);
       }
 
+      function updateScpiReinvestment(nextValue, { preserveChartPosition = false } = {}) {
+        const panel = document.querySelector("#chart-panel");
+        const chart = document.querySelector("#chart");
+        const panelRect = panel?.getBoundingClientRect();
+        const chartIsVisible = panelRect
+          ? panelRect.bottom > 0 && panelRect.top < window.innerHeight
+          : false;
+        const anchorTop = (preserveChartPosition || chartIsVisible) && panelRect ? panelRect.top : null;
+        const lockedHeight = panelRect?.height || 0;
+
+        // Le rendu du graphique et celui des hypothèses sont synchronisés, mais la
+        // carte conserve ici son encombrement exact pendant le remplacement du SVG.
+        // Cela évite que l'ancrage automatique du navigateur ne déplace la fenêtre.
+        if (panel && lockedHeight) {
+          panel.style.height = `${lockedHeight}px`;
+          panel.classList.add("is-scenario-updating");
+        }
+
+        state.values.scpi.reinvestir = Boolean(nextValue);
+        chart.dataset.initialized = "false";
+
+        // Synchronisation légère : on ne reconstruit pas le panneau situé au-dessus
+        // du graphe, ce qui supprimerait puis recréerait plusieurs nœuds dans la page.
+        const hypothesisToggle = document.querySelector('[data-checkbox-field="reinvestir"]');
+        const hypothesisNote = document.querySelector('[data-note-for="reinvestir"]');
+        if (hypothesisToggle) hypothesisToggle.checked = state.values.scpi.reinvestir;
+        if (hypothesisNote) {
+          hypothesisNote.classList.toggle("is-visible", state.values.scpi.reinvestir);
+          hypothesisNote.setAttribute("aria-hidden", String(!state.values.scpi.reinvestir));
+        }
+        renderOutputs();
+
+        const restoreAnchor = () => {
+          if (anchorTop === null || !panel) return;
+          const delta = panel.getBoundingClientRect().top - anchorTop;
+          if (Math.abs(delta) > 0.5) window.scrollBy({ top: delta, left: 0, behavior: "instant" });
+        };
+
+        restoreAnchor();
+        requestAnimationFrame(() => {
+          restoreAnchor();
+          if (!panel) return;
+          panel.classList.remove("is-scenario-updating");
+          requestAnimationFrame(restoreAnchor);
+        });
+      }
+
+      function releaseScpiChartHeightLock() {
+        const panel = document.querySelector("#chart-panel");
+        if (!panel) return;
+        panel.style.height = "";
+        panel.classList.remove("is-scenario-updating");
+      }
+
       let outputsRenderFrame = 0;
 
       function scheduleRenderOutputs() {
         if (outputsRenderFrame) return;
+        releaseScpiChartHeightLock();
         outputsRenderFrame = requestAnimationFrame(() => {
           outputsRenderFrame = 0;
           renderOutputs();
@@ -582,6 +650,7 @@
                 updateRangeProgress(range);
                 refreshDependentFields();
                 updatePresets();
+                releaseScpiChartHeightLock();
                 renderOutputs();
               });
               presetRow.append(button);
@@ -709,7 +778,12 @@
           const input = document.createElement("input");
           input.type = "checkbox";
           input.checked = values[field.key];
+          input.dataset.checkboxField = field.key;
           input.addEventListener("change", () => {
+            if (state.mode === "scpi" && field.key === "reinvestir") {
+              updateScpiReinvestment(input.checked);
+              return;
+            }
             values[field.key] = input.checked;
             withHeightTransition(document.querySelector(".tool-params"), render);
           });
@@ -717,9 +791,12 @@
 
           fields.append(label);
 
-          if (field.checkedNote && values[field.key]) {
+          if (field.checkedNote) {
             const note = document.createElement("small");
             note.className = "tool-field-note";
+            note.dataset.noteFor = field.key;
+            note.classList.toggle("is-visible", Boolean(values[field.key]));
+            note.setAttribute("aria-hidden", String(!values[field.key]));
             note.textContent = field.checkedNote;
             fields.append(note);
           }
@@ -876,6 +953,8 @@
           const revenuEffort = loyerMensuelFin - revenuInitial;
           const immediateFlow = scpiImmediateFlowRevenu(revenuInitial);
           const viagerFlow = scpiFlowRevenu(revenuEffort);
+          const hasInitialPayment = Number(values.versementInitial) > 0;
+          const hasScheduledPayment = Number(values.versementMensuel) > 0;
           const moneyMarkup = (amount) => `<span class="scpi-money-value">${formatMoney(amount).replace(/\s?€$/, "")}</span><small class="scpi-money-unit">€</small>`;
           const flowSecondaryMarkup = (flow) => {
             if (flow.secondaryValue !== undefined) {
@@ -905,7 +984,7 @@
                 </div>
               </div>
               <div class="scpi-flow-grid">
-              ${immediateFlow ? `
+              ${hasInitialPayment && immediateFlow ? `
               <div class="scpi-flow is-open" data-flow="immediate" aria-label="Mécanique du versement initial : capital versé aujourd'hui, loyer généré dès le premier mois">
                 <div class="scpi-flow-step scpi-flow-effort">
                   <span class="scpi-flow-label">Versement initial</span>
@@ -919,7 +998,7 @@
                 </div>
               </div>
               ` : ""}
-              ${viagerFlow ? `
+              ${hasScheduledPayment && viagerFlow ? `
               <div class="scpi-flow is-open" data-flow="viager" aria-label="Mécanique du versement programmé : effort mensuel pendant la phase d'épargne, loyer viager ensuite">
                 <div class="scpi-flow-step scpi-flow-effort">
                   <span class="scpi-flow-label">Versement programmé</span>
@@ -1002,13 +1081,30 @@
       // clés. Le total versé reste visible en contexte, mais en retrait.
       function renderRentGrowthChart(rows) {
         const chart = document.querySelector("#chart");
-        const animateBars = chart.dataset.initialized !== "true";
+        if (!rows.length) {
+          chart.dataset.initialized = "false";
+          chart.innerHTML = `
+            <div class="chart-zero-state" role="status">
+              <span>Déplacez un curseur pour afficher la projection.</span>
+            </div>
+          `;
+          return;
+        }
         const width = 960;
         const height = 400;
         const pad = { top: 64, right: 36, bottom: 54, left: 128 };
         const values = state.values.scpi;
 
         const rentSeries = rows.map((row) => row.revenuMensuel || 0);
+        const comparisonRows = computeScpi({ ...values, reinvestir: !values.reinvestir });
+        const comparisonSeries = comparisonRows.map((row) => row.revenuMensuel || 0);
+        const nonReinvestedSeries = values.reinvestir ? comparisonSeries : rentSeries;
+        const reinvestedSeries = values.reinvestir ? rentSeries : comparisonSeries;
+        const previousSeries = Array.isArray(chart._rentSeries) && chart._rentSeries.length === rentSeries.length
+          ? chart._rentSeries
+          : null;
+        const scenarioChanged = previousSeries !== null && chart._reinvested !== values.reinvestir;
+        const animateBars = chart.dataset.initialized !== "true" && !scenarioChanged;
         const lastYear = rows.length;
         const hasIncomePhase = values.dureeVersements < lastYear;
 
@@ -1026,7 +1122,10 @@
         candidateYears.add(finalMilestoneYear);
         const milestoneYears = Array.from(candidateYears).sort((a, b) => a - b);
 
-        const max = Math.max(...rentSeries, 1);
+        // Les deux scénarios partagent volontairement la même échelle. Sans cela,
+        // chaque série occuperait toute la hauteur et masquerait visuellement la
+        // puissance du réinvestissement malgré des montants très différents.
+        const max = Math.max(...nonReinvestedSeries, ...reinvestedSeries, 1);
         const scaleMax = max * 1.08;
         const plotWidth = width - pad.left - pad.right;
         const x = (index) => pad.left + (index / Math.max(rows.length - 1, 1)) * (width - pad.left - pad.right);
@@ -1045,12 +1144,41 @@
           const barHeight = Math.max(0, baseline - topY);
           const phaseClass = annee <= values.dureeVersements ? "chart-bar-investment" : "chart-bar-income";
           const classes = ["chart-bar", phaseClass];
-          if (animateBars) classes.push("chart-bar-enter");
+          if (scenarioChanged) classes.push("chart-bar-scenario-transition");
+          else if (animateBars) classes.push("chart-bar-enter");
           if (milestoneYears.includes(annee)) classes.push("chart-bar-milestone");
           if (annee === finalMilestoneYear) classes.push("chart-bar-final");
-          const animationStyle = animateBars ? ` style="--bar-delay: ${index * 9}ms"` : "";
+          const previousHeight = previousSeries
+            ? Math.max(0, baseline - y(previousSeries[index] || 0))
+            : 0;
+          const startScale = barHeight > 0 ? previousHeight / barHeight : 1;
+          const animationStyle = scenarioChanged
+            ? ` style="--bar-delay: ${index * 7}ms; --bar-start-scale: ${startScale.toFixed(4)}"`
+            : animateBars ? ` style="--bar-delay: ${index * 9}ms"` : "";
           return `<rect class="${classes.join(" ")}"${animationStyle} x="${(x(index) - barWidth / 2).toFixed(2)}" y="${topY.toFixed(2)}" width="${barWidth.toFixed(2)}" height="${barHeight.toFixed(2)}" rx="${barRadius.toFixed(2)}"></rect>`;
         }).join("");
+
+        const referenceBars = scenarioChanged ? previousSeries.map((value, index) => {
+          const annee = index + 1;
+          const topY = y(value);
+          const barHeight = Math.max(0, baseline - topY);
+          const phaseClass = annee <= values.dureeVersements
+            ? "chart-reference-investment"
+            : "chart-reference-income";
+          return `<rect class="chart-reference-bar ${phaseClass}" style="--bar-delay: ${index * 4}ms" x="${(x(index) - barWidth / 2).toFixed(2)}" y="${topY.toFixed(2)}" width="${barWidth.toFixed(2)}" height="${barHeight.toFixed(2)}" rx="${barRadius.toFixed(2)}"></rect>`;
+        }).join("") : "";
+
+        const nonReinvestedFinal = nonReinvestedSeries.at(-1) || 0;
+        const reinvestedFinal = reinvestedSeries.at(-1) || 0;
+        const reinvestmentGain = Math.max(0, reinvestedFinal - nonReinvestedFinal);
+        const reinvestmentMultiple = nonReinvestedFinal > 0 ? reinvestedFinal / nonReinvestedFinal : 0;
+        const impactMarkup = scenarioChanged && reinvestmentGain > 0 ? `
+          <div class="chart-reinvest-impact" role="status">
+            <small>${values.reinvestir ? "Effet du réinvestissement" : "Potentiel avec réinvestissement"}</small>
+            <strong>+${formatMoney(reinvestmentGain)}<span>/mois</span></strong>
+            ${reinvestmentMultiple > 1 ? `<em>Loyer final × ${new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 1 }).format(reinvestmentMultiple)}</em>` : ""}
+          </div>
+        ` : "";
 
         const grid = niceValueTicks(max, 4).map((value) => {
           const lineY = y(value);
@@ -1097,6 +1225,7 @@
                 </linearGradient>
               </defs>
               <g class="chart-grid">${grid}</g>
+              <g class="chart-reference-bars">${referenceBars}</g>
               <g class="chart-bars">${bars}</g>
               <g class="chart-axis">${ticks}</g>
               <g class="chart-hover">
@@ -1104,6 +1233,7 @@
                 <circle class="chart-hover-dot chart-hover-dot-gains" r="4"></circle>
               </g>
             </svg>
+            ${impactMarkup}
             <div class="chart-tooltip">
               <span class="chart-tooltip-year"></span>
               <div class="chart-tooltip-row chart-tooltip-gains"><small>Loyer</small><strong></strong></div>
@@ -1116,6 +1246,8 @@
         `;
 
         chart.dataset.initialized = "true";
+        chart._rentSeries = [...rentSeries];
+        chart._reinvested = values.reinvestir;
         setupRentGrowthHover(chart, rows, { x, y, pad, width, height, rentSeries, hoverScaleY: 1.05 });
       }
 
@@ -1205,6 +1337,14 @@
         }
 
         const chart = document.querySelector("#chart");
+        if (!rows.length) {
+          chart.innerHTML = `
+            <div class="chart-zero-state" role="status">
+              <span>Déplacez un curseur pour afficher la projection.</span>
+            </div>
+          `;
+          return;
+        }
         const width = 960;
         const height = 380;
         const pad = { top: 28, right: 36, bottom: 54, left: 128 };
@@ -1444,12 +1584,16 @@
               <svg viewBox="0 0 ${size} ${size}" role="img" aria-label="Répartition du capital final entre sommes investies et ${metricLabel.toLowerCase()}">
                 <defs>
                   <linearGradient id="pieInvested" x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0%" stop-color="#6f8ba7"></stop>
-                    <stop offset="100%" stop-color="#9eb2c4"></stop>
+                    <stop offset="0%" stop-color="#627f9b"></stop>
+                    <stop offset="48%" stop-color="#89a2b8"></stop>
+                    <stop offset="78%" stop-color="#aec0cd"></stop>
+                    <stop offset="100%" stop-color="#7893ac"></stop>
                   </linearGradient>
                   <linearGradient id="pieGains" x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0%" stop-color="#b99761"></stop>
-                    <stop offset="100%" stop-color="#dfcba8"></stop>
+                    <stop offset="0%" stop-color="#9f7135"></stop>
+                    <stop offset="42%" stop-color="#bd9252"></stop>
+                    <stop offset="74%" stop-color="#dfc48f"></stop>
+                    <stop offset="100%" stop-color="#ad7d3d"></stop>
                   </linearGradient>
                 </defs>
                 <circle class="pie-track" cx="${size / 2}" cy="${size / 2}" r="${radius}" stroke-width="${strokeWidth}"></circle>
@@ -1885,7 +2029,16 @@
         const avSeries = avRows.map((row) => row.capital || 0);
         const livretSeries = livretRows.map((row) => row.capital || 0);
 
-        if (state.compareView === "evolution") {
+        if (!avRows.length) {
+          chart.innerHTML = `
+            ${renderCompareSubtabs()}
+            <div class="chart-zero-state" role="status">
+              <span>Déplacez un curseur pour afficher la comparaison.</span>
+            </div>
+            ${renderLivretRateControl(values)}
+            ${renderCompareDisclaimer()}
+          `;
+        } else if (state.compareView === "evolution") {
           renderCompareEvolution(chart, avRows, avSeries, livretSeries, values);
         } else {
           renderCompareShock(chart, avSeries, livretSeries, values);
@@ -1908,9 +2061,18 @@
       function renderOutputs() {
         const rows = rowsForMode();
         const content = modeContent[state.mode];
+        const chartReinvestControl = document.querySelector("#scpi-chart-reinvest");
         document.title = `${content.title} | Simulateur`;
         document.querySelector("#tool-page-title").textContent = content.title;
         document.querySelector(".tool-card-title h2").textContent = content.chartTitle;
+        chartReinvestControl.hidden = state.mode !== "scpi";
+        if (state.mode === "scpi") {
+          const reinvestir = state.values.scpi.reinvestir;
+          chartReinvestControl.classList.toggle("is-active", reinvestir);
+          chartReinvestControl.setAttribute("aria-pressed", String(reinvestir));
+          chartReinvestControl.setAttribute("aria-label", reinvestir ? "Désactiver le réinvestissement des loyers" : "Activer le réinvestissement des loyers");
+          chartReinvestControl.querySelector("strong").textContent = reinvestir ? "Loyers réinvestis" : "Loyers non réinvestis";
+        }
         if (state.mode === "per") {
           document.querySelector("#pie-panel .tool-card-title h2").textContent = "Effort réel et avantage fiscal";
           document.querySelector("#table-panel .tool-card-title h2").textContent = "Scénarios de versement";
@@ -1924,14 +2086,30 @@
       }
 
       function render() {
+        releaseScpiChartHeightLock();
         renderFields();
         renderOutputs();
       }
+
+      document.querySelector("#zero-fields").addEventListener("click", () => {
+        const values = state.values[state.mode];
+        fieldDefinitions[state.mode].forEach((field) => {
+          if (field.type === "number") values[field.key] = 0;
+        });
+        withHeightTransition(document.querySelector(".tool-params"), render);
+      });
 
       document.querySelector("#reset-fields").addEventListener("click", () => {
         state.values[state.mode] = structuredClone(defaults[state.mode]);
         withHeightTransition(document.querySelector(".tool-params"), render);
       });
+
+      document.querySelector("#scpi-chart-reinvest").addEventListener("click", () => {
+        if (state.mode !== "scpi") return;
+        updateScpiReinvestment(!state.values.scpi.reinvestir, { preserveChartPosition: true });
+      });
+
+      window.addEventListener("resize", releaseScpiChartHeightLock, { passive: true });
 
       if (state.mode === "scpi") {
         document.querySelector("#fiscal-view-button").hidden = false;
