@@ -1079,8 +1079,9 @@
       // perdue tant que le point de bascule n'est pas atteint) : il montre uniquement la
       // progression du loyer mensuel lui-même, avec des jalons chiffrés à quelques années
       // clés. Le total versé reste visible en contexte, mais en retrait.
-      function renderRentGrowthChart(rows) {
+      function renderRentGrowthChart(rows, { focusAfterToggle = false } = {}) {
         const chart = document.querySelector("#chart");
+        window.clearTimeout(chart._focusTimer);
         if (!rows.length) {
           chart.dataset.initialized = "false";
           chart.innerHTML = `
@@ -1104,7 +1105,8 @@
           ? chart._rentSeries
           : null;
         const scenarioChanged = previousSeries !== null && chart._reinvested !== values.reinvestir;
-        const animateBars = chart.dataset.initialized !== "true" && !scenarioChanged;
+        const activatingReinvestment = scenarioChanged && values.reinvestir;
+        const deactivatingReinvestment = scenarioChanged && !values.reinvestir;
         const lastYear = rows.length;
         const hasIncomePhase = values.dureeVersements < lastYear;
 
@@ -1122,11 +1124,23 @@
         candidateYears.add(finalMilestoneYear);
         const milestoneYears = Array.from(candidateYears).sort((a, b) => a - b);
 
-        // Les deux scénarios partagent volontairement la même échelle. Sans cela,
-        // chaque série occuperait toute la hauteur et masquerait visuellement la
-        // puissance du réinvestissement malgré des montants très différents.
-        const max = Math.max(...nonReinvestedSeries, ...reinvestedSeries, 1);
-        const scaleMax = max * 1.08;
+        const sharedMax = Math.max(...nonReinvestedSeries, ...reinvestedSeries, 1);
+        const currentMax = Math.max(...rentSeries, 1);
+        const comparisonMode = activatingReinvestment && !focusAfterToggle;
+        // Premier temps : échelle commune pour rendre l'écart incontestable.
+        // Second temps : recentrage éditorial du scénario choisi. Le scénario sans
+        // réinvestissement occupe 74 % du graphe afin de rester attractif sans effacer
+        // pour autant le potentiel supplémentaire de la capitalisation.
+        const targetFill = values.reinvestir ? 0.925 : 0.74;
+        const scaleMax = comparisonMode ? sharedMax * 1.08 : currentMax / targetFill;
+        const previousScaleMax = Number(chart._scaleMax) || scaleMax;
+        const scaleChanged = Math.abs(previousScaleMax - scaleMax) > Math.max(1, scaleMax * 0.002);
+        // La démonstration est volontairement asymétrique : l'activation montre la
+        // croissance et le changement d'échelle ; la désactivation rejoint directement
+        // son cadrage final afin de ne pas mettre en scène une chute du rendement.
+        const transitionBars = activatingReinvestment || (!scenarioChanged && (focusAfterToggle || scaleChanged));
+        const transitionAxis = activatingReinvestment || (!scenarioChanged && scaleChanged);
+        const animateBars = chart.dataset.initialized !== "true" && !transitionBars && !scenarioChanged;
         const plotWidth = width - pad.left - pad.right;
         const x = (index) => pad.left + (index / Math.max(rows.length - 1, 1)) * (width - pad.left - pad.right);
         const y = (value) => height - pad.bottom - (value / scaleMax) * (height - pad.top - pad.bottom);
@@ -1144,23 +1158,24 @@
           const barHeight = Math.max(0, baseline - topY);
           const phaseClass = annee <= values.dureeVersements ? "chart-bar-investment" : "chart-bar-income";
           const classes = ["chart-bar", phaseClass];
-          if (scenarioChanged) classes.push("chart-bar-scenario-transition");
+          if (transitionBars) classes.push("chart-bar-scenario-transition");
+          if (activatingReinvestment) classes.push("chart-bar-reinvesting");
           else if (animateBars) classes.push("chart-bar-enter");
           if (milestoneYears.includes(annee)) classes.push("chart-bar-milestone");
           if (annee === finalMilestoneYear) classes.push("chart-bar-final");
-          const previousHeight = previousSeries
-            ? Math.max(0, baseline - y(previousSeries[index] || 0))
-            : 0;
+          const previousValue = previousSeries ? previousSeries[index] || 0 : value;
+          const previousY = height - pad.bottom - (previousValue / previousScaleMax) * (height - pad.top - pad.bottom);
+          const previousHeight = Math.max(0, baseline - previousY);
           const startScale = barHeight > 0 ? previousHeight / barHeight : 1;
-          const animationStyle = scenarioChanged
-            ? ` style="--bar-delay: ${index * 7}ms; --bar-start-scale: ${startScale.toFixed(4)}"`
+          const animationStyle = transitionBars
+            ? ` style="--bar-delay: ${index * (activatingReinvestment ? 5 : 4)}ms; --bar-start-scale: ${startScale.toFixed(4)}"`
             : animateBars ? ` style="--bar-delay: ${index * 9}ms"` : "";
           return `<rect class="${classes.join(" ")}"${animationStyle} x="${(x(index) - barWidth / 2).toFixed(2)}" y="${topY.toFixed(2)}" width="${barWidth.toFixed(2)}" height="${barHeight.toFixed(2)}" rx="${barRadius.toFixed(2)}"></rect>`;
         }).join("");
 
-        const referenceBars = scenarioChanged ? previousSeries.map((value, index) => {
+        const referenceBars = activatingReinvestment ? previousSeries.map((value, index) => {
           const annee = index + 1;
-          const topY = y(value);
+          const topY = height - pad.bottom - (value / previousScaleMax) * (height - pad.top - pad.bottom);
           const barHeight = Math.max(0, baseline - topY);
           const phaseClass = annee <= values.dureeVersements
             ? "chart-reference-investment"
@@ -1172,16 +1187,17 @@
         const reinvestedFinal = reinvestedSeries.at(-1) || 0;
         const reinvestmentGain = Math.max(0, reinvestedFinal - nonReinvestedFinal);
         const reinvestmentMultiple = nonReinvestedFinal > 0 ? reinvestedFinal / nonReinvestedFinal : 0;
-        const impactMarkup = scenarioChanged && reinvestmentGain > 0 ? `
+        const showImpact = (activatingReinvestment || focusAfterToggle) && reinvestmentGain > 0;
+        const impactMarkup = showImpact ? `
           <div class="chart-reinvest-impact" role="status">
-            <small>${values.reinvestir ? "Effet du réinvestissement" : "Potentiel avec réinvestissement"}</small>
+            <small>Effet du réinvestissement</small>
             <strong>+${formatMoney(reinvestmentGain)}<span>/mois</span></strong>
             ${reinvestmentMultiple > 1 ? `<em>Loyer final × ${new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 1 }).format(reinvestmentMultiple)}</em>` : ""}
           </div>
         ` : "";
 
-        const grid = niceValueTicks(max, 4).map((value) => {
-          const lineY = y(value);
+        const gridForScale = (axisMax) => niceValueTicks(axisMax, 4).map((value) => {
+          const lineY = height - pad.bottom - (value / axisMax) * (height - pad.top - pad.bottom);
           return `
             <g>
               <line x1="${pad.left}" y1="${lineY}" x2="${width - pad.right}" y2="${lineY}" />
@@ -1189,6 +1205,8 @@
             </g>
           `;
         }).join("");
+        const grid = gridForScale(scaleMax);
+        const previousGrid = activatingReinvestment ? gridForScale(previousScaleMax) : "";
         const ticks = niceYearTicks(rows.length).map((annee) => {
           const tickX = x(annee - 1);
           return `<text x="${tickX}" y="${height - 10}">${annee}</text>`;
@@ -1224,7 +1242,8 @@
                   <stop offset="100%" stop-color="#e5cfaa" stop-opacity="0.72"></stop>
                 </linearGradient>
               </defs>
-              <g class="chart-grid">${grid}</g>
+              ${previousGrid ? `<g class="chart-grid chart-grid-previous">${previousGrid}</g>` : ""}
+              <g class="chart-grid${transitionAxis ? ` chart-grid-rescale${activatingReinvestment ? " chart-grid-reinvesting" : ""}` : ""}">${grid}</g>
               <g class="chart-reference-bars">${referenceBars}</g>
               <g class="chart-bars">${bars}</g>
               <g class="chart-axis">${ticks}</g>
@@ -1233,6 +1252,7 @@
                 <circle class="chart-hover-dot chart-hover-dot-gains" r="4"></circle>
               </g>
             </svg>
+            ${!comparisonMode ? `<span class="chart-scale-note${deactivatingReinvestment ? " is-immediate" : ""}">Échelle adaptée au scénario</span>` : ""}
             ${impactMarkup}
             <div class="chart-tooltip">
               <span class="chart-tooltip-year"></span>
@@ -1248,7 +1268,17 @@
         chart.dataset.initialized = "true";
         chart._rentSeries = [...rentSeries];
         chart._reinvested = values.reinvestir;
+        chart._scaleMax = scaleMax;
         setupRentGrowthHover(chart, rows, { x, y, pad, width, height, rentSeries, hoverScaleY: 1.05 });
+
+        if (activatingReinvestment) {
+          const expectedReinvestmentState = values.reinvestir;
+          const focusDelay = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 1500;
+          chart._focusTimer = window.setTimeout(() => {
+            if (state.mode !== "scpi" || state.values.scpi.reinvestir !== expectedReinvestmentState) return;
+            renderRentGrowthChart(rowsForMode(), { focusAfterToggle: true });
+          }, focusDelay);
+        }
       }
 
       function setupRentGrowthHover(chart, rows, ctx) {
