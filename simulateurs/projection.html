@@ -23,7 +23,7 @@
         <section class="tool-overview" aria-label="Synthèse et hypothèses">
           <aside class="tool-params" aria-label="Hypothèses">
             <div class="tool-params-title">
-              <h2><button type="button" id="zero-fields" class="tool-zero-fields" aria-label="Hypothèses — mettre tous les curseurs à zéro" title="Mettre tous les curseurs à zéro">Hypothèses</button></h2>
+              <h2><button type="button" id="zero-fields" class="tool-zero-fields" aria-label="Hypothèses — mettre les versements à zéro" title="Mettre les versements à zéro">Hypothèses</button></h2>
               <button type="button" id="reset-fields" class="tool-reset">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 1 2.64 6.36"></path><path d="M3 21v-6h6"></path></svg>
                 Réinitialiser
@@ -45,9 +45,6 @@
             </button>
             <button type="button" data-view="table" aria-label="Calendrier" title="Calendrier">
               <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg>
-            </button>
-            <button type="button" data-view="fiscal" id="fiscal-view-button" aria-label="Fiscalité" title="Fiscalité" hidden>
-              <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="19" y1="5" x2="5" y2="19"></line><circle cx="7" cy="7" r="2.4"></circle><circle cx="17" cy="17" r="2.4"></circle></svg>
             </button>
             <button type="button" data-view="compare" id="compare-view-button" aria-label="Comparaison Livret A" title="Comparaison Livret A" hidden>
               <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="6" height="10"></rect><rect x="14" y="4" width="6" height="16"></rect></svg>
@@ -88,15 +85,9 @@
                 <table id="projection-table"></table>
               </div>
             </div>
-            <div class="tool-fiscal-card" id="fiscal-panel" hidden>
-              <div class="tool-card-title">
-                <h2>Fiscalité des loyers</h2>
-              </div>
-              <div class="fiscal-view" id="fiscal" aria-label="Impact de la fiscalité selon l'origine des parts"></div>
-            </div>
             <div class="tool-compare-card" id="compare-panel" hidden>
               <div class="tool-card-title">
-                <h2>Livret A vs Assurance Vie</h2>
+                <h2>Livret A vs Assurance Vie : manque à gagner sur 30 ans</h2>
               </div>
               <div class="line-chart" id="compare" aria-label="Comparaison entre un Livret A et votre assurance vie"></div>
             </div>
@@ -219,6 +210,10 @@
         values: structuredClone(defaults),
         previousGauge: {},
         compareView: "ecart"
+      };
+      const scpiContributionReveals = {
+        immediate: { pending: false, animateNext: false, timer: 0 },
+        viager: { pending: false, animateNext: false, timer: 0 }
       };
       document.body.dataset.mode = state.mode;
 
@@ -503,7 +498,6 @@
         }
 
         state.values.scpi.reinvestir = Boolean(nextValue);
-        chart.dataset.initialized = "false";
 
         // Synchronisation légère : on ne reconstruit pas le panneau situé au-dessus
         // du graphe, ce qui supprimerait puis recréerait plusieurs nœuds dans la page.
@@ -547,6 +541,35 @@
           outputsRenderFrame = 0;
           renderOutputs();
         });
+      }
+
+      function queueScpiContributionReveal(flow, fieldKey, previousValue, nextValue) {
+        if (state.mode !== "scpi") return;
+        const reveal = scpiContributionReveals[flow];
+        if (!reveal) return;
+        const wasVisible = Number(previousValue) > 0;
+        const isVisible = Number(nextValue) > 0;
+
+        if (!isVisible) {
+          window.clearTimeout(reveal.timer);
+          reveal.timer = 0;
+          reveal.pending = false;
+          reveal.animateNext = false;
+          return;
+        }
+
+        if (!wasVisible || reveal.pending) {
+          reveal.pending = true;
+          reveal.animateNext = false;
+          window.clearTimeout(reveal.timer);
+          reveal.timer = window.setTimeout(() => {
+            reveal.timer = 0;
+            if (Number(state.values.scpi[fieldKey]) <= 0) return;
+            reveal.pending = false;
+            reveal.animateNext = true;
+            renderOutputs();
+          }, 120);
+        }
       }
 
       function renderFields() {
@@ -609,7 +632,13 @@
           };
 
           input.addEventListener("input", () => {
+            const previousValue = values[field.key];
             values[field.key] = parseInputNumber(input.value);
+            if (field.key === "versementInitial") {
+              queueScpiContributionReveal("immediate", field.key, previousValue, values[field.key]);
+            } else if (field.key === "versementMensuel") {
+              queueScpiContributionReveal("viager", field.key, previousValue, values[field.key]);
+            }
             range.value = values[field.key];
             updateRangeProgress(range);
             refreshDependentFields();
@@ -620,7 +649,13 @@
             input.value = formatInputNumber(values[field.key]);
           });
           range.addEventListener("input", () => {
+            const previousValue = values[field.key];
             values[field.key] = Number(range.value || 0);
+            if (field.key === "versementInitial") {
+              queueScpiContributionReveal("immediate", field.key, previousValue, values[field.key]);
+            } else if (field.key === "versementMensuel") {
+              queueScpiContributionReveal("viager", field.key, previousValue, values[field.key]);
+            }
             input.value = formatInputNumber(values[field.key]);
             updateRangeProgress(range);
             refreshDependentFields();
@@ -955,6 +990,24 @@
           const viagerFlow = scpiFlowRevenu(revenuEffort);
           const hasInitialPayment = Number(values.versementInitial) > 0;
           const hasScheduledPayment = Number(values.versementMensuel) > 0;
+          const initialReveal = scpiContributionReveals.immediate;
+          const scheduledReveal = scpiContributionReveals.viager;
+          if (!hasInitialPayment) {
+            window.clearTimeout(initialReveal.timer);
+            initialReveal.timer = 0;
+            initialReveal.pending = false;
+            initialReveal.animateNext = false;
+          }
+          if (!hasScheduledPayment) {
+            window.clearTimeout(scheduledReveal.timer);
+            scheduledReveal.timer = 0;
+            scheduledReveal.pending = false;
+            scheduledReveal.animateNext = false;
+          }
+          const showInitialPayment = hasInitialPayment && !initialReveal.pending;
+          const showScheduledPayment = hasScheduledPayment && !scheduledReveal.pending;
+          const animateInitialPayment = showInitialPayment && initialReveal.animateNext;
+          const animateScheduledPayment = showScheduledPayment && scheduledReveal.animateNext;
           const moneyMarkup = (amount) => `<span class="scpi-money-value">${formatMoney(amount).replace(/\s?€$/, "")}</span><small class="scpi-money-unit">€</small>`;
           const flowSecondaryMarkup = (flow) => {
             if (flow.secondaryValue !== undefined) {
@@ -984,8 +1037,8 @@
                 </div>
               </div>
               <div class="scpi-flow-grid">
-              ${hasInitialPayment && immediateFlow ? `
-              <div class="scpi-flow is-open" data-flow="immediate" aria-label="Mécanique du versement initial : capital versé aujourd'hui, loyer généré dès le premier mois">
+              ${showInitialPayment && immediateFlow ? `
+              <div class="scpi-flow is-open${animateInitialPayment ? " is-contribution-entering" : ""}" data-flow="immediate" aria-label="Mécanique du versement initial : capital versé aujourd'hui, loyer généré dès le premier mois">
                 <div class="scpi-flow-step scpi-flow-effort">
                   <span class="scpi-flow-label">Versement initial</span>
                   <strong class="scpi-flow-amount value-update">${moneyMarkup(values.versementInitial)}</strong>
@@ -998,8 +1051,8 @@
                 </div>
               </div>
               ` : ""}
-              ${hasScheduledPayment && viagerFlow ? `
-              <div class="scpi-flow is-open" data-flow="viager" aria-label="Mécanique du versement programmé : effort mensuel pendant la phase d'épargne, loyer viager ensuite">
+              ${showScheduledPayment && viagerFlow ? `
+              <div class="scpi-flow is-open${animateScheduledPayment ? " is-contribution-entering" : ""}" data-flow="viager" aria-label="Mécanique du versement programmé : effort mensuel pendant la phase d'épargne, loyer viager ensuite">
                 <div class="scpi-flow-step scpi-flow-effort">
                   <span class="scpi-flow-label">Versement programmé</span>
                   <strong class="scpi-flow-amount value-update">${moneyMarkup(effortMensuel)}<small class="scpi-flow-period">/mois</small></strong>
@@ -1026,6 +1079,29 @@
               </div>
             </article>
           `;
+
+          [
+            { active: animateInitialPayment, reveal: initialReveal, flow: "immediate", value: immediateFlow?.value },
+            { active: animateScheduledPayment, reveal: scheduledReveal, flow: "viager", value: viagerFlow?.value }
+          ].forEach(({ active, reveal, flow, value }) => {
+            if (!active) return;
+            reveal.animateNext = false;
+            const amount = summary.querySelector(`[data-flow="${flow}"] .scpi-flow-revenu .scpi-money-value`);
+            if (amount) {
+              amount.dataset.value = "0";
+              amount._displayValue = 0;
+              amount.textContent = formatNumber(0);
+              const startAmountReveal = () => {
+                if (!amount.isConnected) return;
+                animateFormattedNumber(amount, value, formatNumber, 720);
+              };
+              if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+                startAmountReveal();
+              } else {
+                window.setTimeout(startAmountReveal, 520);
+              }
+            }
+          });
 
           return;
         }
@@ -1079,7 +1155,7 @@
       // perdue tant que le point de bascule n'est pas atteint) : il montre uniquement la
       // progression du loyer mensuel lui-même, avec des jalons chiffrés à quelques années
       // clés. Le total versé reste visible en contexte, mais en retrait.
-      function renderRentGrowthChart(rows, { focusAfterToggle = false } = {}) {
+      function renderRentGrowthChart(rows) {
         const chart = document.querySelector("#chart");
         window.clearTimeout(chart._focusTimer);
         if (!rows.length) {
@@ -1097,16 +1173,12 @@
         const values = state.values.scpi;
 
         const rentSeries = rows.map((row) => row.revenuMensuel || 0);
-        const comparisonRows = computeScpi({ ...values, reinvestir: !values.reinvestir });
-        const comparisonSeries = comparisonRows.map((row) => row.revenuMensuel || 0);
-        const nonReinvestedSeries = values.reinvestir ? comparisonSeries : rentSeries;
-        const reinvestedSeries = values.reinvestir ? rentSeries : comparisonSeries;
         const previousSeries = Array.isArray(chart._rentSeries) && chart._rentSeries.length === rentSeries.length
           ? chart._rentSeries
           : null;
         const scenarioChanged = previousSeries !== null && chart._reinvested !== values.reinvestir;
-        const activatingReinvestment = scenarioChanged && values.reinvestir;
-        const deactivatingReinvestment = scenarioChanged && !values.reinvestir;
+        const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        const animateScenario = scenarioChanged && !reducedMotion;
         const lastYear = rows.length;
         const hasIncomePhase = values.dureeVersements < lastYear;
 
@@ -1124,23 +1196,10 @@
         candidateYears.add(finalMilestoneYear);
         const milestoneYears = Array.from(candidateYears).sort((a, b) => a - b);
 
-        const sharedMax = Math.max(...nonReinvestedSeries, ...reinvestedSeries, 1);
         const currentMax = Math.max(...rentSeries, 1);
-        const comparisonMode = activatingReinvestment && !focusAfterToggle;
-        // Premier temps : échelle commune pour rendre l'écart incontestable.
-        // Second temps : recentrage éditorial du scénario choisi. Le scénario sans
-        // réinvestissement occupe 74 % du graphe afin de rester attractif sans effacer
-        // pour autant le potentiel supplémentaire de la capitalisation.
-        const targetFill = values.reinvestir ? 0.925 : 0.74;
-        const scaleMax = comparisonMode ? sharedMax * 1.08 : currentMax / targetFill;
+        const scaleMax = currentMax * 1.08;
         const previousScaleMax = Number(chart._scaleMax) || scaleMax;
-        const scaleChanged = Math.abs(previousScaleMax - scaleMax) > Math.max(1, scaleMax * 0.002);
-        // La démonstration est volontairement asymétrique : l'activation montre la
-        // croissance et le changement d'échelle ; la désactivation rejoint directement
-        // son cadrage final afin de ne pas mettre en scène une chute du rendement.
-        const transitionBars = activatingReinvestment || (!scenarioChanged && (focusAfterToggle || scaleChanged));
-        const transitionAxis = activatingReinvestment || (!scenarioChanged && scaleChanged);
-        const animateBars = chart.dataset.initialized !== "true" && !transitionBars && !scenarioChanged;
+        const animateBars = chart.dataset.initialized !== "true" && !animateScenario;
         const plotWidth = width - pad.left - pad.right;
         const x = (index) => pad.left + (index / Math.max(rows.length - 1, 1)) * (width - pad.left - pad.right);
         const y = (value) => height - pad.bottom - (value / scaleMax) * (height - pad.top - pad.bottom);
@@ -1158,46 +1217,22 @@
           const barHeight = Math.max(0, baseline - topY);
           const phaseClass = annee <= values.dureeVersements ? "chart-bar-investment" : "chart-bar-income";
           const classes = ["chart-bar", phaseClass];
-          if (transitionBars) classes.push("chart-bar-scenario-transition");
-          if (activatingReinvestment) classes.push("chart-bar-reinvesting");
-          else if (animateBars) classes.push("chart-bar-enter");
+          if (animateBars) classes.push("chart-bar-enter");
           if (milestoneYears.includes(annee)) classes.push("chart-bar-milestone");
           if (annee === finalMilestoneYear) classes.push("chart-bar-final");
-          const previousValue = previousSeries ? previousSeries[index] || 0 : value;
+          const animationStyle = animateBars ? ` style="--bar-delay: ${index * 9}ms"` : "";
+          const previousValue = previousSeries?.[index] || 0;
           const previousY = height - pad.bottom - (previousValue / previousScaleMax) * (height - pad.top - pad.bottom);
           const previousHeight = Math.max(0, baseline - previousY);
-          const startScale = barHeight > 0 ? previousHeight / barHeight : 1;
-          const animationStyle = transitionBars
-            ? ` style="--bar-delay: ${index * (activatingReinvestment ? 5 : 4)}ms; --bar-start-scale: ${startScale.toFixed(4)}"`
-            : animateBars ? ` style="--bar-delay: ${index * 9}ms"` : "";
-          return `<rect class="${classes.join(" ")}"${animationStyle} x="${(x(index) - barWidth / 2).toFixed(2)}" y="${topY.toFixed(2)}" width="${barWidth.toFixed(2)}" height="${barHeight.toFixed(2)}" rx="${barRadius.toFixed(2)}"></rect>`;
+          const scenarioAnimation = animateScenario ? `
+            <animate attributeName="y" from="${previousY.toFixed(2)}" to="${topY.toFixed(2)}" dur="920ms" calcMode="spline" keySplines="0.22 1 0.36 1" fill="freeze"></animate>
+            <animate attributeName="height" from="${previousHeight.toFixed(2)}" to="${barHeight.toFixed(2)}" dur="920ms" calcMode="spline" keySplines="0.22 1 0.36 1" fill="freeze"></animate>
+          ` : "";
+          return `<rect class="${classes.join(" ")}"${animationStyle} x="${(x(index) - barWidth / 2).toFixed(2)}" y="${topY.toFixed(2)}" width="${barWidth.toFixed(2)}" height="${barHeight.toFixed(2)}" rx="${barRadius.toFixed(2)}">${scenarioAnimation}</rect>`;
         }).join("");
 
-        const referenceBars = activatingReinvestment ? previousSeries.map((value, index) => {
-          const annee = index + 1;
-          const topY = height - pad.bottom - (value / previousScaleMax) * (height - pad.top - pad.bottom);
-          const barHeight = Math.max(0, baseline - topY);
-          const phaseClass = annee <= values.dureeVersements
-            ? "chart-reference-investment"
-            : "chart-reference-income";
-          return `<rect class="chart-reference-bar ${phaseClass}" style="--bar-delay: ${index * 4}ms" x="${(x(index) - barWidth / 2).toFixed(2)}" y="${topY.toFixed(2)}" width="${barWidth.toFixed(2)}" height="${barHeight.toFixed(2)}" rx="${barRadius.toFixed(2)}"></rect>`;
-        }).join("") : "";
-
-        const nonReinvestedFinal = nonReinvestedSeries.at(-1) || 0;
-        const reinvestedFinal = reinvestedSeries.at(-1) || 0;
-        const reinvestmentGain = Math.max(0, reinvestedFinal - nonReinvestedFinal);
-        const reinvestmentMultiple = nonReinvestedFinal > 0 ? reinvestedFinal / nonReinvestedFinal : 0;
-        const showImpact = (activatingReinvestment || focusAfterToggle) && reinvestmentGain > 0;
-        const impactMarkup = showImpact ? `
-          <div class="chart-reinvest-impact" role="status">
-            <small>Effet du réinvestissement</small>
-            <strong>+${formatMoney(reinvestmentGain)}<span>/mois</span></strong>
-            ${reinvestmentMultiple > 1 ? `<em>Loyer final × ${new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 1 }).format(reinvestmentMultiple)}</em>` : ""}
-          </div>
-        ` : "";
-
-        const gridForScale = (axisMax) => niceValueTicks(axisMax, 4).map((value) => {
-          const lineY = height - pad.bottom - (value / axisMax) * (height - pad.top - pad.bottom);
+        const grid = niceValueTicks(scaleMax, 4).map((value) => {
+          const lineY = y(value);
           return `
             <g>
               <line x1="${pad.left}" y1="${lineY}" x2="${width - pad.right}" y2="${lineY}" />
@@ -1205,8 +1240,6 @@
             </g>
           `;
         }).join("");
-        const grid = gridForScale(scaleMax);
-        const previousGrid = activatingReinvestment ? gridForScale(previousScaleMax) : "";
         const ticks = niceYearTicks(rows.length).map((annee) => {
           const tickX = x(annee - 1);
           return `<text x="${tickX}" y="${height - 10}">${annee}</text>`;
@@ -1221,7 +1254,7 @@
           return `
             <div class="chart-milestone-chip${isFinal ? " chart-milestone-chip-final" : ""}">
               <span>${label}</span>
-              <strong>${formatMoney(value)}<small>/mois</small></strong>
+              <strong><b class="chart-milestone-value" data-value="${value}">${formatMoney(value)}</b><small>/mois</small></strong>
             </div>
           `;
         }).join("");
@@ -1242,9 +1275,7 @@
                   <stop offset="100%" stop-color="#e5cfaa" stop-opacity="0.72"></stop>
                 </linearGradient>
               </defs>
-              ${previousGrid ? `<g class="chart-grid chart-grid-previous">${previousGrid}</g>` : ""}
-              <g class="chart-grid${transitionAxis ? ` chart-grid-rescale${activatingReinvestment ? " chart-grid-reinvesting" : ""}` : ""}">${grid}</g>
-              <g class="chart-reference-bars">${referenceBars}</g>
+              <g class="chart-grid${animateScenario ? " chart-grid-scenario-shift" : ""}">${grid}</g>
               <g class="chart-bars">${bars}</g>
               <g class="chart-axis">${ticks}</g>
               <g class="chart-hover">
@@ -1252,8 +1283,6 @@
                 <circle class="chart-hover-dot chart-hover-dot-gains" r="4"></circle>
               </g>
             </svg>
-            ${!comparisonMode ? `<span class="chart-scale-note${deactivatingReinvestment ? " is-immediate" : ""}">Échelle adaptée au scénario</span>` : ""}
-            ${impactMarkup}
             <div class="chart-tooltip">
               <span class="chart-tooltip-year"></span>
               <div class="chart-tooltip-row chart-tooltip-gains"><small>Loyer</small><strong></strong></div>
@@ -1271,13 +1300,23 @@
         chart._scaleMax = scaleMax;
         setupRentGrowthHover(chart, rows, { x, y, pad, width, height, rentSeries, hoverScaleY: 1.05 });
 
-        if (activatingReinvestment) {
-          const expectedReinvestmentState = values.reinvestir;
-          const focusDelay = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 1500;
-          chart._focusTimer = window.setTimeout(() => {
-            if (state.mode !== "scpi" || state.values.scpi.reinvestir !== expectedReinvestmentState) return;
-            renderRentGrowthChart(rowsForMode(), { focusAfterToggle: true });
-          }, focusDelay);
+        if (animateScenario) {
+          const milestoneChips = chart.querySelectorAll(".chart-milestone-chip");
+          milestoneYears.forEach((annee, index) => {
+            const amount = milestoneChips[index]?.querySelector(".chart-milestone-value");
+            if (!amount) return;
+            const previousValue = previousSeries[annee - 1] || 0;
+            const targetValue = rentSeries[annee - 1] || 0;
+            amount._displayValue = previousValue;
+            amount.dataset.value = previousValue;
+            amount.textContent = formatMoney(previousValue);
+            requestAnimationFrame(() => animateFormattedNumber(amount, targetValue, formatMoney, 920));
+          });
+
+          const finalChip = milestoneChips[milestoneChips.length - 1];
+          if ((rentSeries.at(-1) || 0) > (previousSeries.at(-1) || 0)) {
+            finalChip?.classList.add("is-value-rising");
+          }
         }
       }
 
@@ -1877,8 +1916,6 @@
         svg.addEventListener("touchend", hide);
       }
 
-      const LIVRET_A_PRESETS = [1.7, 2, 2.4, 3];
-
       function animateValue(el, from, to, duration = 700) {
         const token = (el._animateToken = (el._animateToken || 0) + 1);
         const start = performance.now();
@@ -1902,12 +1939,27 @@
       }
 
       function renderLivretRateControl(values) {
+        const min = 0;
+        const max = 5;
+        const progress = ((values.tauxLivretA - min) / (max - min)) * 100;
         return `
-          <div class="fiscal-tmi">
-            <span>Taux net du Livret A retenu</span>
-            <div class="tool-presets">
-              ${LIVRET_A_PRESETS.map((t) => `<button type="button" class="tool-preset${values.tauxLivretA === t ? " is-active" : ""}" data-taux="${t}">${t} %</button>`).join("")}
+          <div class="livret-rate-control">
+            <div class="livret-rate-heading">
+              <span>Taux net du Livret A retenu</span>
+              <strong><span data-livret-rate-value>${formatPercent(values.tauxLivretA)}</span><small>&nbsp;%</small></strong>
             </div>
+            <input
+              class="livret-rate-range"
+              type="range"
+              min="${min}"
+              max="${max}"
+              step="0.1"
+              value="${values.tauxLivretA}"
+              style="--range-progress:${Math.max(0, Math.min(100, progress))}%"
+              aria-label="Taux net du Livret A retenu"
+              aria-valuetext="${formatPercent(values.tauxLivretA)} %"
+              data-livret-rate
+            >
           </div>
         `;
       }
@@ -1931,7 +1983,6 @@
           ${renderCompareSubtabs()}
           <div class="capital-heading">
             <div>
-              <span>Manque à gagner sur ${formatNumber(values.dureeTotale)} ans en restant sur un Livret A</span>
               <strong class="capital-amount value-update"><span class="compare-shock-value">${formatMoney(previous.ecart).replace(/\s?€$/, "")}</span><span class="capital-currency">€</span></strong>
             </div>
           </div>
@@ -2080,12 +2131,18 @@
             renderCompare(avRows);
           });
         });
-        chart.querySelectorAll("[data-taux]").forEach((button) => {
-          button.addEventListener("click", () => {
-            values.tauxLivretA = Number(button.dataset.taux);
-            renderCompare(avRows);
+        const rateRange = chart.querySelector("[data-livret-rate]");
+        if (rateRange) {
+          rateRange.addEventListener("input", () => {
+            values.tauxLivretA = Number(rateRange.value);
+            const progress = (values.tauxLivretA / Number(rateRange.max || 5)) * 100;
+            const value = chart.querySelector("[data-livret-rate-value]");
+            rateRange.style.setProperty("--range-progress", `${Math.max(0, Math.min(100, progress))}%`);
+            rateRange.setAttribute("aria-valuetext", `${formatPercent(values.tauxLivretA)} %`);
+            if (value) value.textContent = formatPercent(values.tauxLivretA);
           });
-        });
+          rateRange.addEventListener("change", () => renderCompare(avRows));
+        }
       }
 
       function renderOutputs() {
@@ -2107,11 +2164,13 @@
           document.querySelector("#pie-panel .tool-card-title h2").textContent = "Effort réel et avantage fiscal";
           document.querySelector("#table-panel .tool-card-title h2").textContent = "Scénarios de versement";
         }
+        if (state.mode === "av") {
+          document.querySelector("#compare-panel .tool-card-title h2").textContent = `Livret A vs Assurance Vie : manque à gagner sur ${formatNumber(state.values.av.dureeTotale)} ans`;
+        }
         renderSummary(rows);
         renderChart(rows);
         renderPie(rows);
         renderTable(rows);
-        if (state.mode === "scpi") renderFiscal(rows);
         if (state.mode === "av") renderCompare(rows);
       }
 
@@ -2123,14 +2182,26 @@
 
       document.querySelector("#zero-fields").addEventListener("click", () => {
         const values = state.values[state.mode];
-        fieldDefinitions[state.mode].forEach((field) => {
-          if (field.type === "number") values[field.key] = 0;
+        const versementFields = {
+          av: ["capitalInitial", "versementMensuel"],
+          scpi: ["versementInitial", "versementMensuel"]
+        };
+        (versementFields[state.mode] || []).forEach((key) => {
+          values[key] = 0;
         });
         withHeightTransition(document.querySelector(".tool-params"), render);
       });
 
       document.querySelector("#reset-fields").addEventListener("click", () => {
         state.values[state.mode] = structuredClone(defaults[state.mode]);
+        if (state.mode === "scpi") {
+          Object.values(scpiContributionReveals).forEach((reveal) => {
+            window.clearTimeout(reveal.timer);
+            reveal.timer = 0;
+            reveal.pending = false;
+            reveal.animateNext = false;
+          });
+        }
         withHeightTransition(document.querySelector(".tool-params"), render);
       });
 
@@ -2141,9 +2212,6 @@
 
       window.addEventListener("resize", releaseScpiChartHeightLock, { passive: true });
 
-      if (state.mode === "scpi") {
-        document.querySelector("#fiscal-view-button").hidden = false;
-      }
       if (state.mode === "av") {
         document.querySelector("#compare-view-button").hidden = false;
       }
@@ -2158,7 +2226,6 @@
             document.querySelector("#chart-panel").hidden = state.view !== "chart";
             document.querySelector("#pie-panel").hidden = state.view !== "pie";
             document.querySelector("#table-panel").hidden = state.view !== "table";
-            document.querySelector("#fiscal-panel").hidden = state.view !== "fiscal";
             document.querySelector("#compare-panel").hidden = state.view !== "compare";
           };
           if (document.startViewTransition) {

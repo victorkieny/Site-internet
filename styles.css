@@ -2281,7 +2281,15 @@ h3 {
 }
 
 .scpi-flow-grid > .scpi-flow:only-child {
-  grid-column: 1 / -1;
+  grid-column: auto;
+}
+
+.scpi-flow-grid > .scpi-flow[data-flow="immediate"]:only-child {
+  grid-column: 1;
+}
+
+.scpi-flow-grid > .scpi-flow[data-flow="viager"]:only-child {
+  grid-column: 2;
 }
 
 .scpi-flow-grid .scpi-flow-step {
@@ -2392,6 +2400,49 @@ h3 {
 
 .scpi-flow.is-open::before {
   opacity: 1;
+}
+
+.scpi-flow.is-contribution-entering {
+  animation: scpiContributionEnter 760ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
+.scpi-flow[data-flow="immediate"].is-contribution-entering {
+  animation-name: scpiContributionEnterInitial;
+}
+
+.scpi-flow.is-contribution-entering::after {
+  content: "";
+  position: absolute;
+  z-index: 4;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    105deg,
+    transparent 12%,
+    rgba(255, 253, 250, 0.12) 34%,
+    rgba(213, 177, 112, 0.34) 50%,
+    rgba(255, 253, 250, 0.12) 66%,
+    transparent 88%
+  );
+  pointer-events: none;
+  animation: scpiContributionSweep 1080ms cubic-bezier(0.22, 1, 0.36, 1) 180ms both;
+}
+
+.scpi-flow.is-contribution-entering .scpi-flow-effort > * {
+  animation: scpiContributionEffort 500ms cubic-bezier(0.22, 1, 0.36, 1) 180ms backwards;
+}
+
+.scpi-flow.is-contribution-entering .scpi-flow-reveal {
+  animation: scpiContributionRevenueReveal 680ms cubic-bezier(0.16, 1, 0.3, 1) 350ms backwards;
+}
+
+.scpi-flow.is-contribution-entering .scpi-flow-effort::after {
+  animation: scpiContributionDivider 520ms cubic-bezier(0.22, 1, 0.36, 1) 330ms backwards;
+}
+
+.scpi-flow.is-contribution-entering .scpi-flow-revenu .scpi-flow-amount {
+  transform-origin: left bottom;
+  animation: scpiContributionAmount 720ms cubic-bezier(0.16, 1, 0.3, 1) 560ms backwards;
 }
 
 .scpi-flow-step {
@@ -3285,6 +3336,12 @@ body[data-mode="scpi"] #chart-panel .chart-milestone-chip strong {
   transition: color 200ms ease, transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+body[data-mode="scpi"] #chart-panel .chart-milestone-value {
+  color: inherit;
+  font: inherit;
+  font-weight: inherit;
+}
+
 body[data-mode="scpi"] #chart-panel .chart-milestone-chip strong small {
   color: inherit;
   font-family: var(--sans);
@@ -3311,6 +3368,14 @@ body[data-mode="scpi"] #chart-panel .chart-milestone-chip-final::before {
 body[data-mode="scpi"] #chart-panel .chart-milestone-chip-final strong {
   color: #765d3d;
   font-size: 1.28rem;
+}
+
+body[data-mode="scpi"] #chart-panel .chart-milestone-chip-final.is-value-rising::before {
+  animation: scpiFinalMilestonePulse 920ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+body[data-mode="scpi"] #chart-panel .chart-milestone-chip-final.is-value-rising strong {
+  animation: scpiFinalValueLift 920ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 body[data-mode="scpi"] #chart-panel .chart-milestone-chip:hover::before {
@@ -3343,6 +3408,10 @@ body[data-mode="scpi"] #chart-panel .chart-grid text,
 body[data-mode="scpi"] #chart-panel .chart-axis text {
   fill: rgba(43, 37, 30, 0.7);
   font-size: 16px;
+}
+
+body[data-mode="scpi"] #chart-panel .chart-grid-scenario-shift {
+  animation: scpiAxisReframe 620ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 body[data-mode="scpi"] #chart-panel .chart-bar {
@@ -3479,6 +3548,43 @@ body[data-mode="scpi"] #chart-panel .chart-tooltip-gains strong {
   }
   to {
     transform: scaleY(1);
+  }
+}
+
+@keyframes scpiAxisReframe {
+  0% {
+    opacity: 0.28;
+    transform: translateY(3px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scpiFinalMilestonePulse {
+  0%, 100% {
+    box-shadow:
+      0 0 0 1px rgba(117, 82, 39, 0.5),
+      0 0 0 6px rgba(185, 151, 97, 0.11);
+    transform: translateX(-50%) scale(1);
+  }
+  58% {
+    box-shadow:
+      0 0 0 1px rgba(117, 82, 39, 0.58),
+      0 0 0 12px rgba(185, 151, 97, 0.16);
+    transform: translateX(-50%) scale(1.22);
+  }
+}
+
+@keyframes scpiFinalValueLift {
+  0%, 100% {
+    filter: none;
+    transform: translateY(0) scale(1);
+  }
+  58% {
+    filter: drop-shadow(0 5px 10px rgba(154, 112, 56, 0.18));
+    transform: translateY(-2px) scale(1.055);
   }
 }
 
@@ -3675,6 +3781,106 @@ body[data-mode="scpi"] #chart-panel .chart-tooltip-gains strong {
   color: rgba(43, 37, 30, 0.62);
   font-size: 0.86rem;
   font-weight: 560;
+}
+
+.livret-rate-control {
+  display: grid;
+  gap: 7px;
+  width: min(100%, 280px);
+  padding: 2px 1px;
+}
+
+.livret-rate-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.livret-rate-heading > span {
+  color: rgba(43, 37, 30, 0.62);
+  font-size: 0.78rem;
+  font-weight: 560;
+}
+
+.livret-rate-heading strong {
+  color: var(--interest-gold);
+  font-family: var(--serif);
+  font-size: 1.05rem;
+  font-weight: 400;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.livret-rate-heading small {
+  font-family: var(--sans);
+  font-size: 0.62em;
+  font-weight: 500;
+}
+
+.livret-rate-range {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  height: 18px;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.livret-rate-range::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    rgba(111, 139, 167, 0.84) 0%,
+    rgba(185, 151, 97, 0.88) var(--range-progress),
+    rgba(43, 37, 30, 0.1) var(--range-progress),
+    rgba(43, 37, 30, 0.1) 100%
+  );
+  box-shadow: inset 0 1px 2px rgba(43, 37, 30, 0.08);
+}
+
+.livret-rate-range::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 7px;
+  height: 16px;
+  margin-top: -6px;
+  border: 1px solid rgba(166, 126, 69, 0.66);
+  border-radius: 999px;
+  background: #fff8ec;
+  box-shadow: 0 4px 10px rgba(43, 37, 30, 0.16);
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.livret-rate-range:hover::-webkit-slider-thumb,
+.livret-rate-range:focus-visible::-webkit-slider-thumb {
+  transform: scaleY(1.12);
+  box-shadow: 0 5px 12px rgba(43, 37, 30, 0.2), 0 0 0 4px rgba(185, 151, 97, 0.09);
+}
+
+.livret-rate-range::-moz-range-track {
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(43, 37, 30, 0.1);
+  box-shadow: inset 0 1px 2px rgba(43, 37, 30, 0.08);
+}
+
+.livret-rate-range::-moz-range-progress {
+  height: 4px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(111, 139, 167, 0.84), rgba(185, 151, 97, 0.88));
+}
+
+.livret-rate-range::-moz-range-thumb {
+  width: 7px;
+  height: 16px;
+  border: 1px solid rgba(166, 126, 69, 0.66);
+  border-radius: 999px;
+  background: #fff8ec;
+  box-shadow: 0 4px 10px rgba(43, 37, 30, 0.16);
 }
 
 .fiscal-compare {
@@ -5712,6 +5918,130 @@ body[data-mode="scpi"] .tool-field[data-field="dureeTotale"] .tool-input-wrap in
   }
 }
 
+@keyframes scpiContributionEnter {
+  from {
+    opacity: 0;
+    clip-path: inset(0 0 0 22% round 24px);
+    filter: blur(9px);
+    transform: translateX(52px) scale(0.94);
+  }
+
+  68% {
+    opacity: 1;
+    clip-path: inset(0 0 0 0 round 24px);
+    filter: blur(0);
+    transform: translateX(-3px) scale(1.01);
+  }
+
+  to {
+    opacity: 1;
+    clip-path: inset(0 0 0 0 round 24px);
+    filter: blur(0);
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes scpiContributionEnterInitial {
+  from {
+    opacity: 0;
+    clip-path: inset(0 22% 0 0 round 24px);
+    filter: blur(9px);
+    transform: translateX(-52px) scale(0.94);
+  }
+
+  68% {
+    opacity: 1;
+    clip-path: inset(0 0 0 0 round 24px);
+    filter: blur(0);
+    transform: translateX(3px) scale(1.01);
+  }
+
+  to {
+    opacity: 1;
+    clip-path: inset(0 0 0 0 round 24px);
+    filter: blur(0);
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes scpiContributionEffort {
+  from {
+    opacity: 0;
+    filter: blur(4px);
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0);
+  }
+}
+
+@keyframes scpiContributionRevenueReveal {
+  from {
+    opacity: 0;
+    clip-path: inset(0 0 0 88%);
+    filter: blur(8px);
+    transform: translateX(34px);
+  }
+
+  to {
+    opacity: 1;
+    clip-path: inset(0 0 0 0);
+    filter: blur(0);
+    transform: translateX(0);
+  }
+}
+
+@keyframes scpiContributionSweep {
+  0% {
+    opacity: 0;
+    transform: translateX(-115%);
+  }
+
+  28% {
+    opacity: 0.75;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateX(115%);
+  }
+}
+
+@keyframes scpiContributionDivider {
+  from {
+    opacity: 0;
+    transform: scaleY(0.2);
+  }
+
+  to {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+}
+
+@keyframes scpiContributionAmount {
+  from {
+    opacity: 0;
+    filter: drop-shadow(0 0 0 rgba(185, 151, 97, 0));
+    transform: translateY(10px) scale(0.9);
+  }
+
+  62% {
+    opacity: 1;
+    filter: drop-shadow(0 8px 18px rgba(185, 151, 97, 0.32));
+    transform: translateY(0) scale(1.075);
+  }
+
+  to {
+    opacity: 1;
+    filter: drop-shadow(0 0 0 rgba(185, 151, 97, 0));
+    transform: translateY(0) scale(1);
+  }
+}
+
 @media (max-width: 980px) {
   .simulator-choice-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -5777,6 +6107,14 @@ body[data-mode="scpi"] .tool-field[data-field="dureeTotale"] .tool-input-wrap in
 }
 
 @media (max-width: 660px) {
+  .scpi-flow-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .scpi-flow-grid > .scpi-flow[data-flow]:only-child {
+    grid-column: 1;
+  }
+
   .scpi-summary-row {
     grid-template-columns: 1fr;
   }
@@ -6027,17 +6365,27 @@ body[data-mode="scpi"] .tool-field[data-field="dureeTotale"] .tool-input-wrap in
   .tool-result-card,
   .line-chart,
   .scpi-flow,
+  .scpi-flow.is-contribution-entering,
+  .scpi-flow[data-flow="immediate"].is-contribution-entering,
   .scpi-flow::before,
+  .scpi-flow.is-contribution-entering::after,
+  .scpi-flow.is-contribution-entering .scpi-flow-effort > *,
+  .scpi-flow.is-contribution-entering .scpi-flow-effort::after,
+  .scpi-flow.is-contribution-entering .scpi-flow-reveal,
+  .scpi-flow.is-contribution-entering .scpi-flow-revenu .scpi-flow-amount,
   .scpi-flow-reveal,
   .scpi-flow-revenu,
   .scpi-flow-chevron,
   .scpi-flow-chevron > span,
   .scpi-flow-chevron i,
   .chart-bar-enter,
+  .chart-grid-scenario-shift,
   .chart-tooltip,
   .chart-hover,
   .chart-milestone-chip::before,
-  .chart-milestone-chip strong {
+  .chart-milestone-chip strong,
+  .chart-milestone-chip-final.is-value-rising::before,
+  .chart-milestone-chip-final.is-value-rising strong {
     animation: none;
     transition: none;
   }
