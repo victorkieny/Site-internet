@@ -500,6 +500,34 @@ h1 {
   view-transition-name: main-nav-active;
 }
 
+.main-nav a.nav-cta {
+  gap: 8px;
+  padding: 0 20px;
+  border-color: rgba(224, 195, 142, 0.4);
+  background: linear-gradient(180deg, #332d25 0%, var(--button) 54%, #211c17 100%);
+  color: var(--white);
+  font-weight: 620;
+}
+
+.main-nav a.nav-cta svg {
+  width: 0.82em;
+  height: 0.82em;
+  transition: transform 220ms ease;
+}
+
+.main-nav a.nav-cta:hover,
+.main-nav a.nav-cta:focus-visible {
+  border-color: rgba(224, 195, 142, 0.55);
+  background: linear-gradient(180deg, #3a3329 0%, var(--button-hover) 54%, #17130f 100%);
+  color: var(--white);
+  box-shadow: 0 14px 26px rgba(43, 37, 30, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.main-nav a.nav-cta:hover svg,
+.main-nav a.nav-cta:focus-visible svg {
+  transform: translateX(3px);
+}
+
 .appointment-link {
   position: relative;
   display: inline-flex;
@@ -817,6 +845,77 @@ h3 {
   margin: 0;
 }
 
+/* Footer commun — repris sur toutes les pages */
+
+.site-footer {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 900px);
+  justify-self: center;
+  display: grid;
+  gap: 14px;
+  margin-top: 24px;
+  padding: 18px 26px;
+  border: 1px solid rgba(43, 37, 30, 0.075);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 0% 50%, rgba(111, 139, 167, 0.08), transparent 36%),
+    radial-gradient(circle at 100% 50%, rgba(199, 174, 137, 0.1), transparent 36%),
+    rgba(255, 253, 250, 0.48);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(14px);
+}
+
+.site-footer-note {
+  margin: 0;
+  color: rgba(81, 75, 68, 0.72);
+  font-family: var(--sans);
+  font-size: 1rem;
+  font-weight: 450;
+  text-align: center;
+}
+
+.site-footer-note + .site-footer-bottom {
+  padding-top: 14px;
+  border-top: 1px solid rgba(43, 37, 30, 0.075);
+}
+
+.site-footer-bottom {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.site-footer-copy {
+  margin: 0;
+  color: rgba(81, 75, 68, 0.72);
+  font-family: var(--sans);
+  font-size: 0.88rem;
+  font-weight: 450;
+}
+
+.site-footer-links {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 18px;
+}
+
+.site-footer-links a {
+  color: rgba(81, 75, 68, 0.78);
+  font-family: var(--sans);
+  font-size: 0.88rem;
+  font-weight: 500;
+  transition: color 220ms ease;
+}
+
+.site-footer-links a:hover,
+.site-footer-links a:focus-visible {
+  color: #9b7642;
+}
+
 @keyframes appointmentReveal {
   from {
     opacity: 0;
@@ -1067,7 +1166,7 @@ h3 {
   margin: 0 auto;
   padding: clamp(82px, 9svh, 108px) clamp(18px, 4vw, 64px) clamp(36px, 5svh, 72px);
   display: grid;
-  grid-template-rows: auto 1fr;
+  grid-template-rows: auto 1fr auto;
   gap: clamp(24px, 4svh, 44px);
 }
 
@@ -6982,6 +7081,28 @@ body[data-mode="scpi"] .tool-field[data-field="dureeTotale"] .tool-input-wrap in
     height: 390px;
   }
 
+  .main-nav {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+    width: min(92%, 420px);
+    padding: 6px;
+  }
+
+  .main-nav a {
+    flex: 0 1 auto;
+  }
+
+  .main-nav a.nav-cta {
+    flex: 1 1 100%;
+    margin-top: 2px;
+  }
+
+  .site-footer-bottom {
+    justify-content: center;
+    text-align: center;
+  }
+
   .intro {
     width: min(100%, 760px);
     grid-template-columns: minmax(0, 1fr);
@@ -7303,12 +7424,12 @@ body[data-mode="scpi"] .tool-field[data-field="dureeTotale"] .tool-input-wrap in
 
   .main-nav {
     top: 12px;
-    width: min(calc(100% - 28px), 320px);
+    width: min(92%, 340px);
     font-size: 0.82rem;
   }
 
   .main-nav a {
-    flex: 1;
+    flex: 0 1 auto;
     min-height: 32px;
     padding: 0 10px;
   }
