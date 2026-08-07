@@ -8,6 +8,7 @@ Objectif : passer d'un site "page d'accueil = prise de RDV" à une architecture 
 - Home : nouvelle page de présentation façon Brice (hero, aperçu simulateurs, bandeau statuts, teaser ressources), avec le CTA "Prendre RDV" mis en avant partout — l'objectif de conversion vers la prise de RDV ne doit pas se diluer dans la présentation.
 - **"Indépendant"** : tu as choisi de reprendre le vocabulaire de Brice ("cabinet indépendant", "architecture ouverte") malgré l'écart documenté avec tes propres mandats Stellium (non-indépendant en instruments financiers, conseil niveau 1 en assurance). C'est ton arbitrage, pas le mien — je te le signale une dernière fois ici pour que ce soit tracé noir sur blanc, et je l'exécute tel quel dans les prompts ci-dessous. Si un jour ça remonte en revue de conformité, ce fichier documente que c'était un choix assumé, pas un oubli.
 - Méthode : séquencée, un prompt par étape, vérification visuelle avant de passer à la suivante.
+- **Forme, pas fond (ajouté 07/08/2026)** : à partir de l'Étape 4, Victor a précisé qu'il ne veut que de la restructuration (HTML/CSS, squelette, titres de section) — aucun paragraphe de contenu rédigé à sa place, même à partir de faits qu'il a donnés en conversation. Partout où une section attend un paragraphe qu'il écrira lui-même, mettre un texte **visible** "À compléter." directement dans la balise de contenu (pas un commentaire HTML caché) — plus simple à repérer en relecture visuelle.
 
 ## Garde-fou DA — à garder en tête, ne pas re-décrire dans chaque prompt
 
@@ -99,17 +100,15 @@ Ne pas créer a-propos.html, ressources.html, mentions-legales.html ni politique
 ```
 Contexte : idem. Nav/footer globaux déjà en place (étape 3), le lien "À propos" existe déjà et pointe vers a-propos.html.
 
-Tâche : créer a-propos.html. Structure de référence bricepoitau.com : photo, section "Parcours", section "Philosophie de conseil", section "Formation & engagement". Reprendre cette architecture, contenu propre à Victor :
+Tâche : créer a-propos.html. Structure de référence bricepoitau.com : photo, section "Parcours", section "Philosophie de conseil", section "Formation & engagement". Reprendre cette architecture — **structure uniquement, aucun paragraphe rédigé** :
 
-- Parcours : à rédiger à partir de mon double profil réel — ingénieur d'application clinique en électrophysiologie cardiaque chez J&J MedTech (système CARTO) en parallèle du développement de mon activité de CGP. Laisser un <!-- TODO --> si des détails précis manquent (école, année, etc.) plutôt qu'inventer.
-- Philosophie de conseil : positionnement "cabinet indépendant" façon Brice — formulation à reprendre dans l'esprit de bricepoitau.com. Laisser <!-- TODO: à valider par Victor --> sur ce paragraphe précis, je le rédigerai/validerai moi-même mot à mot avant publication.
-- Formation & engagement : diplômes/habilitations réels de Victor — <!-- TODO: à compléter --> si l'IA ne les connaît pas, ne pas inventer.
+- Parcours, Philosophie de conseil, Formation & engagement : pour chaque section, un simple paragraphe avec le texte visible "À compléter." — ne rédige aucun contenu, même à partir d'éléments biographiques déjà connus. Victor écrira ces textes lui-même.
 - Pas de mécénat/association à mentionner sauf si je le demande explicitement (ne pas copier le bloc FinzzAct de Brice).
 
-Photo : utiliser un placeholder (assets/ existant si disponible, sinon commentaire <!-- TODO: photo --> ) plutôt qu'une image inventée.
+Photo : utiliser un placeholder (assets/ existant si disponible, sinon un simple encadré avec texte "À compléter.") plutôt qu'une image inventée.
 ```
 
-**Vérification** : relire le texte généré avant publication — c'est la page où le risque de dérive de ton (trop "vendeur" ou approximations réglementaires) est le plus élevé.
+**Vérification** : la page ne doit contenir que de la structure et des "À compléter." — aucun texte rédigé à la place de Victor.
 
 ---
 
@@ -146,7 +145,7 @@ Structure/mise en page à construire complètement.
 D'abord vérifier si ces pages existent déjà quelque part dans le repo avant de lancer ce prompt (`ls` à la racine). Si absentes :
 
 ```
-Contexte : idem. Créer mentions-legales.html et politique-confidentialite.html, structure minimale sobre cohérente avec le reste du site (nav + footer communs, un seul bloc de texte). Contenu : <!-- TODO: texte juridique à fournir par Victor (raison sociale, ORIAS, hébergeur, RGPD) --> — ne jamais générer de mentions légales ou de politique de confidentialité "génériques" inventées, c'est un document engageant juridiquement.
+Contexte : idem. Créer mentions-legales.html et politique-confidentialite.html, structure minimale sobre cohérente avec le reste du site (nav + footer communs, un seul bloc de texte). Contenu : texte visible "À compléter." à la place du corps juridique — ne jamais générer de mentions légales ou de politique de confidentialité "génériques" inventées, c'est un document engageant juridiquement, Victor le fournira lui-même.
 ```
 
 ---
