@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta
       name="description"
-      content="Victor KIENY, conseiller en ingénierie patrimoniale. Prise de rendez-vous pour appel téléphonique, rendez-vous découverte ou rendez-vous de suivi."
+      content="Victor KIENY, conseiller en ingénierie patrimoniale : simulateurs patrimoniaux, ressources et accompagnement pour structurer, optimiser et transmettre votre patrimoine."
     >
     <title>Victor KIENY | Conseiller en ingénierie patrimoniale</title>
     <link rel="icon" href="favicon.ico" sizes="any">
@@ -15,148 +15,96 @@
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
-    <main class="page" id="accueil">
+    <main class="home-page" id="accueil">
       <nav class="main-nav" aria-label="Navigation principale">
         <a href="index.html" aria-current="page">Accueil</a>
         <a href="simulateurs.html">Simulateurs</a>
       </nav>
-      <section class="intro" aria-labelledby="hero-title">
+
+      <section class="home-hero" aria-labelledby="hero-title">
+        <img class="brand-logo" src="assets/logo-transparent.png" alt="" aria-hidden="true">
         <div class="title-block">
-          <img class="brand-logo" src="assets/logo-transparent.png" alt="" aria-hidden="true">
           <h1 id="hero-title">Victor Kieny</h1>
           <p class="eyebrow">Conseiller en ingénierie patrimoniale</p>
         </div>
-        <address class="top-details" aria-label="Coordonnées">
-          <a class="contact-link" href="tel:+33767095950">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.91.33 1.8.62 2.65a2 2 0 0 1-.45 2.11L8 9.76a16 16 0 0 0 6.24 6.24l1.28-1.28a2 2 0 0 1 2.11-.45c.85.29 1.74.5 2.65.62A2 2 0 0 1 22 16.92z"></path>
-            </svg>
-            <span class="contact-copy">
-              <small>Par téléphone</small>
-              <strong>+33 7 67 09 59 50</strong>
-            </span>
-            <span class="contact-arrow" aria-hidden="true">↗</span>
-          </a>
-          <a class="contact-link" href="mailto:conseil@victorkieny.fr">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <rect x="3" y="5" width="18" height="14" rx="2"></rect>
-              <path d="m3 7 9 6 9-6"></path>
-            </svg>
-            <span class="contact-copy">
-              <small>Par e-mail</small>
-              <strong>conseil@victorkieny.fr</strong>
-            </span>
-            <span class="contact-arrow" aria-hidden="true">↗</span>
-          </a>
-        </address>
+        <p class="home-hero-tagline">Structurer, optimiser et transmettre votre patrimoine : un accompagnement sur mesure, appuyé sur des outils de simulation précis et une architecture de solutions ouverte.</p>
+        <a class="cta-button" href="rdv.html">
+          Prendre rendez-vous
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M5 12h14"></path>
+            <path d="m13 6 6 6-6 6"></path>
+          </svg>
+        </a>
       </section>
 
-      <section class="welcome" aria-label="Message de bienvenue">
-        <p class="lead lead-desktop">
-          <span class="lead-primary">Bienvenue sur mon espace de prise de <span class="no-break">rendez-vous.</span></span>
-          <span class="lead-secondary">Choisissez le format d'échange adapté à votre besoin.</span>
-        </p>
-        <p class="lead lead-mobile" aria-hidden="true">
-          <span class="lead-primary">Bienvenue sur mon espace de prise de rdv.</span>
-          <span class="lead-secondary">Choisissez le format adapté à votre besoin.</span>
-        </p>
-      </section>
-
-      <section class="appointments" id="rendez-vous" aria-labelledby="appointments-title">
+      <section class="home-simulators" aria-labelledby="home-simulators-title">
         <div class="section-heading">
-          <h2 id="appointments-title">Choisissez votre rendez-vous.</h2>
+          <h2 id="home-simulators-title">Simulateurs patrimoniaux</h2>
         </div>
 
-        <div class="appointment-grid">
-          <a class="appointment" href="https://calendar.app.google/hFCpwhxGwRXCt1ie8" target="_blank" rel="noopener noreferrer">
-            <span class="card-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24">
-                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.91.33 1.8.62 2.65a2 2 0 0 1-.45 2.11L8 9.76a16 16 0 0 0 6.24 6.24l1.28-1.28a2 2 0 0 1 2.11-.45c.85.29 1.74.5 2.65.62A2 2 0 0 1 22 16.92z"></path>
-              </svg>
+        <div class="simulator-choice-grid simulator-choice-grid-featured" aria-label="Simulateurs disponibles">
+          <a class="simulator-choice simulator-choice-featured simulator-choice-av" href="simulateurs/projection.html?mode=av">
+            <span class="simulator-choice-topline">
+              <span class="simulator-choice-kicker">Épargne &amp; capitalisation</span>
             </span>
-            <span class="appointment-kicker">Premier échange</span>
-            <h3 class="appointment-title-long">Appel téléphonique</h3>
-            <p class="duration">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <circle cx="12" cy="12" r="9"></circle>
-                <path d="M12 7v5l3 2"></path>
-              </svg>
-              30 minutes
-            </p>
-            <p class="appointment-copy">Pour un premier échange ou une question rapide.</p>
-            <span class="appointment-link">
-              Choisir ce rendez-vous
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M5 12h14"></path>
-                <path d="m13 6 6 6-6 6"></path>
-              </svg>
+            <h2>Assurance Vie</h2>
+            <p>Projeter l'encours, les versements et la puissance des intérêts composés dans le temps.</p>
+            <span class="simulator-choice-tags" aria-label="Points clés">
+              <span>Intérêts composés</span>
+              <span>Capitalisation</span>
             </span>
+            <span class="simulator-choice-action">Découvrir le simulateur <i aria-hidden="true"></i></span>
           </a>
-
-          <a class="appointment" href="https://calendar.app.google/gGCpyHk1Dj5sxGqg9" target="_blank" rel="noopener noreferrer">
-            <span class="card-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="9"></circle>
-                <path d="m15.5 8.5-2 5-5 2 2-5 5-2z"></path>
-                <path d="M12 2v2"></path>
-                <path d="M12 20v2"></path>
-                <path d="M2 12h2"></path>
-                <path d="M20 12h2"></path>
-              </svg>
+          <a class="simulator-choice simulator-choice-featured simulator-choice-scpi" href="simulateurs/projection.html?mode=scpi">
+            <span class="simulator-choice-topline">
+              <span class="simulator-choice-kicker">Immobilier &amp; revenus</span>
             </span>
-            <span class="appointment-kicker">Analyse patrimoniale</span>
-            <h3 class="appointment-title-long">Rendez-vous découverte</h3>
-            <p class="duration">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <circle cx="12" cy="12" r="9"></circle>
-                <path d="M12 7v5l3 2"></path>
-              </svg>
-              1 h 30
-            </p>
-            <p class="appointment-copy">Un entretien approfondi permettant d'analyser votre situation patrimoniale ainsi que vos objectifs, afin d'identifier les solutions adaptées.</p>
-            <span class="appointment-link">
-              Choisir ce rendez-vous
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M5 12h14"></path>
-                <path d="m13 6 6 6-6 6"></path>
-              </svg>
+            <h2>SCPI</h2>
+            <p>Projeter le capital investi et les revenus locatifs perçus, avec ou sans réinvestissement des loyers.</p>
+            <span class="simulator-choice-tags" aria-label="Points clés">
+              <span>Revenus locatifs</span>
+              <span>Rendement</span>
             </span>
-          </a>
-
-          <a class="appointment" href="https://calendar.app.google/NVPXnf91Q5xbu4fG6" target="_blank" rel="noopener noreferrer">
-            <span class="card-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24">
-                <path d="M3 12a9 9 0 0 1 15.6-6.1"></path>
-                <path d="M21 12a9 9 0 0 1-15.6 6.1"></path>
-                <path d="M18 3v4h-4"></path>
-                <path d="M6 21v-4h4"></path>
-                <path d="m9.5 12 1.7 1.7 3.3-3.4"></path>
-              </svg>
-            </span>
-            <span class="appointment-kicker">Accompagnement</span>
-            <h3 class="appointment-title-long">Rendez-vous de suivi</h3>
-            <p class="duration">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <circle cx="12" cy="12" r="9"></circle>
-                <path d="M12 7v5l3 2"></path>
-              </svg>
-              1 heure
-            </p>
-            <p class="appointment-copy">Réservé aux personnes déjà accompagnées, ce rendez-vous permet de faire un point sur les solutions mises en place et l'évolution de votre situation.</p>
-            <span class="appointment-link">
-              Choisir ce rendez-vous
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M5 12h14"></path>
-                <path d="m13 6 6 6-6 6"></path>
-              </svg>
-            </span>
+            <span class="simulator-choice-action">Découvrir le simulateur <i aria-hidden="true"></i></span>
           </a>
         </div>
+
+        <a class="home-link-more" href="simulateurs.html">
+          Voir tous les simulateurs
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M5 12h14"></path>
+            <path d="m13 6 6 6-6 6"></path>
+          </svg>
+        </a>
       </section>
 
-      <footer class="page-note">
-        <p>Tous les rendez-vous sont synchronisés avec mon agenda, une confirmation vous sera envoyée après la réservation.</p>
-      </footer>
+      <section class="home-regulatory" aria-label="Statuts réglementaires">
+        <p><!-- TODO: à compléter avec les mandats Stellium exacts (ORIAS, statuts, immatriculations) --></p>
+      </section>
+
+      <section class="home-resources" aria-labelledby="home-resources-title">
+        <div class="section-heading">
+          <h2 id="home-resources-title">Ressources</h2>
+        </div>
+        <p class="home-resources-copy">Un panorama de partenaires référencés et des habilitations professionnelles vérifiées, réunis dans un espace dédié.</p>
+        <a class="home-link-more" href="ressources.html">
+          Découvrir les ressources
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M5 12h14"></path>
+            <path d="m13 6 6 6-6 6"></path>
+          </svg>
+        </a>
+      </section>
+
+      <section class="home-cta-final" aria-label="Prendre rendez-vous">
+        <a class="cta-button" href="rdv.html">
+          Prendre rendez-vous
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M5 12h14"></path>
+            <path d="m13 6 6 6-6 6"></path>
+          </svg>
+        </a>
+      </section>
     </main>
   </body>
 </html>
