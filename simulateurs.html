@@ -106,5 +106,32 @@
         </div>
       </footer>
     </main>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+    <script>
+      (function () {
+        var prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        if (prefersReducedMotion || typeof gsap === "undefined") return;
+        gsap.registerPlugin(ScrollTrigger);
+
+        document.querySelectorAll(".simulator-choice-grid").forEach(function (grid) {
+          var cards = grid.querySelectorAll(".simulator-choice");
+          if (!cards.length) return;
+
+          gsap.set(cards, { opacity: 0, y: 24 });
+          gsap.to(cards, {
+            opacity: 1,
+            y: 0,
+            duration: 0.7,
+            ease: "power2.out",
+            stagger: 0.1,
+            scrollTrigger: {
+              trigger: grid,
+              start: "top 85%"
+            }
+          });
+        });
+      })();
+    </script>
   </body>
 </html>

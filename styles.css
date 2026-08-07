@@ -630,16 +630,12 @@ h2 {
     radial-gradient(circle at 4% 0%, rgba(140, 181, 210, 0.17), transparent 38%),
     linear-gradient(118deg, #304653 0%, #3a4141 58%, #4c4439 100%);
   box-shadow:
-    0 24px 54px rgba(43, 37, 30, 0.18),
-    inset 0 1px 0 rgba(255, 255, 255, 0.13),
-    inset 0 0 0 1px rgba(255, 253, 250, 0.035);
+    0 10px 22px rgba(43, 37, 30, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 0 0 1px rgba(255, 253, 250, 0.03);
   transform-origin: center;
   transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1), border-color 260ms ease, box-shadow 320ms ease;
-  animation: appointmentReveal 560ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
 }
-
-.appointment:nth-child(2) { animation-delay: 70ms; }
-.appointment:nth-child(3) { animation-delay: 140ms; }
 
 .appointment:nth-child(2) {
   background:
@@ -686,9 +682,8 @@ h2 {
 .appointment:hover {
   border-color: rgba(236, 207, 152, 0.52);
   box-shadow:
-    0 36px 72px rgba(43, 37, 30, 0.24),
-    0 10px 24px rgba(43, 37, 30, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.17);
+    0 16px 32px rgba(43, 37, 30, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
   transform: translateY(-6px);
 }
 
@@ -1145,8 +1140,8 @@ h3 {
   border-radius: 26px;
   border: 1px solid rgba(43, 37, 30, 0.09);
   box-shadow:
-    0 28px 60px rgba(43, 37, 30, 0.14),
-    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    0 10px 24px rgba(43, 37, 30, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
 .about-parcours-text {
@@ -1492,6 +1487,22 @@ h3 {
   outline-offset: 5px;
 }
 
+/* simulateurs.html — allègement visuel, révélation reprise par GSAP/ScrollTrigger.
+   Scopé à .simulator-page pour ne pas affecter les mêmes cartes réutilisées sur index.html. */
+.simulator-page .simulator-choice-featured {
+  box-shadow:
+    0 10px 24px rgba(43, 37, 30, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 0 0 1px rgba(255, 253, 250, 0.03);
+  animation: none;
+}
+
+.simulator-page .simulator-choice-featured:hover {
+  box-shadow:
+    0 16px 34px rgba(43, 37, 30, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
 .simulator-choice-topline {
   display: flex;
   align-items: center;
@@ -1606,15 +1617,9 @@ h3 {
     radial-gradient(circle at 100% 5%, rgba(199, 174, 137, 0.16), transparent 44%),
     linear-gradient(118deg, rgba(249, 250, 249, 0.84), rgba(255, 253, 250, 0.76) 52%, rgba(245, 237, 224, 0.72));
   box-shadow:
-    0 16px 38px rgba(43, 37, 30, 0.075),
-    inset 0 1px 0 rgba(255, 255, 255, 0.86);
-  backdrop-filter: blur(18px) saturate(1.08);
-  animation: simulatorCardReveal 520ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+    0 6px 16px rgba(43, 37, 30, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
-
-.simulator-choice-soon:nth-child(2) { animation-delay: 45ms; }
-.simulator-choice-soon:nth-child(3) { animation-delay: 90ms; }
-.simulator-choice-soon:nth-child(4) { animation-delay: 135ms; }
 
 .simulator-choice-soon .simulator-choice-kicker {
   color: rgba(75, 92, 104, 0.61);
