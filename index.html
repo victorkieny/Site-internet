@@ -36,83 +36,24 @@
           <h1 id="hero-title">Victor Kieny</h1>
           <p class="eyebrow">Conseiller en ingénierie patrimoniale</p>
         </div>
-        <p class="home-hero-tagline">Un accompagnement patrimonial rigoureux, pensé comme une architecture sur-mesure — épargne et placements financiers, immobilier, retraite et transmission — pour les personnes physiques comme pour les personnes morales.</p>
-        <a class="cta-button" href="rdv.html">
-          Prendre rendez-vous
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M5 12h14"></path>
-            <path d="m13 6 6 6-6 6"></path>
-          </svg>
-        </a>
-      </section>
-
-      <section class="home-simulators" aria-labelledby="home-simulators-title">
-        <div class="section-heading">
-          <h2 id="home-simulators-title">Simulateurs patrimoniaux</h2>
-        </div>
-
-        <div class="simulator-choice-grid simulator-choice-grid-featured" aria-label="Simulateurs disponibles">
-          <a class="simulator-choice simulator-choice-featured simulator-choice-av" href="simulateurs/projection.html?mode=av">
-            <span class="simulator-choice-topline">
-              <span class="simulator-choice-kicker">Épargne &amp; capitalisation</span>
-            </span>
-            <h2>Assurance Vie</h2>
-            <p>Projeter l'encours, les versements et la puissance des intérêts composés dans le temps.</p>
-            <span class="simulator-choice-tags" aria-label="Points clés">
-              <span>Intérêts composés</span>
-              <span>Capitalisation</span>
-            </span>
-            <span class="simulator-choice-action">Découvrir le simulateur <i aria-hidden="true"></i></span>
+        <span class="home-hero-divider" aria-hidden="true"></span>
+        <p class="home-hero-tagline">Un accompagnement patrimonial rigoureux, pensé comme une architecture <span class="home-hero-tagline-accent">sur-mesure</span> — épargne et placements financiers, immobilier, retraite et transmission — pour les personnes physiques comme pour les personnes morales.</p>
+        <div class="home-hero-actions">
+          <a class="cta-button" href="rdv.html">
+            Prendre rendez-vous
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M5 12h14"></path>
+              <path d="m13 6 6 6-6 6"></path>
+            </svg>
           </a>
-          <a class="simulator-choice simulator-choice-featured simulator-choice-scpi" href="simulateurs/projection.html?mode=scpi">
-            <span class="simulator-choice-topline">
-              <span class="simulator-choice-kicker">Immobilier &amp; revenus</span>
-            </span>
-            <h2>SCPI</h2>
-            <p>Projeter le capital investi et les revenus locatifs perçus, avec ou sans réinvestissement des loyers.</p>
-            <span class="simulator-choice-tags" aria-label="Points clés">
-              <span>Revenus locatifs</span>
-              <span>Rendement</span>
-            </span>
-            <span class="simulator-choice-action">Découvrir le simulateur <i aria-hidden="true"></i></span>
+          <a class="home-link-more" href="simulateurs.html">
+            Découvrir les simulateurs
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M5 12h14"></path>
+              <path d="m13 6 6 6-6 6"></path>
+            </svg>
           </a>
         </div>
-
-        <a class="home-link-more" href="simulateurs.html">
-          Voir tous les simulateurs
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M5 12h14"></path>
-            <path d="m13 6 6 6-6 6"></path>
-          </svg>
-        </a>
-      </section>
-
-      <section class="home-regulatory" aria-label="Statuts réglementaires">
-        <p>Immatriculé ORIAS n°25008348 · Mandataire d'intermédiaire en assurance et en opérations de banque · Agent lié de prestataire de services d'investissement</p>
-      </section>
-
-      <section class="home-resources" aria-labelledby="home-resources-title">
-        <div class="section-heading">
-          <h2 id="home-resources-title">Ressources</h2>
-        </div>
-        <p class="home-resources-copy">Un panorama de partenaires référencés et des habilitations professionnelles vérifiées, réunis dans un espace dédié.</p>
-        <a class="home-link-more" href="ressources.html">
-          Découvrir les ressources
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M5 12h14"></path>
-            <path d="m13 6 6 6-6 6"></path>
-          </svg>
-        </a>
-      </section>
-
-      <section class="home-cta-final" aria-label="Prendre rendez-vous">
-        <a class="cta-button" href="rdv.html">
-          Prendre rendez-vous
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M5 12h14"></path>
-            <path d="m13 6 6 6-6 6"></path>
-          </svg>
-        </a>
       </section>
 
       <footer class="site-footer">
@@ -136,8 +77,10 @@
         var heroEls = [
           document.querySelector(".home-hero .eyebrow"),
           document.querySelector(".home-hero h1"),
+          document.querySelector(".home-hero-divider"),
           document.querySelector(".home-hero-tagline"),
-          document.querySelector(".home-hero .cta-button")
+          document.querySelector(".home-hero .cta-button"),
+          document.querySelector(".home-hero .home-link-more")
         ].filter(Boolean);
 
         if (!heroEls.length) return;
@@ -149,6 +92,24 @@
           duration: 0.7,
           ease: "power2.out",
           stagger: 0.1
+        });
+      })();
+    </script>
+    <script>
+      (function () {
+        var prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        var heroCta = document.querySelector(".home-hero .cta-button");
+        if (prefersReducedMotion || typeof gsap === "undefined" || !heroCta) return;
+
+        // Pas d'effet magnétique : juste le retour de pression au clic, piloté par GSAP
+        // pour ne pas entrer en conflit avec le transform inline laissé par l'animation
+        // d'entrée du hero.
+        heroCta.addEventListener("mousedown", function () {
+          gsap.to(heroCta, { scale: 0.96, duration: 0.1, ease: "power2.out" });
+        });
+
+        heroCta.addEventListener("mouseup", function () {
+          gsap.to(heroCta, { scale: 1, duration: 0.25, ease: "power2.out" });
         });
       })();
     </script>
