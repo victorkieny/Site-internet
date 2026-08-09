@@ -30,7 +30,31 @@
         </a>
       </nav>
 
-      <p class="resources-partners-intro">Un réseau de partenaires solide, une expertise vérifiable</p>
+      <nav class="section-tracker" aria-label="Navigation rapide entre sections">
+        <button type="button" class="section-tracker-dot" data-target="resources-partners" aria-current="true">
+          <span class="section-tracker-dot-mark" aria-hidden="true"></span>
+          <span class="section-tracker-dot-label">Partenaires</span>
+        </button>
+        <span class="section-tracker-line" aria-hidden="true">
+          <span class="section-tracker-fill"></span>
+        </span>
+        <button type="button" class="section-tracker-dot" data-target="resources-habilitations">
+          <span class="section-tracker-dot-mark" aria-hidden="true"></span>
+          <span class="section-tracker-dot-label">Habilitations</span>
+        </button>
+      </nav>
+
+      <section class="resources-opening" aria-label="Ressources — introduction">
+        <p class="resources-opening-text">
+          Un réseau de <span class="resources-opening-word" data-target="resources-partners" role="link" tabindex="0">partenaires</span> solide, une <span class="resources-opening-word" data-target="resources-habilitations" role="link" tabindex="0">expertise</span> vérifiable.
+        </p>
+      </section>
+
+      <section class="resources-dive resources-dive-1" aria-hidden="true">
+        <p class="resources-dive-phrase">
+          <span class="resources-dive-rest">Un réseau de </span><span class="resources-dive-word">partenaires</span><span class="resources-dive-rest"> solide, une expertise vérifiable.</span>
+        </p>
+      </section>
 
       <section class="resources-partners" aria-labelledby="partners-title">
         <div class="section-heading">
@@ -215,6 +239,12 @@
 
       </section>
 
+      <section class="resources-dive resources-dive-2" aria-hidden="true">
+        <p class="resources-dive-phrase resources-dive-phrase-single">
+          <span class="resources-dive-word">expertise</span>
+        </p>
+      </section>
+
       <section class="resources-habilitations" aria-labelledby="habilitations-title">
         <div class="section-heading">
           <h2 id="habilitations-title">Habilitations &amp; diplômes</h2>
@@ -336,6 +366,10 @@
         </div>
       </section>
 
+      <section class="resources-closing" aria-hidden="true">
+        <p class="resources-closing-text">Un réseau de partenaires solide, une expertise vérifiable.</p>
+      </section>
+
       <footer class="site-footer">
         <div class="site-footer-bottom">
           <p class="site-footer-copy">© 2026 Victor Kieny — Conseiller en ingénierie patrimoniale</p>
@@ -352,6 +386,43 @@
     <script>
       (function () {
         var prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        var isCompact = window.matchMedia("(max-width: 900px)").matches;
+
+        // Raccourcis cliquables — repère de navigation ET mots "partenaires" /
+        // "expertise" de l'écran d'ouverture : ce sont des fonctions de navigation,
+        // pas des animations décoratives, donc câblées ici, AVANT le retour anticipé
+        // lié à prefers-reduced-motion/GSAP, pour continuer à fonctionner dans tous
+        // les cas (motion réduite, ou même si GSAP ne charge pas).
+        function scrollToTarget(className) {
+          var target = document.querySelector("." + className);
+          if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+
+        var tracker = document.querySelector(".section-tracker");
+        var trackerDots = tracker
+          ? Array.prototype.slice.call(tracker.querySelectorAll(".section-tracker-dot"))
+          : [];
+        trackerDots.forEach(function (dot) {
+          dot.addEventListener("click", function () {
+            scrollToTarget(dot.getAttribute("data-target"));
+          });
+        });
+
+        var openingWords = Array.prototype.slice.call(
+          document.querySelectorAll(".resources-opening-word")
+        );
+        openingWords.forEach(function (word) {
+          word.addEventListener("click", function () {
+            scrollToTarget(word.getAttribute("data-target"));
+          });
+          word.addEventListener("keydown", function (e) {
+            if (e.key === "Enter" || e.key === " " || e.key === "Spacebar") {
+              e.preventDefault();
+              scrollToTarget(word.getAttribute("data-target"));
+            }
+          });
+        });
+
         if (prefersReducedMotion || typeof gsap === "undefined") return;
         gsap.registerPlugin(ScrollTrigger);
 
@@ -446,6 +517,240 @@
         // Survol doré : géré entièrement en CSS (:hover natif par nom, cf. styles.css),
         // pas de JS nécessaire ici — plus simple et plus robuste qu'un masque suivant
         // la souris.
+
+        // Repère de navigation — apparition/disparition + remplissage du trait,
+        // scrubés sur toute la plage qui va du haut de .resources-partners au bas
+        // de .resources-habilitations. Jamais de pin : le scroll n'est jamais bloqué,
+        // scrub:true relie juste l'avancement visuel à la position de scroll.
+        var partnersSection = document.querySelector(".resources-partners");
+        var habilitationsSection = document.querySelector(".resources-habilitations");
+
+        if (tracker && partnersSection && habilitationsSection) {
+          var fill = tracker.querySelector(".section-tracker-fill");
+          var partnersDot = tracker.querySelector('[data-target="resources-partners"]');
+          var habilitationsDot = tracker.querySelector('[data-target="resources-habilitations"]');
+
+          gsap.set(tracker, { opacity: 0 });
+
+          ScrollTrigger.create({
+            trigger: partnersSection,
+            start: "top bottom",
+            endTrigger: habilitationsSection,
+            end: "bottom top",
+            onEnter: function () {
+              gsap.to(tracker, { opacity: 1, duration: 0.4, ease: "power1.out" });
+            },
+            onLeave: function () {
+              gsap.to(tracker, { opacity: 0, duration: 0.4, ease: "power1.out" });
+            },
+            onEnterBack: function () {
+              gsap.to(tracker, { opacity: 1, duration: 0.4, ease: "power1.out" });
+            },
+            onLeaveBack: function () {
+              gsap.to(tracker, { opacity: 0, duration: 0.4, ease: "power1.out" });
+            }
+          });
+
+          // Remplissage du trait, scrubé sur toute la plage — indépendant de la
+          // détection de scène active ci-dessous (deux préoccupations séparées).
+          ScrollTrigger.create({
+            trigger: partnersSection,
+            start: "top top",
+            endTrigger: habilitationsSection,
+            end: "bottom bottom",
+            scrub: true,
+            onUpdate: function (self) {
+              if (fill) gsap.set(fill, { scaleY: self.progress });
+            }
+          });
+
+          // Scène active = la section actuellement au centre du viewport (un
+          // ScrollTrigger dédié par section, onToggle réagit à self.isActive).
+          if (partnersDot) {
+            ScrollTrigger.create({
+              trigger: partnersSection,
+              start: "top center",
+              end: "bottom center",
+              onToggle: function (self) {
+                partnersDot.setAttribute("aria-current", self.isActive ? "true" : "false");
+              }
+            });
+          }
+          if (habilitationsDot) {
+            ScrollTrigger.create({
+              trigger: habilitationsSection,
+              start: "top center",
+              end: "bottom center",
+              onToggle: function (self) {
+                habilitationsDot.setAttribute("aria-current", self.isActive ? "true" : "false");
+              }
+            });
+          }
+
+          // Installation / sortie du mur de partenaires et de la grille
+          // d'habilitations : toujours des timelines scrubées via .fromTo() (jamais
+          // de gsap.set manuel dans onUpdate), pour que l'état de repos (opacity: 1,
+          // scale: 1) soit garanti par GSAP en dehors des plages définies et ne
+          // dérive jamais — c'est le correctif du bug d'opacité anormalement basse
+          // constaté précédemment. Les deux plages (installation en haut de section,
+          // sortie en bas) ne se chevauchent jamais, donc chaque conteneur reste à
+          // opacity: 1 / scale: 1 au repos entre les deux.
+          var partnerWallEl = document.querySelector(".partner-wall");
+          var habilitationGridEl = document.querySelector(".habilitation-grid");
+
+          if (partnerWallEl) {
+            gsap.fromTo(
+              partnerWallEl,
+              { scale: 1.35, opacity: 0.15 },
+              {
+                scale: 1,
+                opacity: 1,
+                ease: "power1.out",
+                scrollTrigger: {
+                  trigger: partnerWallEl,
+                  start: "top bottom",
+                  end: "top 40%",
+                  scrub: true
+                }
+              }
+            );
+            gsap.fromTo(
+              partnerWallEl,
+              { scale: 1, opacity: 1 },
+              {
+                scale: 1.35,
+                opacity: 0,
+                ease: "power1.in",
+                scrollTrigger: {
+                  trigger: partnersSection,
+                  start: "bottom 80%",
+                  end: "bottom top",
+                  scrub: true
+                }
+              }
+            );
+          }
+
+          if (habilitationGridEl) {
+            gsap.fromTo(
+              habilitationGridEl,
+              { scale: 1.3, opacity: 0.15 },
+              {
+                scale: 1,
+                opacity: 1,
+                ease: "power1.out",
+                scrollTrigger: {
+                  trigger: habilitationGridEl,
+                  start: "top bottom",
+                  end: "top 45%",
+                  scrub: true
+                }
+              }
+            );
+          }
+        }
+
+        // Deux plongées pinnées (~100vh de scroll bloqué chacune) : de simples
+        // scènes de transition dédiées, séparées du mur/grille réels, pour ne
+        // jamais toucher à la structure ou aux écouteurs internes du marquee
+        // (défilement, glissement, dorage au survol) pendant qu'ils sont pinnés.
+        // En dehors de ces deux plages précises, le scroll garde sa vitesse
+        // normale — seuls .resources-dive-1 et .resources-dive-2 reçoivent pin:true.
+        // Fragiles sur mobile : désactivées sous 901px, remplacées par une simple
+        // apparition en fondu/scale légère, jamais bloquante.
+        var dive1 = document.querySelector(".resources-dive-1");
+        var dive2 = document.querySelector(".resources-dive-2");
+
+        if (!isCompact) {
+          if (dive1) {
+            var dive1Word = dive1.querySelector(".resources-dive-word");
+            var dive1Rest = gsap.utils.toArray(dive1.querySelectorAll(".resources-dive-rest"));
+            gsap.timeline({
+              scrollTrigger: {
+                trigger: dive1,
+                start: "top top",
+                end: "+=100%",
+                pin: true,
+                scrub: true
+              }
+            })
+              .fromTo(dive1Rest, { opacity: 1 }, { opacity: 0, ease: "power1.in" }, 0)
+              .fromTo(
+                dive1Word,
+                { scale: 1, opacity: 1 },
+                { scale: 5.5, opacity: 0, ease: "power1.in" },
+                0
+              );
+          }
+
+          if (dive2) {
+            var dive2Word = dive2.querySelector(".resources-dive-word");
+            gsap.timeline({
+              scrollTrigger: {
+                trigger: dive2,
+                start: "top top",
+                end: "+=100%",
+                pin: true,
+                scrub: true
+              }
+            })
+              .fromTo(
+                dive2Word,
+                { scale: 0.6, opacity: 0 },
+                { scale: 1, opacity: 1, ease: "power1.out", duration: 0.4 },
+                0
+              )
+              .fromTo(
+                dive2Word,
+                { scale: 1 },
+                { scale: 4.5, opacity: 0, ease: "power1.in", duration: 0.6 },
+                0.4
+              );
+          }
+        } else {
+          [dive1, dive2].forEach(function (dive) {
+            if (!dive) return;
+            var word = dive.querySelector(".resources-dive-word");
+            if (!word) return;
+            gsap.fromTo(
+              word,
+              { opacity: 0, scale: 0.85 },
+              {
+                opacity: 1,
+                scale: 1,
+                ease: "power1.out",
+                scrollTrigger: { trigger: dive, start: "top 75%", end: "top 35%", scrub: true }
+              }
+            );
+          });
+        }
+
+        // Écran de clôture : rappel de la même phrase, plus petit — toujours scrubé,
+        // jamais pinné, pour rester léger en toute fin de page.
+        var closingText = document.querySelector(".resources-closing-text");
+        if (closingText) {
+          gsap.fromTo(
+            closingText,
+            { opacity: 0, y: 16 },
+            {
+              opacity: 1,
+              y: 0,
+              ease: "power1.out",
+              scrollTrigger: { trigger: closingText, start: "top 88%", end: "top 55%", scrub: true }
+            }
+          );
+        }
+
+        // Filet de sécurité : les polices web (Bodoni 72 Display / Avenir Next) qui
+        // finissent de charger après ce script peuvent décaler la hauteur des
+        // sections et donc les positions de déclenchement calculées ci-dessus —
+        // on relance une mesure une fois les polices prêtes pour éviter tout
+        // décalage de progression au repos.
+        if (window.document.fonts && window.document.fonts.ready) {
+          window.document.fonts.ready.then(function () {
+            ScrollTrigger.refresh();
+          });
+        }
       })();
     </script>
     <script>
