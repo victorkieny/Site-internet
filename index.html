@@ -17,17 +17,28 @@
   <body>
     <main class="home-page" id="accueil">
       <nav class="main-nav" aria-label="Navigation principale">
-        <a href="index.html" aria-current="page">Accueil</a>
-        <a href="simulateurs.html">Simulateurs</a>
-        <a href="ressources.html">Ressources</a>
-        <a href="a-propos.html">À propos</a>
-        <a class="nav-cta" href="rdv.html">
-          Prendre RDV
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M5 12h14"></path>
-            <path d="m13 6 6 6-6 6"></path>
+        <input type="checkbox" id="nav-toggle" class="nav-toggle-checkbox" aria-label="Menu de navigation">
+        <label for="nav-toggle" class="main-nav-scrim" aria-hidden="true"></label>
+        <div class="main-nav-panel">
+          <a href="index.html" aria-current="page">Accueil</a>
+          <a href="simulateurs.html">Simulateurs</a>
+          <a href="ressources.html">Ressources</a>
+          <a href="a-propos.html">À propos</a>
+          <a class="nav-cta" href="rdv.html">
+            Prendre RDV
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M5 12h14"></path>
+              <path d="m13 6 6 6-6 6"></path>
+            </svg>
+          </a>
+        </div>
+        <label for="nav-toggle" class="nav-toggle" aria-hidden="true">
+          <svg class="nav-toggle-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 7h16"></path>
+            <path d="M4 12h16"></path>
+            <path d="M4 17h16"></path>
           </svg>
-        </a>
+        </label>
       </nav>
 
       <div class="home-page-content">

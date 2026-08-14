@@ -179,6 +179,23 @@ h1 {
   white-space: nowrap;
 }
 
+/* Nav mobile : menu hamburger en CSS pur (checkbox hack), sans JS — robuste
+   par construction, fonctionne même sur les pages sans script (mentions
+   légales, confidentialité). .nav-toggle-checkbox pilote l'état ouvert/fermé
+   via :checked, ciblant ses frères .main-nav-panel/.nav-toggle/.main-nav-scrim
+   par sélecteur ~. Sur desktop, tout ce bloc est invisible/neutre :
+   .main-nav-panel garde display:contents (ses <a> restent des enfants flex
+   directs de .main-nav, layout inchangé), le reste est display:none. */
+.main-nav-panel {
+  display: contents;
+}
+
+.nav-toggle-checkbox,
+.nav-toggle,
+.main-nav-scrim {
+  display: none;
+}
+
 .main-nav a {
   position: relative;
   display: inline-flex;
@@ -7734,21 +7751,111 @@ body[data-mode="scpi"] .tool-field[data-field="dureeTotale"] .tool-input-wrap in
     height: 390px;
   }
 
+  /* Nav mobile : menu hamburger. Sur desktop .main-nav flotte en position
+     absolute au-dessus du hero (le padding-top de .page/.home-page/
+     .simulator-page réserve l'espace nécessaire). Deux tentatives CSS
+     précédentes (wrap libre, puis scroll horizontal) laissaient soit une
+     hauteur de nav imprévisible (chevauchement avec le logo), soit un
+     rendu peu soigné (CTA disproportionné, liens tronqués). Le hamburger
+     règle les deux : fermé, .main-nav ne occupe que la largeur du bouton
+     (hauteur fixe et minime, jamais de chevauchement) ; ouvert, un panneau
+     déroulant affiche les 4 liens + le CTA empilés proprement. */
   .main-nav {
-    flex-wrap: wrap;
+    width: auto;
+    padding: 0;
+  }
+
+  /* Case à cocher pilotant l'état ouvert/fermé, gardée dans le flux du
+     tabulateur (donc accessible au clavier) mais visuellement masquée par
+     clip plutôt que par opacity:0 en position absolute — elle n'a ainsi
+     aucune influence sur la taille de .main-nav, qui se limite au bouton
+     visible .nav-toggle ci-dessous. */
+  .nav-toggle-checkbox {
+    display: block;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .nav-toggle {
+    display: inline-flex;
+    align-items: center;
     justify-content: center;
+    width: 44px;
+    height: 44px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--surface);
+    cursor: pointer;
+  }
+
+  .nav-toggle-icon {
+    width: 20px;
+    height: 20px;
+    color: var(--ink);
+  }
+
+  .nav-toggle-checkbox:focus-visible ~ .nav-toggle {
+    outline: 2px solid var(--interest-gold);
+    outline-offset: 2px;
+  }
+
+  .main-nav-scrim {
+    display: none;
+  }
+
+  .nav-toggle-checkbox:checked ~ .main-nav-scrim {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 4;
+    background: rgba(43, 37, 30, 0.15);
+  }
+
+  .main-nav-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
     gap: 6px;
-    width: min(92%, 420px);
-    padding: 6px;
+    position: absolute;
+    top: calc(100% + 10px);
+    left: 50%;
+    z-index: 5;
+    width: min(84vw, 320px);
+    padding: 10px;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+    opacity: 0;
+    visibility: hidden;
+    transform: translate(-50%, -8px);
+    transition: opacity 200ms ease, transform 200ms ease, visibility 0s linear 200ms;
   }
 
-  .main-nav a {
-    flex: 0 1 auto;
+  .nav-toggle-checkbox:checked ~ .main-nav-panel {
+    opacity: 1;
+    visibility: visible;
+    transform: translate(-50%, 0);
+    transition: opacity 200ms ease, transform 200ms ease, visibility 0s linear 0s;
   }
 
-  .main-nav a.nav-cta {
-    flex: 1 1 100%;
-    margin-top: 2px;
+  .main-nav-panel a {
+    justify-content: flex-start;
+    width: 100%;
+    min-height: 44px;
+    padding: 0 10px;
+  }
+
+  .main-nav-panel a.nav-cta {
+    justify-content: center;
+    margin-top: 4px;
   }
 
   .site-footer-bottom {
@@ -7983,14 +8090,11 @@ body[data-mode="scpi"] .tool-field[data-field="dureeTotale"] .tool-input-wrap in
 
   .main-nav {
     top: 12px;
-    width: min(92%, 340px);
     font-size: 0.82rem;
   }
 
-  .main-nav a {
-    flex: 0 1 auto;
-    min-height: 32px;
-    padding: 0 10px;
+  .main-nav-panel {
+    width: min(84vw, 300px);
   }
 
   .simulator-page {
