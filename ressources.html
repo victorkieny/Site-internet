@@ -47,7 +47,20 @@
           <p class="resources-opening-text">
             Un réseau de <span class="resources-opening-word" data-modal="partners" role="link" tabindex="0">partenaires</span> solides,<br>une <span class="resources-opening-word" data-modal="habilitations" role="link" tabindex="0">expertise</span> vérifiable.
           </p>
-          <p class="resources-opening-hint">Cliquez pour explorer.</p>
+          <p class="resources-opening-hint">
+            Cliquez pour explorer
+            <svg class="resources-opening-hint-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m7 9 5 5 5-5"></path>
+            </svg>
+          </p>
+          <div class="resources-opening-teasers">
+            <button type="button" class="resources-opening-teaser resources-opening-teaser-back" data-modal="habilitations">
+              <span class="resources-opening-teaser-label">Habilitations</span>
+            </button>
+            <button type="button" class="resources-opening-teaser resources-opening-teaser-front" data-modal="partners">
+              <span class="resources-opening-teaser-label">Partenaires</span>
+            </button>
+          </div>
         </section>
       </div>
 
@@ -607,7 +620,8 @@
             sealRows: sealRows,
             svg: svg,
             segments: segments,
-            rowThresholds: rowThresholds
+            rowThresholds: rowThresholds,
+            offsets: offsets
           };
         }
 
@@ -749,6 +763,7 @@
           // rouvrait quoi que ce soit avant un rafraîchissement de la page.
           partnersShown = false;
           habilitationsShown = false;
+          habilitationsEdgeReachedAt = null;
 
           function finish() {
             backdrop.classList.remove("is-open", "is-stacked");
@@ -772,10 +787,21 @@
             // la contient).
             if (typeof gsap !== "undefined") {
               gsap.killTweensOf([backdrop, card, background, backgroundCard].filter(Boolean));
-              gsap.set([backdrop, card], { clearProps: "opacity" });
+              gsap.set(backdrop, { clearProps: "opacity" });
+              // "transform" en plus de "opacity" sur card : la fermeture
+              // "rangée dans la carte-amorce" (cf. plus bas) lui laisse un
+              // x/y/scaleX/scaleY résiduel en style inline — sans ce clear,
+              // ce résidu resterait collé à la prochaine ouverture, quelle
+              // que soit sa méthode (les animations d'ouverture qui ne
+              // fixent pas explicitement x/y/scaleX/scaleY, comme le simple
+              // fondu-montée, ne l'auraient alors jamais écrasé).
+              gsap.set(card, { clearProps: "opacity,transform" });
             } else {
               backdrop.style.opacity = "";
-              if (card) card.style.opacity = "";
+              if (card) {
+                card.style.opacity = "";
+                card.style.transform = "";
+              }
             }
             if (background) {
               background.classList.remove("is-open");
@@ -794,9 +820,48 @@
             if (lastTrigger) lastTrigger.focus();
           }
 
+          // Carte-amorce d'origine de la carte active : cherchée à la
+          // fermeture, pas mémorisée à l'ouverture — elle est toujours
+          // présente à l'écran (position fixed, jamais retirée du DOM) quel
+          // qu'ait été le déclencheur d'ouverture (teaser, mot doré, scroll
+          // réflexe), donc toujours valide comme point de "rangement".
+          var activeId = backdrop.getAttribute("data-modal-id");
+          var activeTeaser = document.querySelector('.resources-opening-teaser[data-modal="' + activeId + '"]');
+          var activeOrigin = activeTeaser ? activeTeaser.getBoundingClientRect() : null;
+
           if (!prefersReducedMotion && typeof gsap !== "undefined") {
-            gsap.to(card, { opacity: 0, y: 12, scale: 0.98, duration: 0.2, ease: "power1.in" });
-            gsap.to(backdrop, { opacity: 0, duration: 0.2, ease: "power1.in", onComplete: finish });
+            if (activeOrigin) {
+              // Symétrique de l'ouverture façon FLIP (cf. openModal) : la
+              // carte rétrécit et se déplace jusqu'à se superposer très
+              // exactement à sa carte-amorce, au lieu de simplement
+              // s'estomper — elle a l'air d'y retourner, pas de disparaître.
+              var closeCardRect = card.getBoundingClientRect();
+              var closeToX = activeOrigin.left + activeOrigin.width / 2 - (closeCardRect.left + closeCardRect.width / 2);
+              var closeToY = activeOrigin.top + activeOrigin.height / 2 - (closeCardRect.top + closeCardRect.height / 2);
+              var closeToScaleX = activeOrigin.width / closeCardRect.width;
+              var closeToScaleY = activeOrigin.height / closeCardRect.height;
+              // Le fondu du voile est ici PROGRESSIF (pas un cut instantané
+              // comme testé un temps) : sur toute la durée du mouvement de
+              // la carte, pas avant — sinon, étant son parent DOM, un cut
+              // net aurait rendu la carte invisible d'un coup au lieu de la
+              // laisser rétrécir sous nos yeux. Un vrai fondu progressif,
+              // lui, n'a pas ce problème : la carte reste visible À TRAVERS
+              // le voile de plus en plus transparent.
+              gsap.to(backdrop, { opacity: 0, duration: 0.5, ease: "power1.in" });
+              gsap.to(card, {
+                x: closeToX,
+                y: closeToY,
+                scaleX: closeToScaleX,
+                scaleY: closeToScaleY,
+                duration: 0.5,
+                ease: "power3.in",
+                transformOrigin: "center center",
+                onComplete: finish
+              });
+            } else {
+              gsap.to(card, { opacity: 0, y: 12, scale: 0.98, duration: 0.2, ease: "power1.in" });
+              gsap.to(backdrop, { opacity: 0, duration: 0.2, ease: "power1.in", onComplete: finish });
+            }
             // La carte de fond (si présente) s'efface EN MÊME TEMPS que la
             // carte active — les 2 disparaissent ensemble, pas l'une après
             // l'autre.
@@ -841,14 +906,33 @@
           lastTrigger = trigger || document.activeElement;
           var card = backdrop.querySelector(".resources-modal-card");
 
-          // Neutralise tout fondu encore en cours sur la cible avant de la
-          // rouvrir (même logique défensive que closeModal.finish, cf. son
-          // commentaire) : si elle vient d'être fermée très récemment, son
-          // tween de fermeture peut ne pas être totalement terminé et
-          // écraserait sinon l'opacité qu'on s'apprête à reposer.
+          // Origine du "tirage" : si l'ouverture vient d'un clic sur une
+          // carte-amorce de l'écran d'accueil (cf. .resources-opening-teaser),
+          // on mesure sa position/taille RÉELLES à l'écran pour faire partir
+          // l'animation de LÀ plutôt que d'un fondu générique — impression
+          // d'avoir vraiment tiré cette carte du bas de l'écran jusqu'à sa
+          // taille finale, comme un tirage de carte à jouer. N'importe quel
+          // autre déclencheur (mot doré dans la phrase, scroll réflexe)
+          // garde l'animation existante, inchangée.
+          var teaserOrigin =
+            trigger && trigger.classList && trigger.classList.contains("resources-opening-teaser")
+              ? trigger.getBoundingClientRect()
+              : null;
+
+          // Neutralise tout fondu/déplacement encore en cours sur la cible
+          // avant de la rouvrir (même logique défensive que closeModal.finish,
+          // cf. son commentaire) : si elle vient d'être fermée très récemment,
+          // son tween de fermeture peut ne pas être totalement terminé et
+          // écraserait sinon l'opacité qu'on s'apprête à reposer. "transform"
+          // en plus de "opacity" sur card : une fermeture "rangée dans la
+          // carte-amorce" laisse un x/y/scaleX/scaleY résiduel — sans ce
+          // clear, une réouverture qui ne fixe pas explicitement CES 4
+          // propriétés (le simple fondu-montée par exemple, qui ne touche
+          // que y/scale) hériterait de ce résidu au lieu de repartir propre.
           if (typeof gsap !== "undefined") {
             gsap.killTweensOf([backdrop, card]);
-            gsap.set([backdrop, card], { clearProps: "opacity" });
+            gsap.set(backdrop, { clearProps: "opacity" });
+            gsap.set(card, { clearProps: "opacity,transform" });
           }
 
           if (previousBackdrop) {
@@ -894,7 +978,16 @@
             // ci-dessus) n'existe que sur la carte de fond en cas
             // d'enchaînement : rien à faire fondre ici dans ce cas.
             if (!previousBackdrop) {
-              gsap.fromTo(backdrop, { opacity: 0 }, { opacity: 1, duration: 0.35, ease: "power1.out" });
+              if (teaserOrigin) {
+                // Tirage depuis une carte-amorce : le voile apparaît
+                // instantanément avec le clic, pas en fondu — seul le
+                // déplacement/agrandissement de la carte doit se voir,
+                // sinon le fondu du voile se lit comme un fondu général de
+                // la transition, même si la carte elle-même n'en a aucun.
+                gsap.set(backdrop, { opacity: 1 });
+              } else {
+                gsap.fromTo(backdrop, { opacity: 0 }, { opacity: 1, duration: 0.35, ease: "power1.out" });
+              }
             }
 
             // Enchaînement (previousBackdrop) : la nouvelle carte arrive
@@ -903,7 +996,24 @@
             // en biais sur la pile, puis se redresse en position finale
             // lisible. Ouverture depuis l'écran d'accueil (pas
             // d'enchaînement) : simple fondu-montée, inchangé.
-            if (previousBackdrop) {
+            if (teaserOrigin) {
+              // Technique FLIP : le point de départ n'est pas une valeur
+              // arbitraire mais calculé à partir de la position/taille
+              // RÉELLES du bouton-teaser cliqué, comparées à la position/
+              // taille RÉELLES de la carte une fois ouverte (déjà layoutée
+              // ici, is-open venant d'être posé) — la carte semble ainsi
+              // grandir depuis l'endroit exact où on l'a "attrapée".
+              var cardRect = card.getBoundingClientRect();
+              var fromX = teaserOrigin.left + teaserOrigin.width / 2 - (cardRect.left + cardRect.width / 2);
+              var fromY = teaserOrigin.top + teaserOrigin.height / 2 - (cardRect.top + cardRect.height / 2);
+              var fromScaleX = teaserOrigin.width / cardRect.width;
+              var fromScaleY = teaserOrigin.height / cardRect.height;
+              gsap.fromTo(
+                card,
+                { opacity: 1, x: fromX, y: fromY, scaleX: fromScaleX, scaleY: fromScaleY, transformOrigin: "center center" },
+                { x: 0, y: 0, scaleX: 1, scaleY: 1, duration: 0.55, ease: "power3.out" }
+              );
+            } else if (previousBackdrop) {
               gsap.fromTo(
                 card,
                 { opacity: 0, y: -12, scale: 0.95, x: 20, rotate: 6 },
@@ -989,6 +1099,15 @@
           });
         });
 
+        // Cartes-amorce de l'écran d'ouverture (point d'entrée principal) :
+        // de vrais <button>, donc Entrée/Espace les activent nativement au
+        // clavier sans code supplémentaire — seul le clic est à câbler.
+        Array.prototype.slice.call(document.querySelectorAll(".resources-opening-teaser")).forEach(function (teaser) {
+          teaser.addEventListener("click", function () {
+            openModal(teaser.getAttribute("data-modal"), teaser);
+          });
+        });
+
         Array.prototype.slice.call(document.querySelectorAll(".resources-modal-backdrop")).forEach(function (backdrop) {
           var closeBtn = backdrop.querySelector(".resources-modal-close");
           if (closeBtn) closeBtn.addEventListener("click", function () { closeModal(); });
@@ -1024,6 +1143,20 @@
         // après, et la lecture ne doit jamais être coupée) — mais un scroll
         // vers le HAUT, lui, doit pouvoir ramener "partenaires" devant.
         var scrollIntentLocked = false;
+
+        // Un seul et même geste physique (swipe trackpad continu, molette
+        // qui s'emballe) déclenche des dizaines d'événements wheel d'affilée
+        // — sans ce délai, l'un de ces événements arrive PENDANT ce même
+        // geste avec scrollTop déjà au maximum, et la transition vers la
+        // carte suivante se déclenche dans la foulée : dérouler jusqu'en bas
+        // suffisait alors, à lui seul, à enchaîner sur "partenaires", sans
+        // geste distinct. habilitationsEdgeReachedAt mémorise l'instant où
+        // le bord (haut ou bas) a été atteint ; la transition n'est permise
+        // qu'après un court délai SANS que ce bord n'ait jamais été quitté —
+        // le temps que le geste en cours se termine et qu'un nouveau
+        // commence.
+        var habilitationsEdgeReachedAt = null;
+        var HABILITATIONS_EDGE_DELAY = 350;
 
         // La carte qui vient d'apparaître ne doit pas se retrouver déroulée
         // d'emblée par le MÊME geste physique qui l'a fait apparaître (un
@@ -1080,8 +1213,23 @@
           if (activeId === "habilitations") {
             var habilitationsCard = activeBackdrop.querySelector(".resources-modal-card");
             if (habilitationsCard) {
-              if (deltaY < 0 && habilitationsCard.scrollTop > 4) return;
-              if (deltaY > 0 && habilitationsCard.scrollTop + habilitationsCard.clientHeight < habilitationsCard.scrollHeight - 4) return;
+              var atTop = habilitationsCard.scrollTop <= 4;
+              var atBottom = habilitationsCard.scrollTop + habilitationsCard.clientHeight >= habilitationsCard.scrollHeight - 4;
+              if ((deltaY < 0 && !atTop) || (deltaY > 0 && !atBottom)) {
+                // Pas encore au bord dans le sens du geste : on quitte (ou on
+                // n'a jamais atteint) le bord, le délai n'a plus lieu d'être.
+                habilitationsEdgeReachedAt = null;
+                return;
+              }
+              // Au bord : la transition n'est permise qu'après un délai
+              // écoulé DEPUIS le moment où ce bord a été atteint pour la
+              // première fois — jamais dans la foulée du même geste.
+              var now = Date.now();
+              if (habilitationsEdgeReachedAt === null) {
+                habilitationsEdgeReachedAt = now;
+                return;
+              }
+              if (now - habilitationsEdgeReachedAt < HABILITATIONS_EDGE_DELAY) return;
             }
           }
 
@@ -1117,6 +1265,10 @@
           if (activeBackdrop) {
             lockCardScroll(activeBackdrop.querySelector(".resources-modal-card"));
           }
+
+          // La transition vient d'avoir lieu : repart propre pour la
+          // prochaine fois qu'"habilitations" redevient active.
+          habilitationsEdgeReachedAt = null;
 
           scrollIntentLocked = true;
           setTimeout(function () {
@@ -1166,6 +1318,11 @@
           if (openingHint) {
             gsap.set(openingHint, { opacity: 0 });
             openingTl.to(openingHint, { opacity: 1, duration: 0.5, ease: "power2.out" }, "-=0.15");
+          }
+          var openingTeasers = document.querySelector(".resources-opening-teasers");
+          if (openingTeasers) {
+            gsap.set(openingTeasers, { opacity: 0, y: 20 });
+            openingTl.to(openingTeasers, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }, "-=0.2");
           }
         }
 

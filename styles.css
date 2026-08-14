@@ -734,6 +734,23 @@ h3 {
   gap: clamp(48px, 8svh, 80px);
 }
 
+/* #ressources (id unique à ressources.html) : centrer verticalement était
+   utile tant que le "vide" à combler se trouvait EN BAS de la composition
+   (avant l'ajout des cartes-amorce). Ces cartes vivent maintenant hors de
+   ce conteneur, fixées au bas du viewport (cf. .resources-opening-teasers
+   plus bas) — centrer le reste (logo/phrase/indication) créait alors un
+   vide au-dessus du logo à la place. Retour à align-content: start
+   (comportement par défaut de .home-page-content) : le bloc remonte juste
+   sous la nav, les cartes gèrent le bas de l'écran indépendamment. */
+
+/* Le pied de page n'est plus jamais visible sur cette page une fois les
+   cartes-amorce fixées au bas du viewport (cf. .resources-opening-teasers
+   plus bas) : plutôt que de le laisser dépasser sur les côtés derrière les
+   cartes, on le retire proprement de cet écran. */
+#ressources .site-footer {
+  display: none;
+}
+
 .home-page::before {
   content: "";
   position: absolute;
@@ -1498,6 +1515,10 @@ body.resources-modal-open {
 }
 
 .resources-opening-hint {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
   margin: 0;
   color: var(--muted);
   font-family: var(--sans);
@@ -1506,6 +1527,140 @@ body.resources-modal-open {
   letter-spacing: 0.12em;
   text-transform: uppercase;
   text-align: center;
+}
+
+/* Chevron animé sous l'indication texte : un signal graphique se capte en
+   périphérie de vision avant même qu'on lise "Cliquez pour explorer" — les
+   deux se renforcent plutôt que de se substituer l'un à l'autre. */
+.resources-opening-hint-icon {
+  width: 16px;
+  height: 16px;
+  color: var(--label);
+  animation: resources-hint-bounce 1.8s ease-in-out infinite;
+}
+
+@keyframes resources-hint-bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translateY(5px);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .resources-opening-hint-icon {
+    animation: none;
+  }
+}
+
+/* Amorce visuelle des cartes "Partenaires"/"Habilitations" : deux vrais
+   boutons en éventail, silhouette de carte (mêmes codes que
+   .resources-modal-card — fond var(--paper) identique à la page,
+   différenciée par la bordure et l'ombre portée, coins arrondis en haut
+   seulement), superposées et décalées exactement comme la carte de fond
+   d'une pile ouverte (cf. openModal : translate(-20px,14px) rotate(-6deg)
+   scale(0.96)) — la composition d'ouverture montre ainsi, par avance, la
+   même mécanique que celle qui se joue une fois une carte ouverte. Devenues
+   le point d'entrée principal (les mots dorés dans la phrase restent
+   cliquables, en secondaire) : de vrais <button>, donc activables au
+   clavier nativement (Entrée/Espace), pas besoin de gérer keydown à la
+   main. Au survol/focus, la carte se "tire" davantage hors de la pile —
+   la carte de devant monte, celle de derrière glisse plus loin sur le
+   côté — pour suggérer explicitement le geste attendu.
+
+   position: fixed, ancrée au bas du VIEWPORT (pas de .resources-opening,
+   dont elle sort donc du flux/grid — un enfant fixed n'y occupe plus de
+   cellule) plutôt qu'en bas de la composition : les cartes débordent
+   franchement de l'écran, pour appeler le réflexe naturel de scroll (qui
+   les ouvre déjà, cf. handleScrollIntent) plutôt que de simplement
+   suggérer qu'il y a plus bas. Conséquence assumée : le footer, sous ces
+   cartes fixes, n'est plus visible sur cet écran d'ouverture. */
+.resources-opening-teasers {
+  position: fixed;
+  left: 50%;
+  bottom: 0;
+  z-index: 2;
+  width: min(96vw, 760px);
+  transform: translateX(-50%);
+}
+
+.resources-opening-teaser {
+  position: absolute;
+  bottom: -76px;
+  left: 50%;
+  width: min(96vw, 540px);
+  height: 240px;
+  margin: 0;
+  display: flex;
+  align-items: flex-start;
+  padding-top: 34px;
+  border: 1px solid var(--line);
+  border-bottom: none;
+  border-radius: 32px 32px 0 0;
+  background: var(--paper);
+  box-shadow: 0 -22px 44px rgba(43, 37, 30, 0.12);
+  font: inherit;
+  color: inherit;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 260ms ease;
+}
+
+/* La carte de fond est décalée assez loin sur le côté (et son propre
+   libellé aligné sur ce même côté, pas centré) pour que "Habilitations"
+   se lise entièrement dans la portion qui dépasse de sous "Partenaires" —
+   un simple bord qui dépasse ne suffisait pas à rendre le mot lisible. */
+.resources-opening-teaser-back {
+  z-index: 1;
+  justify-content: flex-start;
+  padding-left: 36px;
+  transform: translate(calc(-50% - 160px), 26px) rotate(-4deg) scale(0.94);
+}
+
+.resources-opening-teaser-front {
+  z-index: 2;
+  justify-content: center;
+  transform: translate(-50%, 0) rotate(0deg) scale(1);
+}
+
+.resources-opening-teaser:hover,
+.resources-opening-teaser:focus-visible {
+  box-shadow: 0 -28px 54px rgba(43, 37, 30, 0.18);
+}
+
+.resources-opening-teaser-front:hover,
+.resources-opening-teaser-front:focus-visible {
+  transform: translate(-50%, -46px) rotate(0deg) scale(1.08);
+}
+
+.resources-opening-teaser-back:hover,
+.resources-opening-teaser-back:focus-visible {
+  transform: translate(calc(-50% - 195px), -6px) rotate(-6deg) scale(1.02);
+}
+
+.resources-opening-teaser:focus-visible {
+  outline: 2px solid var(--interest-gold);
+  outline-offset: 3px;
+}
+
+.resources-opening-teaser-label {
+  width: 100%;
+  color: var(--muted);
+  font-family: var(--serif);
+  font-size: 1.75rem;
+}
+
+.resources-opening-teaser-front .resources-opening-teaser-label {
+  text-align: center;
+}
+
+.resources-opening-teaser-back .resources-opening-teaser-label {
+  text-align: left;
 }
 
 .partner-group {
@@ -2068,6 +2223,13 @@ body.resources-modal-open {
     radial-gradient(circle at 2% 6%, rgba(140, 181, 210, 0.13), transparent 37%),
     radial-gradient(circle at 96% 4%, rgba(210, 169, 101, 0.2), transparent 42%),
     linear-gradient(112deg, #34464f 0%, #403f3a 48%, #665138 100%);
+}
+
+.simulator-choice-pierre2coups {
+  background:
+    radial-gradient(circle at 92% 2%, rgba(140, 181, 210, 0.16), transparent 38%),
+    radial-gradient(circle at 4% 94%, rgba(203, 163, 99, 0.16), transparent 42%),
+    linear-gradient(112deg, #313f4a 0%, #3c3b38 50%, #5a4732 100%);
 }
 
 .simulator-choice-featured::before {
@@ -3150,6 +3312,64 @@ body.resources-modal-open {
   line-height: 1.45;
 }
 
+/* Bandeau de synthèse à 3 états (ok / warn / bad) — ex. simulateur crédit,
+   pour signaler si un objectif (autofinancement, seuil de couverture...)
+   est atteint, proche, ou loin. */
+.tool-status-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  border: 1px solid rgba(43, 37, 30, 0.075);
+  border-radius: 18px;
+  background: rgba(255, 253, 250, 0.58);
+}
+
+.tool-status-icon {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+}
+
+.tool-status-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.tool-status-copy {
+  display: grid;
+  gap: 2px;
+}
+
+.tool-status-copy strong {
+  color: var(--ink);
+  font-size: 0.98rem;
+  font-weight: 600;
+}
+
+.tool-status-copy span {
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
+.tool-status-banner.is-ok .tool-status-icon {
+  background: rgba(111, 163, 110, 0.16);
+  color: #4f8f52;
+}
+
+.tool-status-banner.is-warn .tool-status-icon {
+  background: rgba(199, 174, 137, 0.24);
+  color: var(--interest-gold);
+}
+
+.tool-status-banner.is-bad .tool-status-icon {
+  background: rgba(178, 92, 79, 0.14);
+  color: #a5493c;
+}
+
 .scpi-summary-row .scpi-insight-income {
   display: inline-flex;
   align-items: baseline;
@@ -4154,6 +4374,37 @@ body.resources-modal-open {
 
 .legend-invested {
   background: var(--invested-blue);
+}
+
+/* Ligne de référence à zéro — visible seulement quand le domaine du
+   graphique passe en négatif (ex. un effort net qui devient un revenu net). */
+.chart-zero-line {
+  stroke: rgba(43, 37, 30, 0.22);
+  stroke-width: 1.5;
+}
+
+.chart-zero-line-label {
+  fill: var(--ink);
+  stroke: none;
+  font-family: var(--sans);
+  font-size: 17px;
+  font-weight: 650;
+  text-anchor: end;
+}
+
+/* Repère vertical optionnel (ex. année d'autofinancement atteinte). */
+.chart-marker-line {
+  stroke: var(--interest-gold);
+  stroke-width: 1.5;
+  stroke-dasharray: 5 4;
+}
+
+.chart-marker-label {
+  fill: var(--interest-gold);
+  font-family: var(--sans);
+  font-size: 15px;
+  font-weight: 650;
+  text-anchor: middle;
 }
 
 /* SCPI — graphique éditorial inspiré de la synthèse patrimoniale */
@@ -5215,6 +5466,20 @@ body[data-mode="scpi"] #chart-panel .chart-tooltip-gains strong {
   background: rgba(255, 253, 250, 0.94);
   color: var(--muted);
   font-weight: 600;
+}
+
+/* Ligne séparateur visuel dans un tableau générique (ex. "Fin du crédit") —
+   étiquette centrée sur toute la largeur, entre deux groupes de lignes. */
+.table-divider-row td {
+  padding: 9px 8px;
+  background: rgba(199, 174, 137, 0.14);
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 650;
+  letter-spacing: 0.05em;
+  text-align: center;
+  text-transform: uppercase;
+  white-space: normal;
 }
 
 .tool-params {
@@ -8012,6 +8277,38 @@ body[data-mode="scpi"] .tool-field[data-field="dureeTotale"] .tool-input-wrap in
     margin-bottom: 0;
   }
 
+  .resources-opening-teasers {
+    width: min(94vw, 400px);
+  }
+
+  .resources-opening-teaser {
+    bottom: -58px;
+    width: min(92vw, 320px);
+    height: 176px;
+    padding-top: 26px;
+  }
+
+  /* Largeur propre, plus étroite que .resources-opening-teaser-front : sur
+     un écran de téléphone, la carte de devant occupe déjà presque toute la
+     largeur disponible — décaler une carte de MÊME largeur sur le côté la
+     ferait sortir du viewport (donc couper "Habilitations", invisible).
+     Une carte de fond plus étroite laisse la place nécessaire au décalage
+     tout en restant entièrement à l'écran. */
+  .resources-opening-teaser-back {
+    width: min(66vw, 210px);
+    padding-left: 16px;
+    transform: translate(calc(-50% - 50px), 20px) rotate(-4deg) scale(0.94);
+  }
+
+  .resources-opening-teaser-back:hover,
+  .resources-opening-teaser-back:focus-visible {
+    transform: translate(calc(-50% - 58px), 10px) rotate(-6deg) scale(0.96);
+  }
+
+  .resources-opening-teaser-label {
+    font-size: 1.2rem;
+  }
+
   .cta-button {
     width: 100%;
     justify-content: center;
@@ -8162,4 +8459,306 @@ body[data-mode="scpi"] .tool-field[data-field="dureeTotale"] .tool-input-wrap in
   .simulator-empty p {
     font-size: 2rem;
   }
+}
+
+/* Pages simulateur "hors gabarit" (Une pierre deux coups, Comparateur de
+   contrats — simulateurs/une-pierre-deux-coups.html et
+   simulateurs/comparateur-contrats.html) — même traitement des
+   curseurs/champs et des titres de section que .tool-fields sous
+   body[data-mode="av"], repris tel quel (structure DOM identique via
+   renderNumberField, partagé) pour ne pas retomber sur le style de base
+   .tool-range/.tool-field, moins abouti. Un seul bloc, scopé sur les deux
+   valeurs de data-mode, pour ne pas dupliquer cette règle une 3e fois. */
+body[data-mode="pierre2coups"] .tool-fields,
+body[data-mode="comparateur"] .tool-fields {
+  gap: 0;
+}
+
+body[data-mode="pierre2coups"] .tool-field,
+body[data-mode="pierre2coups"] .tool-field:hover,
+body[data-mode="pierre2coups"] .tool-field:focus-within,
+body[data-mode="comparateur"] .tool-field,
+body[data-mode="comparateur"] .tool-field:hover,
+body[data-mode="comparateur"] .tool-field:focus-within {
+  gap: 7px 12px;
+  padding: 15px 2px 17px;
+  border: 0;
+  border-bottom: 1px solid rgba(43, 37, 30, 0.075);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+body[data-mode="pierre2coups"] .tool-field > span,
+body[data-mode="comparateur"] .tool-field > span {
+  color: rgba(43, 37, 30, 0.68);
+  font-size: 0.86rem;
+  font-weight: 540;
+}
+
+body[data-mode="pierre2coups"] .tool-input-wrap,
+body[data-mode="pierre2coups"] .tool-input-wrap:focus-within,
+body[data-mode="comparateur"] .tool-input-wrap,
+body[data-mode="comparateur"] .tool-input-wrap:focus-within {
+  min-width: 100px;
+  min-height: 29px;
+  padding: 0;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+body[data-mode="pierre2coups"] .tool-input-wrap input,
+body[data-mode="comparateur"] .tool-input-wrap input {
+  width: 78px;
+  min-height: 29px;
+  color: rgba(43, 37, 30, 0.9);
+  font-family: var(--serif);
+  font-size: 1.16rem;
+  font-weight: 500;
+  letter-spacing: -0.025em;
+}
+
+body[data-mode="pierre2coups"] .tool-input-wrap small,
+body[data-mode="comparateur"] .tool-input-wrap small {
+  padding-left: 6px;
+  color: rgba(43, 37, 30, 0.5);
+  font-size: 0.7rem;
+}
+
+body[data-mode="pierre2coups"] .tool-range,
+body[data-mode="comparateur"] .tool-range {
+  height: 22px;
+  margin-top: 2px;
+  outline: none;
+}
+
+body[data-mode="pierre2coups"] .tool-range::-webkit-slider-runnable-track,
+body[data-mode="comparateur"] .tool-range::-webkit-slider-runnable-track {
+  height: 7px;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    rgba(91, 119, 146, 0.9) 0%,
+    rgba(185, 151, 97, 0.92) var(--range-progress),
+    rgba(43, 37, 30, 0.085) var(--range-progress),
+    rgba(43, 37, 30, 0.085) 100%
+  );
+  box-shadow: inset 0 1px 2px rgba(43, 37, 30, 0.08);
+}
+
+body[data-mode="pierre2coups"] .tool-range::-webkit-slider-thumb,
+body[data-mode="comparateur"] .tool-range::-webkit-slider-thumb {
+  width: 4px;
+  height: 17px;
+  margin-top: -5px;
+  border: 0;
+  border-radius: 999px;
+  appearance: none;
+  background: #fff7e8;
+  box-shadow:
+    0 0 0 1px rgba(164, 124, 68, 0.72),
+    0 4px 10px rgba(43, 37, 30, 0.2);
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+body[data-mode="pierre2coups"] .tool-range:hover::-webkit-slider-thumb,
+body[data-mode="pierre2coups"] .tool-range:focus-visible::-webkit-slider-thumb,
+body[data-mode="comparateur"] .tool-range:hover::-webkit-slider-thumb,
+body[data-mode="comparateur"] .tool-range:focus-visible::-webkit-slider-thumb {
+  transform: scaleY(1.12);
+  box-shadow:
+    0 0 0 1px rgba(164, 124, 68, 0.9),
+    0 5px 12px rgba(43, 37, 30, 0.22),
+    0 0 0 4px rgba(185, 151, 97, 0.08);
+}
+
+body[data-mode="pierre2coups"] .tool-range::-moz-range-track,
+body[data-mode="comparateur"] .tool-range::-moz-range-track {
+  height: 7px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(43, 37, 30, 0.085);
+  box-shadow: inset 0 1px 2px rgba(43, 37, 30, 0.08);
+}
+
+body[data-mode="pierre2coups"] .tool-range::-moz-range-progress,
+body[data-mode="comparateur"] .tool-range::-moz-range-progress {
+  height: 7px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(91, 119, 146, 0.9), rgba(185, 151, 97, 0.92));
+}
+
+body[data-mode="pierre2coups"] .tool-range::-moz-range-thumb,
+body[data-mode="comparateur"] .tool-range::-moz-range-thumb {
+  width: 4px;
+  height: 17px;
+  border: 0;
+  border-radius: 999px;
+  background: #fff7e8;
+  box-shadow:
+    0 0 0 1px rgba(164, 124, 68, 0.72),
+    0 4px 10px rgba(43, 37, 30, 0.2);
+}
+
+body[data-mode="pierre2coups"] .tool-params-title,
+body[data-mode="pierre2coups"] .tool-summary-title,
+body[data-mode="comparateur"] .tool-params-title,
+body[data-mode="comparateur"] .tool-summary-title {
+  display: flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 2px 16px;
+  border-bottom: 1px solid rgba(43, 37, 30, 0.075);
+}
+
+body[data-mode="pierre2coups"] .tool-params-title,
+body[data-mode="comparateur"] .tool-params-title {
+  justify-content: space-between;
+}
+
+body[data-mode="pierre2coups"] .tool-params-title h2,
+body[data-mode="pierre2coups"] .tool-summary-title h2,
+body[data-mode="pierre2coups"] #chart-panel .tool-card-title h2,
+body[data-mode="comparateur"] .tool-params-title h2,
+body[data-mode="comparateur"] .tool-summary-title h2,
+body[data-mode="comparateur"] #chart-panel .tool-card-title h2 {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: clamp(1.42rem, 1.8vw, 1.68rem);
+  font-weight: 400;
+  line-height: 0.96;
+  transform: scaleX(1.06);
+  transform-origin: left center;
+}
+
+/* Colonne de droite propre à ces pages : regroupe tool-summary et
+   tool-detail (chart + tableau) empilés, pour que tool-detail se place
+   directement sous tool-summary au lieu d'être un bloc pleine largeur sous
+   .tool-overview — sans toucher .tool-layout/.tool-overview/.tool-params/
+   .tool-detail, réutilisés tels quels par projection.html. Le 2e enfant
+   direct de .tool-overview (au lieu de .tool-summary seul) tombe
+   naturellement dans sa colonne de droite existante (minmax(0, 1fr)). */
+.tool-secondary-column {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(22px, 3vw, 38px);
+  min-width: 0;
+}
+
+/* La colonne de droite est plus étroite que l'ancienne largeur pleine
+   page du graphique/tableau : le tableau a besoin d'un peu plus de marge
+   pour rester lisible sans tronquer ses en-têtes. */
+body[data-mode="pierre2coups"] .tool-table-wrap,
+body[data-mode="comparateur"] .tool-table-wrap {
+  font-size: 0.76rem;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+body[data-mode="pierre2coups"] .tool-table-wrap th,
+body[data-mode="comparateur"] .tool-table-wrap th {
+  white-space: normal;
+  line-height: 1.2;
+}
+
+/* .tool-layout est partagée avec projection.html (width: min(100%, 1120px))
+   — élargie ici (valeur propre à chaque page) pour que tout l'espace gagné
+   profite à la colonne de droite (graphique/tableau). */
+body[data-mode="pierre2coups"] .tool-layout {
+  width: min(100%, 1450px);
+}
+
+body[data-mode="comparateur"] .tool-layout {
+  width: min(100%, 1550px);
+}
+
+/* Comparateur de contrats a besoin d'une colonne Hypothèses plus large que
+   les 360px par défaut de .tool-overview, pour accueillir les deux cartes
+   Contrat A / Contrat B côte à côte (cf. .contract-fields plus bas) — sans
+   toucher à .tool-overview elle-même, utilisée telle quelle ailleurs. */
+body[data-mode="comparateur"] .tool-overview {
+  grid-template-columns: minmax(480px, 560px) minmax(0, 1fr);
+}
+
+/* .tool-overview a déjà align-items: stretch (règle partagée inchangée),
+   donc .tool-secondary-column fait déjà la même hauteur que .tool-params —
+   mais rien à l'intérieur n'allait chercher cette hauteur. On fait grandir
+   tool-detail puis le panneau actif de tool-detail-panels jusqu'au bas de
+   tool-params ; le panneau tableau reçoit ainsi exactement la même hauteur
+   que le panneau graphique, avec un scroll interne sur .tool-table-wrap
+   (déjà overflow: auto) pour les lignes qui dépassent, plutôt que
+   d'agrandir la carte. min-height: 0 à chaque étage grid/flex imbriqué :
+   sans ça, la hauteur de contenu naturelle du tableau empêcherait tout
+   rétrécissement/scroll en amont. */
+body[data-mode="pierre2coups"] .tool-detail,
+body[data-mode="comparateur"] .tool-detail {
+  flex: 1;
+  grid-template-rows: auto 1fr;
+  min-height: 0;
+}
+
+body[data-mode="pierre2coups"] .tool-detail-panels,
+body[data-mode="comparateur"] .tool-detail-panels {
+  min-height: 0;
+}
+
+body[data-mode="pierre2coups"] .tool-chart-card,
+body[data-mode="pierre2coups"] .tool-table-card,
+body[data-mode="comparateur"] .tool-chart-card,
+body[data-mode="comparateur"] .tool-table-card {
+  grid-template-rows: auto 1fr;
+  min-height: 0;
+}
+
+/* Comparateur de contrats (simulateurs/comparateur-contrats.html) — deux
+   cartes "Contrat A"/"Contrat B" côte à côte dans .tool-params. La carte
+   elle-même réutilise .tool-result-card (bordure/fond/ombre déjà partagés) ;
+   seuls la grille 2 colonnes, le nom éditable et le repère de croisement du
+   tableau sont propres à cette page. */
+.contract-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  min-width: 0;
+}
+
+.contract-card {
+  min-width: 0;
+}
+
+.contract-name-input {
+  width: 100%;
+  padding: 4px 2px 8px;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: clamp(1.05rem, 1.5vw, 1.24rem);
+  font-weight: 400;
+  transform: scaleX(1.04);
+  transform-origin: left center;
+  transition: border-color 180ms ease;
+}
+
+.contract-name-input:hover,
+.contract-name-input:focus-visible {
+  border-bottom-color: rgba(185, 151, 97, 0.5);
+}
+
+.contract-name-input:focus-visible {
+  outline: none;
+}
+
+/* Ligne mise en évidence dans .tool-table-wrap table (ex. l'année de
+   croisement entre deux courbes) — même teinte or que .table-divider-row,
+   appliquée directement sur la ligne plutôt qu'en séparateur. */
+.table-row-highlight td {
+  background: rgba(199, 174, 137, 0.14);
+  font-weight: 650;
 }
