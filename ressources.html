@@ -30,14 +30,37 @@
         </a>
       </nav>
 
-      <p class="resources-partners-intro">Un réseau de partenaires solide, une expertise vérifiable</p>
+      <div class="home-page-content">
+        <section class="resources-opening" aria-label="Ressources — introduction">
+          <img class="brand-logo" src="assets/logo-transparent.png" alt="" aria-hidden="true">
+          <p class="resources-opening-text">
+            Un réseau de <span class="resources-opening-word" data-modal="partners" role="link" tabindex="0">partenaires</span> solides,<br>une <span class="resources-opening-word" data-modal="habilitations" role="link" tabindex="0">expertise</span> vérifiable.
+          </p>
+          <p class="resources-opening-hint">Cliquez pour explorer.</p>
+        </section>
+      </div>
 
-      <section class="resources-partners" aria-labelledby="partners-title">
+      <footer class="site-footer">
+        <div class="site-footer-bottom">
+          <p class="site-footer-copy">© 2026 Victor Kieny</p>
+          <a class="site-footer-email" href="mailto:conseil@victorkieny.fr">conseil@victorkieny.fr</a>
+          <nav class="site-footer-links" aria-label="Liens légaux">
+            <a href="mentions-legales.html">Mentions légales</a>
+            <a href="politique-confidentialite.html">Confidentialité</a>
+          </nav>
+        </div>
+      </footer>
+    </main>
+
+    <div class="resources-modal-backdrop" data-modal-id="partners" aria-hidden="true">
+      <div class="resources-modal-card resources-partners" role="dialog" aria-modal="true" aria-labelledby="partners-title" tabindex="-1">
+        <button type="button" class="resources-modal-close" aria-label="Fermer">
+          <span aria-hidden="true">&times;</span>
+        </button>
         <div class="section-heading">
           <h2 id="partners-title">Partenaires</h2>
         </div>
         <span class="section-title-accent" aria-hidden="true"></span>
-        <p class="resources-partners-note">Liste non exhaustive</p>
         <div class="partner-wall" aria-label="Panorama de partenaires référencés">
           <div class="partner-marquee partner-wall-depth-1">
             <div class="partner-marquee-track partner-marquee-track-left" style="animation-duration: 100s;">
@@ -212,15 +235,33 @@
             </div>
           </div>
         </div>
+        <p class="resources-partners-note">Liste non exhaustive</p>
+      </div>
+    </div>
 
-      </section>
-
-      <section class="resources-habilitations" aria-labelledby="habilitations-title">
+    <div class="resources-modal-backdrop" data-modal-id="habilitations" aria-hidden="true">
+      <div class="resources-modal-card resources-habilitations" role="dialog" aria-modal="true" aria-labelledby="habilitations-title" tabindex="-1">
+        <button type="button" class="resources-modal-close" aria-label="Fermer">
+          <span aria-hidden="true">&times;</span>
+        </button>
         <div class="section-heading">
-          <h2 id="habilitations-title">Habilitations &amp; diplômes</h2>
+          <h2 id="habilitations-title">Diplômes &amp; habilitations</h2>
         </div>
         <span class="section-title-accent" aria-hidden="true"></span>
         <div class="habilitation-grid">
+          <div class="habilitation-seal-row">
+            <span class="habilitation-seal">
+              <svg class="habilitation-seal-ring" viewBox="0 0 100 100" aria-hidden="true">
+                <circle cx="50" cy="50" r="46"></circle>
+              </svg>
+              <svg class="habilitation-seal-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M22 10 12 5 2 10l10 5 10-5Z"></path>
+                <path d="M6 12v5c0 1.5 2.5 3 6 3s6-1.5 6-3v-5"></path>
+              </svg>
+            </span>
+            <p class="habilitation-seal-text">Ingénieur diplômé de Phelma - Grenoble INP</p>
+          </div>
+
           <div class="habilitation-seal-row habilitation-seal-row-orias">
             <span class="habilitation-seal">
               <svg class="habilitation-seal-ring" viewBox="0 0 100 100" aria-hidden="true">
@@ -232,8 +273,7 @@
               </svg>
             </span>
             <p class="habilitation-seal-text">
-              Inscrit à l'Orias
-              <a class="habilitation-badge-link" href="https://www.orias.fr" target="_blank" rel="noopener noreferrer">n°25008348</a>
+              Immatriculé Orias n°25008348
             </p>
           </div>
 
@@ -320,128 +360,803 @@
             </span>
             <p class="habilitation-seal-text">Assurance Responsabilité Civile Professionnelle n°7400023129, Zurich Insurance Europe AG</p>
           </div>
-
-          <div class="habilitation-seal-row">
-            <span class="habilitation-seal">
-              <svg class="habilitation-seal-ring" viewBox="0 0 100 100" aria-hidden="true">
-                <circle cx="50" cy="50" r="46"></circle>
-              </svg>
-              <svg class="habilitation-seal-icon" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M22 10 12 5 2 10l10 5 10-5Z"></path>
-                <path d="M6 12v5c0 1.5 2.5 3 6 3s6-1.5 6-3v-5"></path>
-              </svg>
-            </span>
-            <p class="habilitation-seal-text">Ingénieur diplômé de Phelma - Grenoble INP</p>
-          </div>
         </div>
-      </section>
+      </div>
+    </div>
 
-      <footer class="site-footer">
-        <div class="site-footer-bottom">
-          <p class="site-footer-copy">© 2026 Victor Kieny — Conseiller en ingénierie patrimoniale</p>
-          <nav class="site-footer-links" aria-label="Liens légaux">
-            <a href="mailto:conseil@victorkieny.fr">conseil@victorkieny.fr</a>
-            <a href="mentions-legales.html">Mentions légales</a>
-            <a href="politique-confidentialite.html">Confidentialité</a>
-          </nav>
-        </div>
-      </footer>
-    </main>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
     <script>
       (function () {
         var prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-        if (prefersReducedMotion || typeof gsap === "undefined") return;
-        gsap.registerPlugin(ScrollTrigger);
+        var activeBackdrop = null;
+        // Carte "de fond" visible en permanence derrière activeBackdrop une
+        // fois qu'on a enchaîné (cf. openModal) — pas juste le temps d'une
+        // transition, tant que la pile est ouverte. null si une seule carte
+        // (ou aucune) est affichée.
+        var backgroundBackdrop = null;
+        var lastTrigger = null;
+        var habilitationsScrollTriggers = [];
+        var habilitationsScrollCleanup = null;
+        // Repli "scroll réflexe" (cf. plus bas, près des écouteurs wheel/touch) :
+        // mémorise si chaque modale a déjà été montrée au moins une fois,
+        // qu'elle ait été ouverte par clic ou par scroll.
+        var partnersShown = false;
+        var habilitationsShown = false;
 
-        // Traits d'accent dorés sous les titres de section : se dessinent à l'arrivée
-        // dans le viewport plutôt que d'être statiques.
-        var accents = gsap.utils.toArray(".section-title-accent");
-        accents.forEach(function (accent) {
+        if (!prefersReducedMotion && typeof gsap !== "undefined" && typeof ScrollTrigger !== "undefined") {
+          gsap.registerPlugin(ScrollTrigger);
+        }
+
+        function getBackdrop(id) {
+          return document.querySelector('.resources-modal-backdrop[data-modal-id="' + id + '"]');
+        }
+
+        // Contenus des modales : plus aucun déclencheur ScrollTrigger (les
+        // sections ne sont plus dans le flux de la page) — un appel direct
+        // ici, à l'ouverture de la modale correspondante, rejoue exactement
+        // les mêmes timelines GSAP qu'avant (assemblage des noms, tampon des
+        // sceaux, trait d'accent). Le survol doré des noms et le glisser du
+        // marquee restent gérés par ailleurs (CSS / second script), inchangés.
+        function playAccent(card) {
+          var accent = card.querySelector(".section-title-accent");
+          if (!accent) return;
           gsap.set(accent, { scaleX: 0 });
-          gsap.to(accent, {
-            scaleX: 1,
-            duration: 0.7,
-            ease: "power2.out",
-            scrollTrigger: {
-              trigger: accent,
-              start: "top 90%"
-            }
-          });
-        });
+          gsap.to(accent, { scaleX: 1, duration: 0.7, ease: "power2.out", delay: 0.15 });
+        }
 
-        // Sceaux d'habilitations : l'anneau se trace (stroke-dasharray) puis l'icône
-        // et le texte apparaissent, ligne par ligne au fil du scroll — pas un fondu
-        // groupé, chaque sceau se "tamponne" à son tour quand il entre dans le viewport.
-        var sealRows = gsap.utils.toArray(".habilitation-seal-row");
-        sealRows.forEach(function (row) {
-          var ring = row.querySelector(".habilitation-seal-ring circle");
-          var icon = row.querySelector(".habilitation-seal-icon");
-          var text = row.querySelector(".habilitation-seal-text");
-
-          if (ring) {
-            var len = ring.getTotalLength();
-            ring.style.strokeDasharray = len;
-            ring.style.strokeDashoffset = len;
-          }
-          gsap.set([icon, text].filter(Boolean), { opacity: 0, y: 10 });
-
-          ScrollTrigger.create({
-            trigger: row,
-            start: "top 88%",
-            once: true,
-            onEnter: function () {
-              var tl = gsap.timeline();
-              if (ring) {
-                tl.to(ring, { strokeDashoffset: 0, duration: 0.75, ease: "power2.out" });
-              }
-              tl.to(
-                [icon, text].filter(Boolean),
-                { opacity: 1, y: 0, duration: 0.5, ease: "power2.out", stagger: 0.08 },
-                ring ? "-=0.35" : 0
-              );
-            }
-          });
-        });
-
-        // Entrée en assemblage des noms de partenaires : chaque bande part d'un état
-        // dispersé (position/rotation aléatoires) et s'assemble en ligne au moment où
-        // elle entre dans le viewport. Le défilement CSS continue de tourner en tâche
-        // de fond ; seule l'apparence des noms est animée ici, une fois par bande.
-        var marquees = gsap.utils.toArray(".partner-marquee");
-        marquees.forEach(function (marquee) {
-          var names = Array.prototype.slice.call(
-            marquee.querySelectorAll(".partner-wall-name-a, .partner-wall-name-b")
-          );
-          if (!names.length) return;
-
-          names.forEach(function (name) {
-            gsap.set(name, {
-              opacity: 0,
-              x: gsap.utils.random(-60, 60),
-              y: gsap.utils.random(-36, 36),
-              rotation: gsap.utils.random(-14, 14)
+        function playPartnersContent(card) {
+          playAccent(card);
+          var marquees = gsap.utils.toArray(card.querySelectorAll(".partner-marquee"));
+          marquees.forEach(function (marquee) {
+            var names = Array.prototype.slice.call(
+              marquee.querySelectorAll(".partner-wall-name-a, .partner-wall-name-b")
+            );
+            if (!names.length) return;
+            names.forEach(function (name) {
+              gsap.set(name, {
+                opacity: 0,
+                x: gsap.utils.random(-60, 60),
+                y: gsap.utils.random(-36, 36),
+                rotation: gsap.utils.random(-14, 14)
+              });
+            });
+            gsap.to(names, {
+              opacity: 1,
+              x: 0,
+              y: 0,
+              rotation: 0,
+              duration: 0.9,
+              ease: "power3.out",
+              delay: 0.2,
+              stagger: { each: 0.012, from: "random" }
             });
           });
+        }
 
-          ScrollTrigger.create({
-            trigger: marquee,
-            start: "top 85%",
-            once: true,
-            onEnter: function () {
-              gsap.to(names, {
-                opacity: 1,
-                x: 0,
-                y: 0,
-                rotation: 0,
-                duration: 0.9,
-                ease: "power3.out",
-                stagger: { each: 0.012, from: "random" }
-              });
+        // Trait reliant les sceaux (mise en page zigzag façon flowvia.fr) :
+        // reconstruit à chaque ouverture de la modale, jamais de coordonnées
+        // figées. Points de la courbe : centre réel de chaque
+        // .habilitation-seal (getBoundingClientRect), converti en coordonnées
+        // relatives au conteneur SVG (lui-même calé sur .habilitation-grid)
+        // en soustrayant le rect du sceau à celui de la grille. Comme chaque
+        // rangée alterne justify-self: start/end tout en gardant l'icône en
+        // premier dans le flux (cf. CSS), les sceaux se retrouvent
+        // naturellement alternés à gauche/droite : c'est cette alternance de
+        // mise en page, et non un décalage artificiel, qui dessine le zigzag.
+        //
+        // Un <path> indépendant par intervalle entre deux icônes successives
+        // (sealRows.length - 1 segments), chacun avec son propre
+        // pathLength="1" + stroke-dasharray: 1 (CSS), piloté par sa propre
+        // variable --segment-progress — plutôt qu'un unique tracé continu
+        // révélé uniformément sur toute sa longueur, ce qui ne correspondait
+        // pas à la position réelle de chaque icône (les cartes n'ont pas
+        // toutes la même hauteur).
+        //
+        // rowThresholds[i] : seuil de scroll réel (0 à 1, même normalisation
+        // que "progress" = card.scrollTop / (scrollHeight - clientHeight))
+        // auquel le centre de l'icône i est effectivement atteint. Calculé à
+        // partir de la position ABSOLUE du point dans le contenu défilable de
+        // la carte (décalage de la grille dans la carte + position du point
+        // dans la grille), pas d'une simple division par le nombre de
+        // sceaux : rowThresholds[0] est donc proche de 0 (juste après
+        // l'en-tête/le trait doré/la légende qui précèdent la grille) et
+        // rowThresholds[dernier] proche de 1 (juste avant le bas réel du
+        // contenu défilable).
+        //
+        // Détruit d'abord tout tracé et écouteur de scroll d'une ouverture
+        // précédente.
+        function buildHabilitationsPath(card) {
+          habilitationsScrollTriggers.forEach(function (st) {
+            st.kill();
+          });
+          habilitationsScrollTriggers = [];
+          if (habilitationsScrollCleanup) {
+            habilitationsScrollCleanup();
+            habilitationsScrollCleanup = null;
+          }
+          var oldSvg = card.querySelector(".habilitation-path-svg");
+          if (oldSvg) oldSvg.remove();
+
+          // Remise à zéro impérative avant toute mesure : rien ne garantit
+          // que card.scrollTop soit à 0 ici (ouverture/fermeture de la
+          // modale ne réinitialisent pas le scroll interne). Sans ce reset,
+          // gridRect/points sont mesurés pendant que le contenu est encore
+          // décalé d'une ouverture précédente, ce qui fausse tous les
+          // rowThresholds calculés plus bas.
+          card.scrollTop = 0;
+
+          var grid = card.querySelector(".habilitation-grid");
+          var sealRows = Array.prototype.slice.call(card.querySelectorAll(".habilitation-seal-row"));
+          sealRows.forEach(function (row) {
+            row.classList.remove("is-active", "is-passed");
+          });
+          var seals = sealRows.map(function (row) {
+            return row.querySelector(".habilitation-seal");
+          });
+          if (!grid || !seals.length) return null;
+
+          var gridRect = grid.getBoundingClientRect();
+          var cardRect = card.getBoundingClientRect();
+          var points = seals.map(function (seal) {
+            var r = seal.getBoundingClientRect();
+            return {
+              x: r.left + r.width / 2 - gridRect.left,
+              y: r.top + r.height / 2 - gridRect.top
+            };
+          });
+
+          // card.scrollTop est forcé à 0 juste au-dessus avant ces mesures :
+          // gridOffsetInCard est donc bien le décalage de la grille depuis
+          // le haut du contenu défilable.
+          //
+          // rowThreshold[i] : position de l'icône i réétalée sur [0, 1] au
+          // prorata de sa distance réelle à la première et à la dernière
+          // icône (pas une division par maxScroll, ni un seuil de
+          // franchissement de centre de viewport — les deux approches
+          // précédentes clampaient indépendamment chaque seuil et pouvaient
+          // faire coïncider deux seuils consécutifs près du bas du scroll
+          // dès que plusieurs icônes tenaient dans le même écran final :
+          // la carte prise en étau entre deux seuils identiques ne
+          // s'activait alors jamais). Ici, le premier seuil vaut
+          // exactement 0, le dernier exactement 1, et les seuils
+          // intermédiaires sont strictement croissants et proportionnels à
+          // l'écart vertical réel entre icônes — garanti par construction,
+          // sans dépendre de maxScroll pour la forme de la répartition.
+          var gridOffsetInCard = gridRect.top - cardRect.top;
+          var offsets = points.map(function (p) {
+            return gridOffsetInCard + p.y;
+          });
+          var firstOffset = offsets[0];
+          var lastOffset = offsets[offsets.length - 1];
+          var span = lastOffset - firstOffset || 1;
+          var rowThresholds = offsets.map(function (offset) {
+            return Math.min(1, Math.max(0, (offset - firstOffset) / span));
+          });
+
+          var svgNS = "http://www.w3.org/2000/svg";
+          var svg = document.createElementNS(svgNS, "svg");
+          svg.setAttribute("class", "habilitation-path-svg");
+          svg.setAttribute("aria-hidden", "true");
+          svg.setAttribute("viewBox", "0 0 " + gridRect.width + " " + gridRect.height);
+          svg.setAttribute("preserveAspectRatio", "none");
+
+          // Points d'ancrage = centres réels des icônes (extrémités
+          // traversées par la courbe).
+          //
+          // Ancienne construction (abandonnée) : les 2 points de contrôle
+          // d'un même segment poussés à une bande fixe proche du bord
+          // gauche/droit du conteneur (calquée sur flowvia.fr), pour un
+          // effet de "ruban" prononcé. Problème structurel, pas un simple
+          // réglage : les 2 points de contrôle partageant la même abscisse,
+          // très éloignée de celle des ancrages, dessinent 2 segments
+          // quasi rectilignes qui se rejoignent en "coude" — visible comme
+          // un angle disgracieux à chaque icône, particulièrement marqué
+          // quand l'écart vertical entre 2 icônes est petit face à la
+          // largeur de la bande. Un premier correctif (amortir le swing
+          // selon l'écart vertical du segment) n'a pas suffi : le coude
+          // reste visible dès que la bande domine.
+          //
+          // Nouvelle construction : courbe en S classique (façon lien de
+          // diagramme Sankey/organigramme) — chaque point de contrôle
+          // reste à l'ABSCISSE DE SON PROPRE ANCRAGE (ctrl1X = p0.x,
+          // ctrl2X = p1.x) et seule l'ORDONNÉE varie (mi-hauteur du
+          // segment). Cette forme est mathématiquement garantie sans coude
+          // ni inflexion visible, quels que soient l'écart horizontal ou
+          // vertical entre les 2 icônes : la courbe part et arrive
+          // toujours à la verticale de son ancrage, sans jamais "revenir en
+          // arrière" latéralement.
+          var segments = [];
+          for (var i = 0; i < points.length - 1; i++) {
+            var p0 = points[i];
+            var p1 = points[i + 1];
+            var segDy = p1.y - p0.y;
+            var ctrl1X = p0.x;
+            var ctrl1Y = p0.y + segDy * 0.5;
+            var ctrl2X = p1.x;
+            var ctrl2Y = p1.y - segDy * 0.5;
+
+            var segment = document.createElementNS(svgNS, "path");
+            segment.setAttribute("class", "habilitation-path-segment");
+            segment.setAttribute("pathLength", "1");
+            segment.setAttribute(
+              "d",
+              "M " + p0.x + "," + p0.y +
+                " C " + ctrl1X + "," + ctrl1Y + " " + ctrl2X + "," + ctrl2Y + " " + p1.x + "," + p1.y
+            );
+            segment.style.setProperty("--segment-progress", "0");
+            svg.appendChild(segment);
+            segments.push(segment);
+          }
+
+          grid.insertBefore(svg, grid.firstChild);
+
+          return {
+            grid: grid,
+            sealRows: sealRows,
+            svg: svg,
+            segments: segments,
+            rowThresholds: rowThresholds
+          };
+        }
+
+        // Repli sous prefers-reduced-motion : le trait est construit (mêmes
+        // points, même courbe) et chaque segment affiché complet directement
+        // (--segment-progress à 1) — .is-active désigne une seule carte "en
+        // cours" au fil du scroll (pas un état cumulatif), donc sans scroll à
+        // observer, aucune carte n'est mise en avant plus qu'une autre ici
+        // (comportement inchangé par rapport à avant cette correction).
+        function renderHabilitationsStatic(card) {
+          // Même principe défensif que playHabilitationsContent : le trait
+          // est une décoration, jamais une condition d'affichage de la carte.
+          try {
+            var built = buildHabilitationsPath(card);
+            if (!built) return;
+            built.segments.forEach(function (segment) {
+              segment.style.setProperty("--segment-progress", "1");
+            });
+          } catch (err) {
+            if (typeof console !== "undefined" && console.error) {
+              console.error("habilitations: échec du tracé statique, carte affichée sans", err);
+            }
+          }
+        }
+
+        // Sceaux d'habilitations, façon flowvia.fr : la progression de
+        // chaque segment de trait ET l'état actif de chaque carte sont
+        // pilotés ensemble par un écouteur de scroll natif sur
+        // .resources-modal-card, throttlé via requestAnimationFrame — pas
+        // ScrollTrigger pour cette partie précise (trigger === scroller sur
+        // le même élément s'est révélé être un cas limite qui cassait la
+        // progression). Technique brute d'origine (flowvia.fr), sans
+        // intermédiaire GSAP : progress = scrollTop / (scrollHeight -
+        // clientHeight), lu directement sur le conteneur — puis comparé à
+        // rowThresholds (mêmes seuils, basés sur la position réelle de
+        // chaque icône, cf. buildHabilitationsPath) pour le trait ET pour
+        // .is-active : les deux utilisent désormais la même référence, donc
+        // garantis synchronisés.
+        function setupHabilitationsScrollProgress(card, segments, sealRows, rowThresholds) {
+          var maxScroll = card.scrollHeight - card.clientHeight;
+          var ticking = false;
+
+          function update() {
+            ticking = false;
+            var progress = maxScroll > 0 ? Math.min(1, Math.max(0, card.scrollTop / maxScroll)) : 1;
+
+            segments.forEach(function (segment, i) {
+              var t0 = rowThresholds[i];
+              var t1 = rowThresholds[i + 1];
+              var segmentProgress;
+              if (progress >= t1 || t1 <= t0) {
+                segmentProgress = progress >= t1 ? 1 : 0;
+              } else if (progress <= t0) {
+                segmentProgress = 0;
+              } else {
+                segmentProgress = (progress - t0) / (t1 - t0);
+              }
+              segment.style.setProperty("--segment-progress", segmentProgress);
+            });
+
+            sealRows.forEach(function (row, i) {
+              var reached = progress >= rowThresholds[i];
+              var supersededByNext = i < sealRows.length - 1 && progress >= rowThresholds[i + 1];
+              row.classList.toggle("is-active", reached && !supersededByNext);
+              row.classList.toggle("is-passed", reached && supersededByNext);
+            });
+          }
+
+          function onScroll() {
+            if (!ticking) {
+              ticking = true;
+              requestAnimationFrame(update);
+            }
+          }
+
+          card.addEventListener("scroll", onScroll);
+          update(); // état correct dès l'ouverture, sans attendre un premier scroll
+
+          return function cleanup() {
+            card.removeEventListener("scroll", onScroll);
+          };
+        }
+
+        function playHabilitationsContent(card) {
+          playAccent(card);
+
+          // Le trait doré est une décoration, pas une condition d'affichage
+          // de la carte : is-open/opacité de la carte sont déjà posés par
+          // openModal AVANT cet appel (cf. plus bas), donc la carte reste
+          // visible même si ce qui suit échoue — mais sans ce try/catch, une
+          // exception ici (mesures DOM, construction du tracé) remontait
+          // sans être interceptée, ce qui a pu empêcher silencieusement
+          // habilitationsScrollCleanup d'être posé et laisser la carte dans
+          // un état incomplet. Ne doit plus jamais faire disparaître ou
+          // bloquer toute la carte.
+          try {
+            var built = buildHabilitationsPath(card);
+            if (!built) return;
+
+            habilitationsScrollCleanup = setupHabilitationsScrollProgress(
+              card,
+              built.segments,
+              built.sealRows,
+              built.rowThresholds
+            );
+          } catch (err) {
+            if (typeof console !== "undefined" && console.error) {
+              console.error("habilitations: échec du tracé/scroll, carte affichée sans", err);
+            }
+          }
+        }
+
+        // Ouverture/fermeture des modales : fonctions de navigation, pas des
+        // animations décoratives — câblées avant tout retour anticipé lié à
+        // prefers-reduced-motion/GSAP, pour continuer à fonctionner dans tous
+        // les cas. Une seule modale ouverte à la fois ; Échap, clic sur le
+        // fond ou clic sur "×" ferment ; le focus part sur le "×" à
+        // l'ouverture et revient sur le mot cliqué à la fermeture.
+        // closeModal ne sert plus qu'aux VRAIES fermetures (X, Échap, clic
+        // sur le fond) : l'enchaînement partenaires → expertise (scroll
+        // réflexe ou clic direct pendant qu'une modale est ouverte) est géré
+        // en interne par openModal (cf. fondu enchaîné plus bas), plus par
+        // un aller-retour fermeture-instantanée-puis-ouverture — c'était ce
+        // couic qui rendait la transition brutale.
+        function closeModal() {
+          var backdrop = activeBackdrop;
+          if (!backdrop) return;
+          var card = backdrop.querySelector(".resources-modal-card");
+          var background = backgroundBackdrop;
+          var backgroundCard = background ? background.querySelector(".resources-modal-card") : null;
+
+          activeBackdrop = null;
+          backgroundBackdrop = null;
+          backdrop.setAttribute("aria-hidden", "true");
+          document.body.classList.remove("resources-modal-open");
+
+          // Une vraie fermeture réinitialise la séquence "scroll réflexe" :
+          // sans ça, une fois les 2 cartes vues, plus aucun scroll ne
+          // rouvrait quoi que ce soit avant un rafraîchissement de la page.
+          partnersShown = false;
+          habilitationsShown = false;
+
+          function finish() {
+            backdrop.classList.remove("is-open", "is-stacked");
+            backdrop.style.zIndex = "";
+            // killTweensOf AVANT clearProps, sur les 4 éléments : "finish"
+            // est appelé par l'onComplete du fondu de backdrop, mais
+            // background/backgroundCard ont chacun leur PROPRE tween
+            // d'opacité, démarré en même temps mais pas garanti terminé au
+            // même tick exact. Sans ce kill, un tween encore actif sur
+            // "background" peut écrire une nouvelle valeur d'opacité sur
+            // l'image suivante et écraser le clearProps qui vient de
+            // s'exécuter — laissant le voile bloqué à opacité 0 pour de
+            // bon. Diagnostic en direct (encart de debug) : c'était
+            // exactement ce qui se passait (bOpacity=0 après une fermeture
+            // puis réouverture). clearProps sur backdrop ET card : sans ça,
+            // l'opacité à 0 du fondu de fermeture reste collée en style
+            // inline pour de bon — la carte qui vient de se fermer rouvre
+            // invisible la prochaine fois qu'elle sert de carte de fond
+            // dans un enchaînement (openModal ne remet alors à jour que
+            // l'opacité de la CARTE via fromTo, jamais celle du voile qui
+            // la contient).
+            if (typeof gsap !== "undefined") {
+              gsap.killTweensOf([backdrop, card, background, backgroundCard].filter(Boolean));
+              gsap.set([backdrop, card], { clearProps: "opacity" });
+            } else {
+              backdrop.style.opacity = "";
+              if (card) card.style.opacity = "";
+            }
+            if (background) {
+              background.classList.remove("is-open");
+              background.setAttribute("aria-hidden", "true");
+              background.style.pointerEvents = "";
+              if (typeof gsap !== "undefined") gsap.set(background, { clearProps: "opacity" });
+              else background.style.opacity = "";
+              if (backgroundCard) {
+                if (typeof gsap !== "undefined") gsap.set(backgroundCard, { clearProps: "transform,opacity" });
+                else {
+                  backgroundCard.style.transform = "";
+                  backgroundCard.style.opacity = "";
+                }
+              }
+            }
+            if (lastTrigger) lastTrigger.focus();
+          }
+
+          if (!prefersReducedMotion && typeof gsap !== "undefined") {
+            gsap.to(card, { opacity: 0, y: 12, scale: 0.98, duration: 0.2, ease: "power1.in" });
+            gsap.to(backdrop, { opacity: 0, duration: 0.2, ease: "power1.in", onComplete: finish });
+            // La carte de fond (si présente) s'efface EN MÊME TEMPS que la
+            // carte active — les 2 disparaissent ensemble, pas l'une après
+            // l'autre.
+            if (backgroundCard) gsap.to(backgroundCard, { opacity: 0, duration: 0.2, ease: "power1.in" });
+            if (background) gsap.to(background, { opacity: 0, duration: 0.2, ease: "power1.in" });
+          } else {
+            finish();
+          }
+        }
+
+        function openModal(id, trigger) {
+          var backdrop = getBackdrop(id);
+          if (!backdrop) return;
+
+          // Capturé AVANT d'écraser activeBackdrop plus bas : si une autre
+          // modale était ouverte, c'est un enchaînement, pas une ouverture
+          // depuis l'écran d'accueil.
+          var previousBackdrop = activeBackdrop && activeBackdrop !== backdrop ? activeBackdrop : null;
+
+          // Invariant : "expertise" ne doit JAMAIS être visible sans
+          // "partenaires" en arrière-plan décalée derrière — y compris si on
+          // clique directement sur "expertise" sans être jamais passé par
+          // "partenaires". Dans ce cas précis, on ouvre "partenaires" en
+          // silence pour qu'elle serve de carte de fond dès la première
+          // apparition, exactement comme dans l'enchaînement normal.
+          if (id === "habilitations" && !previousBackdrop) {
+            var partnersBackdrop = getBackdrop("partners");
+            if (partnersBackdrop && partnersBackdrop !== backdrop) {
+              partnersBackdrop.classList.add("is-open");
+              partnersBackdrop.removeAttribute("aria-hidden");
+              partnersShown = true;
+              if (!prefersReducedMotion && typeof gsap !== "undefined") {
+                playPartnersContent(partnersBackdrop.querySelector(".resources-modal-card"));
+              }
+              previousBackdrop = partnersBackdrop;
+            }
+          }
+
+          if (id === "partners") partnersShown = true;
+          if (id === "habilitations") habilitationsShown = true;
+
+          lastTrigger = trigger || document.activeElement;
+          var card = backdrop.querySelector(".resources-modal-card");
+
+          // Neutralise tout fondu encore en cours sur la cible avant de la
+          // rouvrir (même logique défensive que closeModal.finish, cf. son
+          // commentaire) : si elle vient d'être fermée très récemment, son
+          // tween de fermeture peut ne pas être totalement terminé et
+          // écraserait sinon l'opacité qu'on s'apprête à reposer.
+          if (typeof gsap !== "undefined") {
+            gsap.killTweensOf([backdrop, card]);
+            gsap.set([backdrop, card], { clearProps: "opacity" });
+          }
+
+          if (previousBackdrop) {
+            // Enchaînement : l'ancienne carte ne se ferme plus — elle
+            // devient la carte "de fond", visible EN PERMANENCE derrière la
+            // nouvelle tant que la pile reste ouverte (comme l'as de trèfle
+            // sous l'as de pique), pas juste le temps d'une transition.
+            //
+            // - is-stacked retire le voile/flou propre à cette 2e modale
+            //   (background/backdrop-filter) : un seul voile pour toute la
+            //   pile (celui de la carte de fond), sinon le flou de la carte
+            //   du dessus aurait rendu celle du dessous floue au lieu de
+            //   nette, comme sur l'image de référence.
+            // - z-index : filet de sécurité si l'ordre du DOM changeait un
+            //   jour (habilitations est déjà déclarée après partners, donc
+            //   déjà au-dessus par construction).
+            // - pointer-events: none sur l'ancienne : elle est décorative
+            //   une fois reléguée derrière, plus question de cliquer sur son
+            //   propre bouton fermer ou son fond.
+            backgroundBackdrop = previousBackdrop;
+            backdrop.classList.add("is-stacked");
+            backdrop.style.zIndex = 51;
+            previousBackdrop.setAttribute("aria-hidden", "true");
+            previousBackdrop.style.pointerEvents = "none";
+
+            var previousCard = previousBackdrop.querySelector(".resources-modal-card");
+            if (previousCard) {
+              if (!prefersReducedMotion && typeof gsap !== "undefined") {
+                gsap.to(previousCard, { scale: 0.96, x: -20, y: 14, rotate: -6, duration: 0.4, ease: "power2.out" });
+              } else {
+                previousCard.style.transform = "translate(-20px, 14px) scale(0.96) rotate(-6deg)";
+              }
+            }
+          }
+
+          backdrop.classList.add("is-open");
+          backdrop.removeAttribute("aria-hidden");
+          document.body.classList.add("resources-modal-open");
+          activeBackdrop = backdrop;
+
+          if (!prefersReducedMotion && typeof gsap !== "undefined") {
+            // Le voile/flou (background/backdrop-filter, cf. is-stacked
+            // ci-dessus) n'existe que sur la carte de fond en cas
+            // d'enchaînement : rien à faire fondre ici dans ce cas.
+            if (!previousBackdrop) {
+              gsap.fromTo(backdrop, { opacity: 0 }, { opacity: 1, duration: 0.35, ease: "power1.out" });
+            }
+
+            // Enchaînement (previousBackdrop) : la nouvelle carte arrive
+            // légèrement pivotée/décalée en SENS OPPOSÉ de la carte de fond
+            // (rotate 6→0 contre -6 ci-dessus), façon carte à jouer posée
+            // en biais sur la pile, puis se redresse en position finale
+            // lisible. Ouverture depuis l'écran d'accueil (pas
+            // d'enchaînement) : simple fondu-montée, inchangé.
+            if (previousBackdrop) {
+              gsap.fromTo(
+                card,
+                { opacity: 0, y: -12, scale: 0.95, x: 20, rotate: 6 },
+                { opacity: 1, y: 0, scale: 1, x: 0, rotate: 0, duration: 0.5, ease: "power2.out" }
+              );
+            } else {
+              gsap.fromTo(
+                card,
+                { opacity: 0, y: 16, scale: 0.97 },
+                { opacity: 1, y: 0, scale: 1, duration: 0.4, ease: "power2.out" }
+              );
+            }
+
+            if (id === "partners") {
+              playPartnersContent(card);
+            } else if (id === "habilitations") {
+              playHabilitationsContent(card);
+            }
+          } else if (id === "habilitations") {
+            renderHabilitationsStatic(card);
+          }
+
+          var closeBtn = backdrop.querySelector(".resources-modal-close");
+          if (closeBtn) closeBtn.focus();
+        }
+
+        // Retour en arrière dans la pile : ramène au premier plan la carte
+        // actuellement "de fond" (backgroundBackdrop), sans repasser par
+        // openModal — les 2 backdrops sont déjà ouverts, il s'agit juste
+        // d'inverser leurs rôles (laquelle a le voile/flou propre, laquelle
+        // est cliquable, laquelle est décalée en arrière-plan).
+        function bringToFront(id) {
+          var backdrop = getBackdrop(id);
+          if (!backdrop || !activeBackdrop || backdrop === activeBackdrop) return;
+          if (backgroundBackdrop !== backdrop) return;
+
+          var goingBack = activeBackdrop;
+          var goingFront = backdrop;
+
+          // is-stacked va TOUJOURS sur celle de devant (retire son propre
+          // voile/flou, porté par celle de derrière) — inversé par erreur à
+          // l'origine, ce qui cassait le flou de la pile à chaque
+          // aller-retour.
+          goingFront.classList.add("is-stacked");
+          goingBack.classList.remove("is-stacked");
+
+          goingFront.style.zIndex = 51;
+          goingBack.style.zIndex = "";
+
+          goingFront.removeAttribute("aria-hidden");
+          goingFront.style.pointerEvents = "";
+          goingBack.setAttribute("aria-hidden", "true");
+          goingBack.style.pointerEvents = "none";
+
+          activeBackdrop = goingFront;
+          backgroundBackdrop = goingBack;
+
+          var frontCard = goingFront.querySelector(".resources-modal-card");
+          var backCard = goingBack.querySelector(".resources-modal-card");
+
+          if (!prefersReducedMotion && typeof gsap !== "undefined") {
+            if (frontCard) gsap.to(frontCard, { x: 0, y: 0, scale: 1, rotate: 0, duration: 0.45, ease: "power2.out" });
+            if (backCard) gsap.to(backCard, { x: -20, y: 14, scale: 0.96, rotate: -6, duration: 0.45, ease: "power2.out" });
+          } else {
+            if (frontCard) frontCard.style.transform = "";
+            if (backCard) backCard.style.transform = "translate(-20px, 14px) scale(0.96) rotate(-6deg)";
+          }
+
+          lastTrigger = goingFront.querySelector(".resources-modal-close") || document.activeElement;
+          var closeBtn = goingFront.querySelector(".resources-modal-close");
+          if (closeBtn) closeBtn.focus();
+        }
+
+        Array.prototype.slice.call(document.querySelectorAll(".resources-opening-word")).forEach(function (word) {
+          word.addEventListener("click", function () {
+            openModal(word.getAttribute("data-modal"), word);
+          });
+          word.addEventListener("keydown", function (e) {
+            if (e.key === "Enter" || e.key === " " || e.key === "Spacebar") {
+              e.preventDefault();
+              openModal(word.getAttribute("data-modal"), word);
             }
           });
         });
+
+        Array.prototype.slice.call(document.querySelectorAll(".resources-modal-backdrop")).forEach(function (backdrop) {
+          var closeBtn = backdrop.querySelector(".resources-modal-close");
+          if (closeBtn) closeBtn.addEventListener("click", function () { closeModal(); });
+          backdrop.addEventListener("click", function (e) {
+            if (e.target === backdrop) closeModal();
+          });
+        });
+
+        document.addEventListener("keydown", function (e) {
+          if (e.key === "Escape" && activeBackdrop) closeModal();
+        });
+
+        // Repli "scroll réflexe" : un visiteur qui ne pense pas à cliquer
+        // sur "partenaires"/"expertise" mais scrolle par réflexe doit quand
+        // même accéder au contenu — la molette/le doigt vers le bas ouvre
+        // "partenaires" puis, au geste suivant, "expertise" ; vers le haut,
+        // symétriquement, ramène "partenaires" au premier plan (cf.
+        // bringToFront) si "expertise" est active. Volontairement PAS un
+        // pilotage de la position de scroll (cf. la mésaventure du
+        // scroll-jacking custom sur cette même page, abandonnée pour
+        // instabilité) : on se contente d'écouter le GESTE (wheel/touch,
+        // sans preventDefault, la page continue de défiler normalement si
+        // elle en a la place) comme un simple signal "suivant"/"précédent".
+        //
+        // Gating par modale active (et non par "le curseur est-il dans une
+        // carte", trop grossier) : le mur "partenaires" est purement
+        // décoratif (le marquee défile tout seul, rien à lire au scroll) —
+        // là, scroller depuis L'INTÉRIEUR de la carte doit aussi faire
+        // apparaître "expertise" par-dessus. "habilitations", à l'inverse, a
+        // un vrai contenu scrollable (grille de sceaux + trait animé piloté
+        // par le scroll interne de la carte, cf. setupHabilitationsScrollProgress) :
+        // là, un scroll vers le BAS ne doit jamais être intercepté (rien
+        // après, et la lecture ne doit jamais être coupée) — mais un scroll
+        // vers le HAUT, lui, doit pouvoir ramener "partenaires" devant.
+        var scrollIntentLocked = false;
+
+        // La carte qui vient d'apparaître ne doit pas se retrouver déroulée
+        // d'emblée par le MÊME geste physique qui l'a fait apparaître (un
+        // swipe trackpad déclenche des dizaines d'événements wheel d'affilée
+        // : sans ce verrou, les événements suivants du même geste
+        // atterrissent sur la nouvelle carte, sous le curseur, et
+        // continuent leur course dans son scroll interne — "habilitations"
+        // se retrouvait déjà en train de défiler, trait animé compris, au
+        // moment même où elle apparaissait). Verrouillée en overflow: hidden
+        // pour une durée FIXE et courte après la transition.
+        //
+        // Piège évité : une première version repoussait ce délai à CHAQUE
+        // événement wheel/touch tant qu'ils continuaient d'arriver — un
+        // simple scroll continu (très courant, trackpad notamment) déclenche
+        // des événements en rafale, donc le verrou ne se levait jamais tant
+        // que l'utilisateur scrollait : la carte restait bloquée en
+        // permanence dès qu'on essayait de la lire par scroll continu. Un
+        // délai fixe, non prolongé par les événements suivants, garantit que
+        // le contenu redevient scrollable après un court instant prévisible,
+        // que le geste continue ou non.
+        var scrollLockedCard = null;
+        var scrollLockedCardTimer = null;
+
+        function lockCardScroll(card) {
+          if (!card) return;
+          if (scrollLockedCard && scrollLockedCard !== card) {
+            scrollLockedCard.style.overflowY = "";
+          }
+          scrollLockedCard = card;
+          card.style.overflowY = "hidden";
+          clearTimeout(scrollLockedCardTimer);
+          scrollLockedCardTimer = setTimeout(function () {
+            card.style.overflowY = "";
+            if (scrollLockedCard === card) scrollLockedCard = null;
+          }, 400);
+        }
+
+        function handleScrollIntent(deltaY) {
+          if (Math.abs(deltaY) <= 12 || scrollIntentLocked) return;
+
+          var activeId = activeBackdrop ? activeBackdrop.getAttribute("data-modal-id") : null;
+          var backgroundId = backgroundBackdrop ? backgroundBackdrop.getAttribute("data-modal-id") : null;
+
+          // "habilitations" a un vrai contenu scrollable (grille de sceaux +
+          // trait animé, cf. setupHabilitationsScrollProgress) : tant qu'il
+          // reste du contenu à lire dans la direction du geste, le scroll ne
+          // doit JAMAIS être intercepté. Seulement une fois arrivé à une
+          // extrémité (haut ou bas) de son contenu, un scroll supplémentaire
+          // dans le même sens redevient un signal de navigation — c'est ce
+          // qui permet la boucle infinie partenaires ⇄ expertise même
+          // depuis l'intérieur d'"habilitations". "partenaires" reste
+          // purement décorative (mur de noms qui défile tout seul) : là,
+          // n'importe quel scroll, dans n'importe quel sens, est un signal.
+          if (activeId === "habilitations") {
+            var habilitationsCard = activeBackdrop.querySelector(".resources-modal-card");
+            if (habilitationsCard) {
+              if (deltaY < 0 && habilitationsCard.scrollTop > 4) return;
+              if (deltaY > 0 && habilitationsCard.scrollTop + habilitationsCard.clientHeight < habilitationsCard.scrollHeight - 4) return;
+            }
+          }
+
+          if (deltaY < 0) {
+            // Scroll vers le haut : retour à la carte de fond, s'il y en a
+            // une (sinon rien à faire — déjà sur l'écran d'accueil, ou sur
+            // "partenaires" seule).
+            if (!backgroundBackdrop) return;
+            bringToFront(backgroundId);
+          } else if (activeId === "habilitations") {
+            // Déjà en bas d'"habilitations" (sinon retour anticipé plus
+            // haut) : un scroll de plus reboucle vers "partenaires".
+            if (!backgroundBackdrop) return;
+            bringToFront(backgroundId);
+          } else {
+            if (backgroundId === "habilitations") {
+              // "expertise" est actuellement EN FOND (on est revenu sur
+              // "partenaires" via un scroll vers le haut) : on la ramène
+              // devant plutôt que de retenter openModal, qui n'aurait plus
+              // rien fait une fois habilitationsShown déjà à true — c'est
+              // ce qui rendait la boucle à sens unique. bringToFront rend
+              // l'aller-retour infini.
+              bringToFront("habilitations");
+            } else if (!partnersShown) {
+              openModal("partners");
+            } else if (!habilitationsShown) {
+              openModal("habilitations");
+            } else {
+              return;
+            }
+          }
+
+          if (activeBackdrop) {
+            lockCardScroll(activeBackdrop.querySelector(".resources-modal-card"));
+          }
+
+          scrollIntentLocked = true;
+          setTimeout(function () {
+            scrollIntentLocked = false;
+          }, 700);
+        }
+
+        window.addEventListener(
+          "wheel",
+          function (e) {
+            handleScrollIntent(e.deltaY);
+          },
+          { passive: true }
+        );
+
+        var touchStartY = null;
+        window.addEventListener(
+          "touchstart",
+          function (e) {
+            touchStartY = e.touches && e.touches.length ? e.touches[0].clientY : null;
+          },
+          { passive: true }
+        );
+        window.addEventListener(
+          "touchmove",
+          function (e) {
+            if (touchStartY === null || !e.touches || !e.touches.length) return;
+            var currentY = e.touches[0].clientY;
+            handleScrollIntent(touchStartY - currentY);
+            touchStartY = currentY;
+          },
+          { passive: true }
+        );
+
+        if (prefersReducedMotion || typeof gsap === "undefined") return;
+
+        // Écran d'ouverture : simple animation d'entrée au chargement (fade-up),
+        // même esprit que le hero de l'accueil — rien de lié au scroll.
+        var openingPhrase = document.querySelector(".resources-opening-text");
+        var openingHint = document.querySelector(".resources-opening-hint");
+        if (openingPhrase || openingHint) {
+          var openingTl = gsap.timeline();
+          if (openingPhrase) {
+            gsap.set(openingPhrase, { opacity: 0, y: 24 });
+            openingTl.to(openingPhrase, { opacity: 1, y: 0, duration: 0.7, ease: "power2.out" });
+          }
+          if (openingHint) {
+            gsap.set(openingHint, { opacity: 0 });
+            openingTl.to(openingHint, { opacity: 1, duration: 0.5, ease: "power2.out" }, "-=0.15");
+          }
+        }
 
         // Survol doré : géré entièrement en CSS (:hover natif par nom, cf. styles.css),
         // pas de JS nécessaire ici — plus simple et plus robuste qu'un masque suivant
@@ -453,6 +1168,9 @@
         // Marquee draggable : indépendant de prefers-reduced-motion (interaction
         // directe pilotée par l'utilisateur, pas une animation automatique) et sans
         // dépendance à GSAP — fonctionne à la souris comme au tactile via Pointer Events.
+        // Les mesures (scrollWidth) ne sont prises qu'au pointerdown, donc même si les
+        // pistes démarrent dans une modale display: none, tout se mesure correctement
+        // une fois la modale ouverte (seul moment où l'utilisateur peut cliquer dessus).
         var tracks = document.querySelectorAll(".partner-marquee-track");
 
         tracks.forEach(function (track) {
