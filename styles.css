@@ -1760,16 +1760,22 @@ body.resources-modal-open {
 .partner-wall-depth-6,
 .partner-wall-depth-7,
 .partner-wall-depth-8,
-.partner-wall-depth-9 {
+.partner-wall-depth-9,
+.partner-wall-depth-10,
+.partner-wall-depth-11,
+.partner-wall-depth-12 {
   opacity: 1;
 }
 
-/* Bandes 8 et 9 : réservées au format vertical du téléphone (cf. media query
+/* Bandes 8 à 12 : réservées au format vertical du téléphone (cf. media query
    plus bas), où la carte est haute et étroite — le même nombre de lignes que
    sur ordinateur (pensé pour un format large) laisse trop de vide en
    hauteur. Masquées par défaut, révélées uniquement sous 900px. */
 .partner-wall-depth-8,
-.partner-wall-depth-9 {
+.partner-wall-depth-9,
+.partner-wall-depth-10,
+.partner-wall-depth-11,
+.partner-wall-depth-12 {
   display: none;
 }
 
@@ -2121,6 +2127,7 @@ body.resources-modal-open {
 .simulator-title-block h1 {
   font-size: clamp(3.8rem, min(6vw, 8svh), 5.6rem);
   line-height: 0.9;
+  letter-spacing: -0.025em;
   transform: scaleX(1.08);
   transform-origin: center;
 }
@@ -2293,6 +2300,11 @@ body.resources-modal-open {
   transition: opacity 260ms ease;
 }
 
+.simulator-choice-featured:active {
+  transform: scale(0.98);
+  transition: transform 100ms ease;
+}
+
 .simulator-choice-featured:hover {
   transform: translateY(-5px);
   border-color: rgba(236, 207, 152, 0.58);
@@ -2399,7 +2411,6 @@ body.resources-modal-open {
   font-family: var(--sans);
   font-size: 0.7rem;
   font-weight: 560;
-  backdrop-filter: blur(8px);
 }
 
 .simulator-choice-action {
@@ -7757,7 +7768,8 @@ body[data-mode="scpi"] .tool-field[data-field="dureeTotale"] .tool-input-wrap in
   .appointment-link:hover,
   .appointment:hover .card-icon,
   .scpi-reinvest-control:hover,
-  .simulator-choice-featured:hover {
+  .simulator-choice-featured:hover,
+  .simulator-choice-featured:active {
     transform: none;
   }
 
@@ -8344,7 +8356,10 @@ body[data-mode="scpi"] .tool-field[data-field="dureeTotale"] .tool-input-wrap in
      plus de hauteur disponible qu'en largeur, donc plus de lignes plutôt
      qu'un espacement étiré entre les mêmes 7 qu'sur ordinateur. */
   .partner-wall-depth-8,
-  .partner-wall-depth-9 {
+  .partner-wall-depth-9,
+  .partner-wall-depth-10,
+  .partner-wall-depth-11,
+  .partner-wall-depth-12 {
     display: block;
   }
 
@@ -8357,8 +8372,21 @@ body[data-mode="scpi"] .tool-field[data-field="dureeTotale"] .tool-input-wrap in
      resserrés. */
   .habilitation-seal-row {
     max-width: 100%;
-    gap: 14px;
-    padding: 12px 14px;
+    /* Icône au-dessus, texte en dessous, tout centré : plutôt qu'icône à
+       gauche / texte à droite (hérité du zigzag, cf. commentaire au-dessus).
+       Sur une rangée pleine largeur, une icône calée à gauche laisse le
+       trait qui la traverse (cf. buildHabilitationsPath, construit sur le
+       centre réel de chaque icône) hors-centre par rapport à la carte —
+       correct individuellement mais visuellement pas "centré". En colonne
+       centrée, le centre de l'icône tombe par construction sur l'axe
+       vertical central de la carte, pour CHAQUE rangée : le trait généré
+       est donc à la fois centré et parfaitement droit, sans dépendre d'un
+       alignement en pixels entre rangées. */
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 10px;
+    padding: 14px 16px;
   }
 
   .habilitation-seal-row:nth-of-type(odd),
@@ -8377,6 +8405,12 @@ body[data-mode="scpi"] .tool-field[data-field="dureeTotale"] .tool-input-wrap in
   }
 
   .habilitation-seal-text {
+    /* align-self: stretch (plutôt que la largeur auto par défaut d'un enfant
+       flex centré) : le texte garde toute la largeur de la rangée pour son
+       retour à la ligne, seul son alignement devient centré — sinon il se
+       réduirait à sa largeur intrinsèque et replierait sur bien plus de
+       lignes que nécessaire. */
+    align-self: stretch;
     font-size: 0.86rem;
     line-height: 1.3;
   }
