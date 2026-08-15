@@ -31,6 +31,12 @@ html {
   background: var(--paper);
 }
 
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
 body {
   position: relative;
   margin: 0;
@@ -290,7 +296,7 @@ h1 {
 }
 
 .main-nav a.nav-cta:active {
-  transform: scale(0.96);
+  transform: scale(0.97);
   transition: transform 100ms ease;
 }
 
@@ -820,6 +826,7 @@ h3 {
 .home-hero h1 {
   font-size: clamp(3.4rem, min(9vw, 15svh), 9.5rem);
   line-height: 0.86;
+  letter-spacing: -0.025em;
 }
 
 .home-hero-divider {
@@ -1336,6 +1343,12 @@ h3 {
    règle commune utilisée par les autres pages). */
 .resources-modal-card .section-heading {
   margin-bottom: 0;
+  /* Contre .section-heading { display: none; } posé plus bas pour les petits
+     écrans (pensé pour d'autres pages) : cette règle, plus spécifique (deux
+     classes), l'emporte quel que soit l'ordre dans la feuille — le titre de
+     la modale (Partenaires/Habilitations) doit rester visible à toute
+     largeur, sinon la carte s'ouvre sans en-tête sur téléphone. */
+  display: flex;
 }
 
 .resources-habilitations.resources-modal-card {
@@ -1745,8 +1758,19 @@ body.resources-modal-open {
 .partner-wall-depth-4,
 .partner-wall-depth-5,
 .partner-wall-depth-6,
-.partner-wall-depth-7 {
+.partner-wall-depth-7,
+.partner-wall-depth-8,
+.partner-wall-depth-9 {
   opacity: 1;
+}
+
+/* Bandes 8 et 9 : réservées au format vertical du téléphone (cf. media query
+   plus bas), où la carte est haute et étroite — le même nombre de lignes que
+   sur ordinateur (pensé pour un format large) laisse trop de vide en
+   hauteur. Masquées par défaut, révélées uniquement sous 900px. */
+.partner-wall-depth-8,
+.partner-wall-depth-9 {
+  display: none;
 }
 
 .partner-wall-band {
@@ -8290,26 +8314,71 @@ body[data-mode="scpi"] .tool-field[data-field="dureeTotale"] .tool-input-wrap in
 
   .resources-opening-teaser {
     bottom: -58px;
-    width: min(92vw, 320px);
+    width: min(84vw, 300px);
     height: 176px;
     padding-top: 26px;
   }
 
-  /* Largeur propre, plus étroite que .resources-opening-teaser-front : sur
-     un écran de téléphone, la carte de devant occupe déjà presque toute la
-     largeur disponible — décaler une carte de MÊME largeur sur le côté la
-     ferait sortir du viewport (donc couper "Habilitations", invisible).
-     Une carte de fond plus étroite laisse la place nécessaire au décalage
-     tout en restant entièrement à l'écran. */
+  /* Carte de devant resserrée (84vw au lieu de 92vw, ci-dessus) pour dégager
+     de la marge sur les côtés : sans ça, aucun décalage de la carte de fond
+     ne suffit à la faire dépasser, elle reste entièrement cachée derrière
+     "Partenaires" (bug signalé — "seule la carte partenaire apparaît").
+     Largeur propre, plus étroite que .resources-opening-teaser-front : une
+     carte de fond plus étroite laisse la place nécessaire au décalage tout
+     en limitant ce qui sort du viewport. Un léger débord à gauche est
+     volontaire et cohérent avec le reste de l'écran (cartes déjà pensées
+     pour déborder en bas, cf. .resources-opening-teaser bottom négatif). */
   .resources-opening-teaser-back {
-    width: min(66vw, 210px);
-    padding-left: 16px;
-    transform: translate(calc(-50% - 50px), 20px) rotate(-4deg) scale(0.94);
+    width: min(58vw, 185px);
+    padding-left: 14px;
+    transform: translate(calc(-50% - 100px), 20px) rotate(-4deg) scale(0.94);
   }
 
   .resources-opening-teaser-back:hover,
   .resources-opening-teaser-back:focus-visible {
-    transform: translate(calc(-50% - 58px), 10px) rotate(-6deg) scale(0.96);
+    transform: translate(calc(-50% - 110px), 10px) rotate(-6deg) scale(0.96);
+  }
+
+  /* Révèle les 2 bandes supplémentaires du mur de partenaires (cf. règle de
+     base plus haut, masquées par défaut) : format vertical du téléphone,
+     plus de hauteur disponible qu'en largeur, donc plus de lignes plutôt
+     qu'un espacement étiré entre les mêmes 7 qu'sur ordinateur. */
+  .partner-wall-depth-8,
+  .partner-wall-depth-9 {
+    display: block;
+  }
+
+  /* Timeline "Habilitations" : la zigzag gauche/droite à 75% de largeur
+     (pensée pour une carte large, cf. .habilitation-seal-row plus haut) au
+     lieu de contraster à l'utile ne laisse presque rien à chaque carte sur
+     un écran de téléphone — le texte replie sur 4-5 lignes et chaque sceau
+     devient énorme. En dessous de 900px : plus de zigzag (pleine largeur,
+     empilement simple, plus adapté à un format vertical), icône et texte
+     resserrés. */
+  .habilitation-seal-row {
+    max-width: 100%;
+    gap: 14px;
+    padding: 12px 14px;
+  }
+
+  .habilitation-seal-row:nth-of-type(odd),
+  .habilitation-seal-row:nth-of-type(even) {
+    justify-self: stretch;
+  }
+
+  .habilitation-seal {
+    width: 42px;
+    height: 42px;
+  }
+
+  .habilitation-seal-icon {
+    width: 18px;
+    height: 18px;
+  }
+
+  .habilitation-seal-text {
+    font-size: 0.86rem;
+    line-height: 1.3;
   }
 
   .resources-opening-teaser-label {
