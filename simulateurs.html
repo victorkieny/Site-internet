@@ -163,6 +163,12 @@
             scrollTrigger: {
               trigger: grid,
               start: "top 85%"
+            },
+            // Sans ça, le style inline laissé par GSAP sur transform bloque
+            // définitivement .simulator-choice-featured:hover/:active (styles.css)
+            // une fois l'entrée jouée — même cause que sur le hero de l'accueil.
+            onComplete: function () {
+              gsap.set(cards, { clearProps: "transform" });
             }
           });
         });

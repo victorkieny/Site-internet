@@ -45,17 +45,17 @@
         <section class="resources-opening" aria-label="Ressources — introduction">
           <img class="brand-logo" src="assets/logo-transparent.png" alt="" aria-hidden="true">
           <p class="resources-opening-text">
-            Un réseau de <span class="resources-opening-word" data-modal="partners" role="link" tabindex="0">partenaires</span> solides,<br>une <span class="resources-opening-word" data-modal="habilitations" role="link" tabindex="0">expertise</span> vérifiable.
+            Un réseau de <span class="resources-opening-word">partenaires</span> solides,<br>une <span class="resources-opening-word">expertise</span> vérifiable.
           </p>
-          <p class="resources-opening-hint">
-            Glissez pour explorer
+          <button type="button" class="resources-opening-hint">
+            Explorer
             <svg class="resources-opening-hint-icon" viewBox="0 0 24 24" aria-hidden="true">
               <path d="m7 9 5 5 5-5"></path>
             </svg>
-          </p>
+          </button>
           <div class="resources-opening-teasers">
             <button type="button" class="resources-opening-teaser resources-opening-teaser-back" data-modal="habilitations">
-              <span class="resources-opening-teaser-label">Habilitations</span>
+              <span class="resources-opening-teaser-label">Diplômes &amp; habilitations</span>
             </button>
             <button type="button" class="resources-opening-teaser resources-opening-teaser-front" data-modal="partners">
               <span class="resources-opening-teaser-label">Partenaires</span>
@@ -546,6 +546,30 @@
           return document.querySelector('.resources-modal-backdrop[data-modal-id="' + id + '"]');
         }
 
+        // Technique FLIP partagée : anime card depuis la position/taille
+        // RÉELLES de sa carte-amorce (.resources-opening-teaser[data-modal=id])
+        // jusqu'à sa taille finale — impression de tirer physiquement cette
+        // carte du bas de l'écran, jamais un fondu générique. Mesurée au
+        // moment de l'appel (la carte doit déjà être layoutée, is-open tout
+        // juste posé par l'appelant). Retourne false si la carte-amorce est
+        // introuvable (ne devrait plus arriver en usage normal, cf. appelants).
+        function drawCardFromTeaser(card, id) {
+          var teaser = document.querySelector('.resources-opening-teaser[data-modal="' + id + '"]');
+          if (!teaser || !card) return false;
+          var origin = teaser.getBoundingClientRect();
+          var cardRect = card.getBoundingClientRect();
+          var fromX = origin.left + origin.width / 2 - (cardRect.left + cardRect.width / 2);
+          var fromY = origin.top + origin.height / 2 - (cardRect.top + cardRect.height / 2);
+          var fromScaleX = origin.width / cardRect.width;
+          var fromScaleY = origin.height / cardRect.height;
+          gsap.fromTo(
+            card,
+            { opacity: 1, x: fromX, y: fromY, scaleX: fromScaleX, scaleY: fromScaleY, transformOrigin: "center center" },
+            { x: 0, y: 0, scaleX: 1, scaleY: 1, duration: 0.55, ease: "power3.out" }
+          );
+          return true;
+        }
+
         // Contenus des modales : plus aucun déclencheur ScrollTrigger (les
         // sections ne sont plus dans le flux de la page) — un appel direct
         // ici, à l'ouverture de la modale correspondante, rejoue exactement
@@ -1020,11 +1044,19 @@
           if (id === "habilitations" && !previousBackdrop) {
             var partnersBackdrop = getBackdrop("partners");
             if (partnersBackdrop && partnersBackdrop !== backdrop) {
+              var partnersCard = partnersBackdrop.querySelector(".resources-modal-card");
               partnersBackdrop.classList.add("is-open");
               partnersBackdrop.removeAttribute("aria-hidden");
               partnersShown = true;
               if (!prefersReducedMotion && typeof gsap !== "undefined") {
-                playPartnersContent(partnersBackdrop.querySelector(".resources-modal-card"));
+                // "Partenaires" est ouverte en silence pour servir de fond à
+                // "expertise" (cf. commentaire ci-dessus) — mais reste une des
+                // deux cartes du site, donc reçoit le même tirage depuis sa
+                // propre carte-amorce que n'importe quelle autre ouverture,
+                // jamais une apparition instantanée.
+                gsap.set(partnersBackdrop, { opacity: 1 });
+                drawCardFromTeaser(partnersCard, "partners");
+                playPartnersContent(partnersCard);
               }
               previousBackdrop = partnersBackdrop;
             }
@@ -1036,18 +1068,18 @@
           lastTrigger = trigger || document.activeElement;
           var card = backdrop.querySelector(".resources-modal-card");
 
-          // Origine du "tirage" : si l'ouverture vient d'un clic sur une
-          // carte-amorce de l'écran d'accueil (cf. .resources-opening-teaser),
-          // on mesure sa position/taille RÉELLES à l'écran pour faire partir
-          // l'animation de LÀ plutôt que d'un fondu générique — impression
-          // d'avoir vraiment tiré cette carte du bas de l'écran jusqu'à sa
-          // taille finale, comme un tirage de carte à jouer. N'importe quel
-          // autre déclencheur (mot doré dans la phrase, scroll réflexe)
-          // garde l'animation existante, inchangée.
-          var teaserOrigin =
-            trigger && trigger.classList && trigger.classList.contains("resources-opening-teaser")
-              ? trigger.getBoundingClientRect()
-              : null;
+          // hasTeaserOrigin : la carte-amorce de CETTE modale existe-t-elle
+          // dans le DOM ? (elle existe toujours en usage normal, les deux
+          // sont statiques dans l'écran d'accueil — ce test n'est qu'un
+          // repli défensif). Sert seulement à choisir la branche d'animation
+          // plus bas ; le calcul réel de position est fait par
+          // drawCardFromTeaser (cf. plus haut), au moment de l'animation, pas
+          // ici — avant, seul un clic direct sur la carte-amorce en
+          // bénéficiait ; désormais systématique quel que soit le
+          // déclencheur (clic sur la carte, ou scroll réflexe), pour
+          // qu'ouverture au clic et ouverture au scroll se ressemblent à
+          // l'identique.
+          var hasTeaserOrigin = !!document.querySelector('.resources-opening-teaser[data-modal="' + id + '"]');
 
           // Neutralise tout fondu/déplacement encore en cours sur la cible
           // avant de la rouvrir (même logique défensive que closeModal.finish,
@@ -1108,9 +1140,9 @@
             // ci-dessus) n'existe que sur la carte de fond en cas
             // d'enchaînement : rien à faire fondre ici dans ce cas.
             if (!previousBackdrop) {
-              if (teaserOrigin) {
+              if (hasTeaserOrigin) {
                 // Tirage depuis une carte-amorce : le voile apparaît
-                // instantanément avec le clic, pas en fondu — seul le
+                // instantanément, pas en fondu — seul le
                 // déplacement/agrandissement de la carte doit se voir,
                 // sinon le fondu du voile se lit comme un fondu général de
                 // la transition, même si la carte elle-même n'en a aucun.
@@ -1120,36 +1152,30 @@
               }
             }
 
-            // Enchaînement (previousBackdrop) : la nouvelle carte arrive
-            // légèrement pivotée/décalée en SENS OPPOSÉ de la carte de fond
-            // (rotate 6→0 contre -6 ci-dessus), façon carte à jouer posée
-            // en biais sur la pile, puis se redresse en position finale
-            // lisible. Ouverture depuis l'écran d'accueil (pas
-            // d'enchaînement) : simple fondu-montée, inchangé.
-            if (teaserOrigin) {
-              // Technique FLIP : le point de départ n'est pas une valeur
-              // arbitraire mais calculé à partir de la position/taille
-              // RÉELLES du bouton-teaser cliqué, comparées à la position/
-              // taille RÉELLES de la carte une fois ouverte (déjà layoutée
-              // ici, is-open venant d'être posé) — la carte semble ainsi
-              // grandir depuis l'endroit exact où on l'a "attrapée".
-              var cardRect = card.getBoundingClientRect();
-              var fromX = teaserOrigin.left + teaserOrigin.width / 2 - (cardRect.left + cardRect.width / 2);
-              var fromY = teaserOrigin.top + teaserOrigin.height / 2 - (cardRect.top + cardRect.height / 2);
-              var fromScaleX = teaserOrigin.width / cardRect.width;
-              var fromScaleY = teaserOrigin.height / cardRect.height;
-              gsap.fromTo(
-                card,
-                { opacity: 1, x: fromX, y: fromY, scaleX: fromScaleX, scaleY: fromScaleY, transformOrigin: "center center" },
-                { x: 0, y: 0, scaleX: 1, scaleY: 1, duration: 0.55, ease: "power3.out" }
-              );
-            } else if (previousBackdrop) {
+            // Enchaînement (previousBackdrop) EN PREMIER : la nouvelle carte
+            // arrive légèrement pivotée/décalée en SENS OPPOSÉ de la carte de
+            // fond (rotate 6→0 contre -6 ci-dessus), façon carte à jouer
+            // posée en biais sur la pile, puis se redresse en position
+            // finale lisible — ce cas doit rester prioritaire sur
+            // hasTeaserOrigin (vrai dans tous les cas en usage normal),
+            // sinon l'enchaînement perdrait sa propre animation de pile au
+            // profit d'un tirage depuis la carte-amorce.
+            if (previousBackdrop) {
               gsap.fromTo(
                 card,
                 { opacity: 0, y: -12, scale: 0.95, x: 20, rotate: 6 },
                 { opacity: 1, y: 0, scale: 1, x: 0, rotate: 0, duration: 0.5, ease: "power2.out" }
               );
+            } else if (hasTeaserOrigin) {
+              // Premier plan (pas d'enchaînement) : tirage depuis la
+              // carte-amorce de CETTE modale, quel que soit le déclencheur
+              // réel (clic sur la carte, ou scroll réflexe) — cf.
+              // drawCardFromTeaser.
+              drawCardFromTeaser(card, id);
             } else {
+              // Repli défensif si jamais la carte-amorce était absente du
+              // DOM (ne devrait plus arriver en usage normal) : fondu-montée
+              // plutôt que rien.
               gsap.fromTo(
                 card,
                 { opacity: 0, y: 16, scale: 0.97 },
@@ -1217,17 +1243,11 @@
           if (closeBtn) closeBtn.focus();
         }
 
-        Array.prototype.slice.call(document.querySelectorAll(".resources-opening-word")).forEach(function (word) {
-          word.addEventListener("click", function () {
-            openModal(word.getAttribute("data-modal"), word);
-          });
-          word.addEventListener("keydown", function (e) {
-            if (e.key === "Enter" || e.key === " " || e.key === "Spacebar") {
-              e.preventDefault();
-              openModal(word.getAttribute("data-modal"), word);
-            }
-          });
-        });
+        // Les mots "partenaires"/"expertise" dans la phrase d'accueil ne sont
+        // plus des déclencheurs (retiré à la demande de Victor — trop de façons
+        // différentes d'ouvrir une même carte). Restent : le clic sur une
+        // carte-amorce ci-dessous, le bouton "Explorer", et le scroll réflexe
+        // plus bas.
 
         // Cartes-amorce de l'écran d'ouverture (point d'entrée principal) :
         // de vrais <button>, donc Entrée/Espace les activent nativement au
@@ -1237,6 +1257,18 @@
             openModal(teaser.getAttribute("data-modal"), teaser);
           });
         });
+
+        // Bouton "Explorer" : ouvre directement la première carte
+        // (Partenaires) — hasTeaserOrigin (cf. openModal) reste vrai puisque
+        // la carte-amorce "partners" existe toujours dans le DOM, donc
+        // l'animation de tirage se fait depuis SA position à elle, pas
+        // depuis le bouton, exactement comme un clic sur la carte-amorce.
+        var openingHintBtn = document.querySelector(".resources-opening-hint");
+        if (openingHintBtn) {
+          openingHintBtn.addEventListener("click", function () {
+            openModal("partners", openingHintBtn);
+          });
+        }
 
         Array.prototype.slice.call(document.querySelectorAll(".resources-modal-backdrop")).forEach(function (backdrop) {
           var closeBtn = backdrop.querySelector(".resources-modal-close");
@@ -1364,11 +1396,28 @@
           }
 
           if (deltaY < 0) {
-            // Scroll vers le haut : retour à la carte de fond, s'il y en a
-            // une (sinon rien à faire — déjà sur l'écran d'accueil, ou sur
-            // "partenaires" seule).
-            if (!backgroundBackdrop) return;
-            bringToFront(backgroundId);
+            if (backgroundBackdrop) {
+              // Une carte est superposée derrière : scroll vers le haut =
+              // retour à cette carte de fond, comme d'habitude.
+              bringToFront(backgroundId);
+            } else if (activeId === "partners") {
+              // Cas précis demandé par Victor : "partenaires" seule à
+              // l'écran, aucune carte superposée derrière (jamais enchaîné
+              // sur "expertise" depuis cette ouverture) — le scroll vers le
+              // haut referme la carte, symétrique du scroll vers le bas qui
+              // l'a ouverte. closeModal() anime déjà le retour exact vers la
+              // carte-amorce d'origine (cf. son commentaire) : rien à ajouter
+              // côté animation, seulement à déclencher la fermeture ici.
+              // Ne s'applique QUE dans cet état : dès qu'"expertise" a été
+              // montrée une fois, backgroundBackdrop n'est plus jamais null
+              // tant qu'une carte reste ouverte (cf. bringToFront), donc ce
+              // cas ne peut plus se reproduire avant une vraie fermeture qui
+              // réinitialise partnersShown/habilitationsShown.
+              closeModal();
+            } else {
+              // Écran d'accueil (rien d'ouvert) : aucun signal à donner.
+              return;
+            }
           } else if (activeId === "habilitations") {
             // Déjà en bas d'"habilitations" (sinon retour anticipé plus
             // haut) : un scroll de plus reboucle vers "partenaires".
@@ -1463,12 +1512,19 @@
     </script>
     <script>
       (function () {
-        // Marquee draggable : indépendant de prefers-reduced-motion (interaction
-        // directe pilotée par l'utilisateur, pas une animation automatique) et sans
-        // dépendance à GSAP — fonctionne à la souris comme au tactile via Pointer Events.
-        // Les mesures (scrollWidth) ne sont prises qu'au pointerdown, donc même si les
-        // pistes démarrent dans une modale display: none, tout se mesure correctement
-        // une fois la modale ouverte (seul moment où l'utilisateur peut cliquer dessus).
+        // Marquee draggable : le SUIVI pendant le glissement reste indépendant de
+        // prefers-reduced-motion (interaction directe pilotée par l'utilisateur, pas
+        // une animation automatique) et sans dépendance à GSAP — fonctionne à la
+        // souris comme au tactile via Pointer Events. Les mesures (scrollWidth) ne
+        // sont prises qu'au pointerdown, donc même si les pistes démarrent dans une
+        // modale display: none, tout se mesure correctement une fois la modale
+        // ouverte (seul moment où l'utilisateur peut cliquer dessus).
+        //
+        // Le "lancer" au relâchement (coastFrom, plus bas), lui, EST une animation
+        // ajoutée après le geste — coupé sous prefers-reduced-motion, qui retrouve
+        // alors le comportement d'origine (reprise immédiate du défilement ambiant,
+        // sans vélocité).
+        var prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
         var tracks = document.querySelectorAll(".partner-marquee-track");
 
         tracks.forEach(function (track) {
@@ -1477,6 +1533,13 @@
           var startTranslateX = 0;
           var halfWidth = 0;
           var originalDuration = track.style.animationDuration;
+          // Historique court des dernières positions/horodatages du pointeur pendant
+          // le drag, pour calculer sa vélocité au relâchement — 5 points suffisent
+          // (quelques dizaines de ms) ; un historique plus long capturerait un
+          // mouvement déjà terminé (doigt ralenti ou immobile juste avant de lâcher).
+          var history = [];
+          var coastRafId = null;
+          var STOP_VELOCITY = 0.02; // px/ms, ~20px/s : en dessous, imperceptible — partagé entre endDrag (déclenche ou non le coast) et coastFrom (condition d'arrêt)
 
           function getCurrentTranslateX() {
             var transform = window.getComputedStyle(track).transform;
@@ -1487,11 +1550,68 @@
             return values[4] || 0;
           }
 
+          // Reprend le défilement ambiant à partir de x : logique inchangée par
+          // rapport à l'origine (progression normalisée dans la boucle, calée via
+          // animation-delay) — appelée soit immédiatement au relâchement (pas de
+          // vélocité mesurable, ou reduced-motion), soit à la fin du "coast".
+          function resumeLoop(x) {
+            var normalized = halfWidth ? x % halfWidth : 0;
+            if (normalized > 0) normalized -= halfWidth;
+            var progress = halfWidth ? Math.abs(normalized) / halfWidth : 0;
+            var durationSeconds = parseFloat(originalDuration) || 90;
+
+            track.style.transform = "";
+            track.style.animationDelay = -progress * durationSeconds + "s";
+            track.style.animationName = "partner-marquee";
+          }
+
+          // "Lancer" façon Apple (WWDC 2018, Designing Fluid Interfaces) :
+          // décroissance EXPONENTIELLE de la vélocité, pas la formule physique
+          // v²/2a. decelPerFrame calibré à 60fps (0.99, repère "snappier" du
+          // skill — 0.998 est pensé pour un long scroll de contenu, trop lent à
+          // s'arrêter sur un marquee compact) puis élevé à la puissance
+          // dt/16.67 à chaque frame pour rester indépendant du taux de
+          // rafraîchissement réel de l'écran. Filet de sécurité sur la durée
+          // totale (COAST_MAX_MS) : si jamais requestAnimationFrame est
+          // fortement ralenti par le navigateur, le lancer s'interrompt proprement
+          // plutôt que de continuer indéfiniment.
+          function coastFrom(x, velocity) {
+            var DECEL_PER_FRAME = 0.99;
+            var COAST_MAX_MS = 2500;
+            var lastTs = null;
+            var elapsed = 0;
+
+            function step(ts) {
+              if (lastTs === null) lastTs = ts;
+              var dt = ts - lastTs;
+              lastTs = ts;
+              elapsed += dt;
+
+              velocity *= Math.pow(DECEL_PER_FRAME, dt / (1000 / 60));
+              x += velocity * dt;
+              track.style.transform = "translateX(" + x + "px)";
+
+              if (Math.abs(velocity) < STOP_VELOCITY || elapsed > COAST_MAX_MS) {
+                coastRafId = null;
+                resumeLoop(x);
+                return;
+              }
+              coastRafId = requestAnimationFrame(step);
+            }
+
+            coastRafId = requestAnimationFrame(step);
+          }
+
           track.addEventListener("pointerdown", function (e) {
+            if (coastRafId !== null) {
+              cancelAnimationFrame(coastRafId);
+              coastRafId = null;
+            }
             isDragging = true;
             halfWidth = track.scrollWidth / 2;
             startTranslateX = getCurrentTranslateX();
             startPointerX = e.clientX;
+            history = [{ x: e.clientX, t: e.timeStamp }];
             track.style.animationName = "none";
             track.style.transform = "translateX(" + startTranslateX + "px)";
             track.classList.add("is-dragging");
@@ -1502,6 +1622,9 @@
             if (!isDragging) return;
             var x = startTranslateX + (e.clientX - startPointerX);
             track.style.transform = "translateX(" + x + "px)";
+
+            history.push({ x: e.clientX, t: e.timeStamp });
+            if (history.length > 5) history.shift();
           });
 
           function endDrag(e) {
@@ -1517,14 +1640,25 @@
             }
 
             var finalX = getCurrentTranslateX();
-            var normalized = halfWidth ? finalX % halfWidth : 0;
-            if (normalized > 0) normalized -= halfWidth;
-            var progress = halfWidth ? Math.abs(normalized) / halfWidth : 0;
-            var durationSeconds = parseFloat(originalDuration) || 90;
 
-            track.style.transform = "";
-            track.style.animationDelay = -progress * durationSeconds + "s";
-            track.style.animationName = "partner-marquee";
+            // Vélocité = premier et dernier point de l'historique court, en
+            // px/ms. Écart de temps nul ou aberrant (un seul point capturé, ou
+            // doigt resté immobile avant de lâcher) : pas de lancer, comportement
+            // d'origine.
+            var velocity = 0;
+            if (history.length >= 2) {
+              var first = history[0];
+              var last = history[history.length - 1];
+              var dt = last.t - first.t;
+              if (dt > 0) velocity = (last.x - first.x) / dt;
+            }
+            history = [];
+
+            if (prefersReducedMotion || Math.abs(velocity) < STOP_VELOCITY) {
+              resumeLoop(finalX);
+            } else {
+              coastFrom(finalX, velocity);
+            }
           }
 
           track.addEventListener("pointerup", endDrag);

@@ -1117,6 +1117,7 @@ h3 {
 .about-entry-heading h2 {
   text-align: left;
   transform-origin: left center;
+  letter-spacing: -0.025em;
 }
 
 /* .section-title-accent garde sa définition partagée (trait doré fin,
@@ -1216,9 +1217,15 @@ h3 {
   outline-offset: 3px;
 }
 
+.about-badge-cta:active {
+  transform: scale(0.97);
+  transition: transform 100ms ease;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .about-badge-cta:hover,
-  .about-badge-cta:focus-visible {
+  .about-badge-cta:focus-visible,
+  .about-badge-cta:active {
     transform: none;
   }
 
@@ -1356,6 +1363,15 @@ h3 {
   text-align: center;
 }
 
+/* Même tracking que les autres grands titres du site (h1 hero, h2 des
+   cartes simulateurs) : ces deux titres héritent sinon du h2 générique
+   (3rem, aucun letter-spacing) — scopé ici plutôt que sur le h2 global,
+   qui sert aussi d'autres pages non auditées. */
+.resources-partners .section-heading h2,
+.resources-habilitations .section-heading h2 {
+  letter-spacing: -0.025em;
+}
+
 /* Même hauteur pour les 2 cartes plutôt qu'une hauteur dictée par leur
    contenu respectif (très différent entre le mur de partenaires et la
    grille d'habilitations) : indispensable maintenant qu'elles sont visibles
@@ -1403,6 +1419,11 @@ h3 {
   transform: scale(1.1);
 }
 
+.resources-modal-close:active {
+  transform: scale(0.92);
+  transition: transform 100ms ease;
+}
+
 .resources-modal-close:focus-visible {
   outline: none;
 }
@@ -1431,115 +1452,88 @@ body.resources-modal-open {
   font-size: clamp(2rem, min(5vw, 8svh), 3.6rem);
   font-weight: 400;
   line-height: 0.5;
+  letter-spacing: -0.025em;
   text-align: center;
 }
 
-/* Mot cliquable : au repos, un reflet doré balaie le mot en boucle, pour
-   laisser deviner qu'il est cliquable avant même le survol.
-
-   Point technique : avec background-size > 100%, le déplacement réel (en
-   largeur d'élément) induit par un background-position en % ne varie pas
-   linéairement avec ce %, à cause de la formule CSS
-   offset = position% × (taille_conteneur − taille_fond). Un trajet de
-   ±150% (avec un fond à 200%) déplace le fond de 3 largeurs d'élément, soit
-   1,5× la largeur du fond lui-même (2 largeurs) : la boucle retombait donc à
-   mi-motif un passage sur deux, montrant tantôt une traversée complète,
-   tantôt une traversée coupée à mi-mot. Correctif : un trajet de ±100%
-   déplace le fond d'exactement 2 largeurs d'élément — un multiple ENTIER de
-   la largeur du fond — si bien que chaque passage retombe toujours au même
-   point du motif : chaque traversée est complète et identique, sans
-   alternance. */
+/* Simple emphase statique, plus une interaction : ces mots n'ouvrent plus les
+   modales (retiré à la demande de Victor, cf. ressources.html — seuls le
+   clic sur une carte-amorce et le scroll réflexe restent des déclencheurs).
+   Ancienne version : reflet doré animé en boucle + agrandissement au survol,
+   pensés pour signaler "cliquable" — supprimés avec l'interaction elle-même,
+   sinon le mot continuerait de RESSEMBLER à un lien qui ne fait plus rien. */
 .resources-opening-word {
-  position: relative;
   display: inline-block;
   /* La hauteur de ligne du paragraphe (.resources-opening-text, line-height:
      0.5) s'aligne toujours sur son contenu inline le plus haut : tant que ce
      span a un line-height nettement supérieur, il impose sa propre hauteur
      aux deux lignes de la phrase et annule le resserrement du paragraphe —
-     d'où l'interligne resté large malgré le 0.5. 1.0 confirmé encore un peu
-     de jeu sous les jambages ("p", "j"...) au survol du dégradé doré
-     (background-clip: text, clippé à la line-height) ; remonté légèrement à
-     1.05 pour garder une marge de sécurité un peu plus confortable. */
+     d'où l'interligne resté large malgré le 0.5. */
   line-height: 1.05;
   padding-bottom: 0.06em;
-  cursor: pointer;
-  text-decoration-line: none;
-  text-decoration-color: var(--interest-gold);
-  text-decoration-thickness: 1px;
-  text-underline-offset: 0.12em;
-  /* color plein en repli si background-clip: text n'est pas supporté. */
-  color: var(--ink);
-  background-image: linear-gradient(
-    100deg,
-    var(--ink) 0%,
-    var(--ink) 40%,
-    var(--logo-gold) 50%,
-    var(--ink) 60%,
-    var(--ink) 100%
-  );
-  background-size: 200% 100%;
-  background-position: 100% 0%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: resources-word-shimmer 2s linear infinite;
-  transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1), text-decoration-color 220ms ease;
+  color: var(--interest-gold);
 }
 
-@keyframes resources-word-shimmer {
-  to {
-    background-position: -100% 0%;
-  }
-}
-
-/* text-decoration-line (et non le raccourci text-decoration) : le raccourci
-   aurait réinitialisé text-decoration-thickness à sa valeur par défaut
-   (épaisse) à chaque survol, écrasant le trait fin défini ci-dessus. */
-.resources-opening-word:hover,
-.resources-opening-word:focus-visible {
-  text-decoration-line: underline;
-  transform: scale(1.02);
-  /* Le reflet en boucle cède la place à un dégradé plein et fixe : on coupe
-     l'animation et on remet le dégradé à la taille de l'élément (au lieu des
-     220% du reflet), sinon seule une portion du dégradé plein serait visible. */
-  animation: none;
-  background-size: 100% 100%;
-  background-position: 0% 0%;
-  background-image: linear-gradient(120deg, var(--logo-gold), var(--interest-gold));
-  color: transparent;
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.resources-opening-word:focus-visible {
-  outline: none;
-}
-
-/* Animation continue en boucle : désactivée sous prefers-reduced-motion,
-   remplacée par la couleur --ink statique. */
 @media (prefers-reduced-motion: reduce) {
-  .resources-opening-word {
-    animation: none;
-    background-image: none;
-    color: var(--ink);
-    -webkit-text-fill-color: var(--ink);
+  .resources-opening-teaser-front:active,
+  .resources-opening-teaser-back:active,
+  .resources-modal-close:active {
+    transform: none;
   }
 }
 
+/* Vrai <button> (ouvre une carte sur ressources.html, scrolle jusqu'à la
+   section suivante sur à-propos.html) : on repart de l'apparence native
+   (focus clavier gratuit) et on l'efface, même logique que
+   .resources-opening-teaser plus bas. */
 .resources-opening-hint {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  margin: 0;
+  /* S'ajoute au gap partagé de 40px de .resources-opening (logo/phrase/
+     indication) pour recentrer visuellement "EXPLORER" entre la phrase et
+     le sommet visible des cartes-amorce (position: fixed, cf.
+     .resources-opening-teasers) plutôt que de le laisser collé à la
+     phrase. Dépend de la hauteur d'écran réelle — à ajuster en direct si
+     le centrage ne tombe pas juste. */
+  margin: clamp(40px, 9svh, 100px) 0 0;
+  border: none;
+  background: none;
+  padding: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
   color: var(--muted);
+  font: inherit;
   font-family: var(--sans);
   font-size: 0.76rem;
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   text-align: center;
+  transition: color 200ms ease;
+}
+
+.resources-opening-hint:hover,
+.resources-opening-hint:focus-visible {
+  color: var(--ink);
+}
+
+.resources-opening-hint:focus-visible {
+  outline: 2px solid var(--logo-gold);
+  outline-offset: 4px;
+}
+
+.resources-opening-hint:active {
+  transform: scale(0.97);
+  transition: transform 100ms ease, color 200ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .resources-opening-hint:active {
+    transform: none;
+  }
 }
 
 /* Chevron animé sous l'indication texte : un signal graphique se capte en
@@ -1603,14 +1597,14 @@ body.resources-modal-open {
 
 .resources-opening-teaser {
   position: absolute;
-  bottom: -76px;
+  bottom: -78px;
   left: 50%;
-  width: min(96vw, 540px);
-  height: 240px;
+  width: min(96vw, 527px);
+  height: 255px;
   margin: 0;
   display: flex;
   align-items: flex-start;
-  padding-top: 34px;
+  padding-top: 36px;
   border: 1px solid var(--line);
   border-bottom: none;
   border-radius: 32px 32px 0 0;
@@ -1631,8 +1625,8 @@ body.resources-modal-open {
 .resources-opening-teaser-back {
   z-index: 1;
   justify-content: flex-start;
-  padding-left: 36px;
-  transform: translate(calc(-50% - 160px), 26px) rotate(-4deg) scale(0.94);
+  padding-left: 31px;
+  transform: translate(calc(-50% - 246px), 22px) rotate(-4deg) scale(0.94);
 }
 
 .resources-opening-teaser-front {
@@ -1653,7 +1647,20 @@ body.resources-modal-open {
 
 .resources-opening-teaser-back:hover,
 .resources-opening-teaser-back:focus-visible {
-  transform: translate(calc(-50% - 195px), -6px) rotate(-6deg) scale(1.02);
+  transform: translate(calc(-50% - 281px), -5px) rotate(-6deg) scale(1.02);
+}
+
+/* Placées après :hover : au press (souris restée en hover pendant le clic,
+   ou simple tap tactile sans hover), la carte se tasse depuis sa position
+   de repos plutôt que de rester figée en position survolée/relevée. */
+.resources-opening-teaser-front:active {
+  transform: translate(-50%, 0) rotate(0deg) scale(0.96);
+  transition: transform 100ms ease;
+}
+
+.resources-opening-teaser-back:active {
+  transform: translate(calc(-50% - 246px), 22px) rotate(-4deg) scale(0.9);
+  transition: transform 100ms ease;
 }
 
 .resources-opening-teaser:focus-visible {
@@ -1665,7 +1672,12 @@ body.resources-modal-open {
   width: 100%;
   color: var(--muted);
   font-family: var(--serif);
-  font-size: 1.75rem;
+  /* Cartes agrandies (cf. .resources-opening-teaser) pour laisser grossir
+     ce libellé, quasiment à la hauteur de .resources-opening-text (clamp
+     2rem–3.6rem) sans l'égaler tout à fait — la phrase d'ouverture reste
+     la plus grande, hiérarchie conservée. Réduit de ~15% par rapport au
+     premier agrandissement, jugé trop imposant. */
+  font-size: clamp(1.62rem, 3.6vw, 2.55rem);
 }
 
 .resources-opening-teaser-front .resources-opening-teaser-label {
@@ -1674,6 +1686,45 @@ body.resources-modal-open {
 
 .resources-opening-teaser-back .resources-opening-teaser-label {
   text-align: left;
+  /* "Diplômes & habilitations" est trop long pour tenir sur une ligne dans
+     la portion qui dépasse de sous "Partenaires" — largeur contrainte pour
+     que le retour à la ligne se fasse DANS cette portion visible plutôt
+     qu'au bord de la carte entière (qui, lui, tombe sous "Partenaires" et
+     coupe le texte en plein mot). Valeur à ajuster si le libellé change. */
+  max-width: 212px;
+}
+
+/* En dessous d'environ 1160px de large, le décalage de -290px (ci-dessus)
+   pousse la carte de fond hors de l'écran par la gauche : sa demi-largeur
+   (620px de carte, quasi fixe dès qu'on dépasse ~646px de viewport) ne
+   laisse plus assez de place. Décalage et empiètement réduits ici — le
+   libellé repasse à 3 lignes courtes plutôt que 2 (moins de largeur
+   disponible), toujours dans la portion visible. Vérifié à 1024px ; à
+   surveiller sur les fenêtres de navigateur étroites. */
+@media (max-width: 1160px) {
+  .resources-opening-teaser {
+    width: min(90vw, 391px);
+    height: 221px;
+  }
+
+  .resources-opening-teaser-back {
+    padding-top: 20px;
+    transform: translate(calc(-50% - 153px), 17px) rotate(-4deg) scale(0.94);
+  }
+
+  .resources-opening-teaser-back:hover,
+  .resources-opening-teaser-back:focus-visible {
+    transform: translate(calc(-50% - 174px), 3px) rotate(-6deg) scale(1);
+  }
+
+  .resources-opening-teaser-back:active {
+    transform: translate(calc(-50% - 153px), 17px) rotate(-4deg) scale(0.9);
+  }
+
+  .resources-opening-teaser-back .resources-opening-teaser-label {
+    max-width: 110px;
+    font-size: 1.36rem;
+  }
 }
 
 .partner-group {
@@ -1897,34 +1948,23 @@ body.resources-modal-open {
   z-index: -1;
 }
 
+/* Pas de transition sur stroke-dashoffset (délibéré) : --segment-progress
+   est mis à jour en continu pendant le scroll (toutes les ~16ms via rAF,
+   cf. setupHabilitationsScrollProgress dans ressources.html) — un trait
+   piloté par un geste continu doit le suivre au pixel près, comme le mur de
+   partenaires colle au doigt pendant le drag (principe de suivi 1:1 du
+   skill apple-design). Une version précédente ajoutait une transition de
+   0,7s pour un effet de "poursuite" — le trait restait alors visiblement en
+   retard sur le scroll en permanence, ce qui lisait comme un rendu mou
+   plutôt que fluide. Sous prefers-reduced-motion, aucune différence de
+   comportement à faire ici : renderHabilitationsStatic (cf. script) pose
+   --segment-progress à 1 directement, sans jamais passer par le scroll. */
 .habilitation-path-segment {
   fill: none;
   stroke: var(--logo-gold);
   stroke-width: 2;
   stroke-dasharray: 1;
   stroke-dashoffset: calc(1 - var(--segment-progress, 0));
-}
-
-/* Léger différé entre le scroll et le tracé du trait, pour un rendu plus
-   animé/moderne qu'un suivi 1:1 instantané — seulement si l'utilisateur
-   accepte les animations : sous prefers-reduced-motion, renderHabilitationsStatic
-   pose --segment-progress directement à 1 (cf. script) sans jamais repasser
-   par le scroll ; sans cette media query, ce seul saut 0→1 initial serait lui
-   aussi animé, ce qu'on veut justement éviter sous reduced-motion. */
-@media (prefers-reduced-motion: no-preference) {
-  .habilitation-path-segment {
-    /* Durée seule, sans transition-delay : --segment-progress est mis à
-       jour en continu pendant le scroll (toutes les ~16 ms via rAF, cf.
-       script). Un delay se relancerait à chaque mise à jour et ne
-       laisserait jamais le temps à la transition de démarrer tant que ça
-       scrolle — la ligne resterait figée jusqu'à l'arrêt du scroll. Une
-       durée plus longue seule suffit à créer l'effet de "poursuite" en
-       douceur : chaque nouvelle valeur est interpolée en douceur depuis la
-       position actuelle du trait, qui reste donc visiblement en retard sur
-       le scroll pendant qu'on avance.
-    */
-    transition: stroke-dashoffset 0.7s cubic-bezier(0.22, 1, 0.36, 1);
-  }
 }
 
 .habilitation-seal-row {
@@ -8351,6 +8391,18 @@ body[data-mode="scpi"] .tool-field[data-field="dureeTotale"] .tool-input-wrap in
     transform: translate(calc(-50% - 110px), 10px) rotate(-6deg) scale(0.96);
   }
 
+  /* "Diplômes & habilitations" (ancien libellé : "Habilitations" seul) ne
+     tient plus dans la portion visible à cette largeur d'écran — la marge
+     disponible (~45px, plafonnée par la largeur de "Partenaires" devant)
+     ne dépend quasiment pas du décalage ci-dessus, donc pas de réglage qui
+     fasse mieux tenir la phrase entière ici. Taille réduite en
+     conséquence ; la carte une fois ouverte affiche de toute façon le
+     titre complet et net. À revoir séparément si ça reste trop serré. */
+  .resources-opening-teaser-back .resources-opening-teaser-label {
+    max-width: 42px;
+    font-size: 0.82rem;
+  }
+
   /* Révèle les 2 bandes supplémentaires du mur de partenaires (cf. règle de
      base plus haut, masquées par défaut) : format vertical du téléphone,
      plus de hauteur disponible qu'en largeur, donc plus de lignes plutôt
@@ -8416,7 +8468,7 @@ body[data-mode="scpi"] .tool-field[data-field="dureeTotale"] .tool-input-wrap in
   }
 
   .resources-opening-teaser-label {
-    font-size: 1.2rem;
+    font-size: 1.35rem;
   }
 
   .cta-button {
