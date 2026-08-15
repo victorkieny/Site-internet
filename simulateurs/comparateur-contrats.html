@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Comparateur de contrats | Simulateur</title>
+    <link rel="icon" href="../favicon.ico" sizes="any">
+    <link rel="icon" href="../assets/favicon-96x96.png" type="image/png" sizes="96x96">
+    <link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+    <link rel="stylesheet" href="../styles.css">
+  </head>
+  <body class="tool-body">
+    <main class="tool-page" aria-labelledby="tool-page-title">
+      <nav class="main-nav" aria-label="Navigation principale">
+        <input type="checkbox" id="nav-toggle" class="nav-toggle-checkbox" aria-label="Menu de navigation">
+        <label for="nav-toggle" class="main-nav-scrim" aria-hidden="true"></label>
+        <div class="main-nav-panel">
+          <a href="../index.html">Accueil</a>
+          <a href="../simulateurs.html" aria-current="page">Simulateurs</a>
+          <a href="../ressources.html">Ressources</a>
+          <a href="../a-propos.html">À propos</a>
+          <a class="nav-cta" href="../rdv.html">
+            Prendre RDV
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M5 12h14"></path>
+              <path d="m13 6 6 6-6 6"></path>
+            </svg>
+          </a>
+        </div>
+        <label for="nav-toggle" class="nav-toggle" aria-hidden="true">
+          <svg class="nav-toggle-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 7h16"></path>
+            <path d="M4 12h16"></path>
+            <path d="M4 17h16"></path>
+          </svg>
+        </label>
+      </nav>
+      <nav class="tool-nav" aria-label="Navigation du simulateur">
+        <h1 id="tool-page-title">Comparateur de contrats</h1>
+      </nav>
+
+      <section class="tool-layout">
+        <section class="tool-overview" aria-label="Synthèse et hypothèses">
+          <aside class="tool-params" aria-label="Hypothèses">
+            <div class="tool-params-title">
+              <h2><button type="button" id="zero-fields" class="tool-zero-fields" aria-label="Hypothèses — mettre le versement à zéro" title="Mettre le versement à zéro">Hypothèses</button></h2>
+              <button type="button" id="reset-fields" class="tool-reset">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 1 2.64 6.36"></path><path d="M3 21v-6h6"></path></svg>
+                Réinitialiser
+              </button>
+            </div>
+            <div id="fields" class="tool-fields"></div>
+            <div class="contract-fields" id="contract-fields" aria-label="Hypothèses par contrat"></div>
+          </aside>
+
+          <div class="tool-secondary-column">
+            <div class="tool-summary" id="summary"></div>
+
+            <section class="tool-detail" aria-label="Comparaison détaillée">
+              <div class="tool-view-toggle" aria-label="Affichage des résultats">
+                <button class="is-active" type="button" data-view="chart" aria-label="Graphique" title="Graphique">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4v16h16"></path><path d="M7 15l4-5 3 3 5-6"></path></svg>
+                </button>
+                <button type="button" data-view="table" aria-label="Calendrier" title="Calendrier">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg>
+                </button>
+              </div>
+
+              <div class="tool-detail-panels">
+                <div class="tool-chart-card" id="chart-panel">
+                  <div class="tool-card-title">
+                    <h2>Valeur des contrats dans le temps</h2>
+                  </div>
+                  <div class="line-chart" id="chart" aria-label="Graphique de comparaison des deux contrats"></div>
+                </div>
+                <div class="tool-table-card" id="table-panel" hidden>
+                  <div class="tool-card-title">
+                    <h2>Synthèse par échéance</h2>
+                  </div>
+                  <div class="tool-table-wrap">
+                    <table id="projection-table"></table>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script src="shared.js"></script>
+    <script>
+      // ---------------------------------------------------------------
+      // Calcul — logique fournie et validée (cross-vérifiée par deux
+      // méthodes indépendantes), reprise telle quelle.
+      // ---------------------------------------------------------------
+
+      // Nombre d'années nécessaires pour que la valeur du contrat rattrape
+      // les droits d'entrée prélevés au départ.
+      function pointAmortissement(capital, droitsEntreePct, rendementNetPct) {
+        if (droitsEntreePct === 0) return 0;
+        if (rendementNetPct <= 0) return null;
+        return Math.log(capital / (capital * (1 - droitsEntreePct / 100))) / Math.log(1 + rendementNetPct / 100);
+      }
+
+      // Année (non entière) à laquelle les deux courbes de valeur se croisent.
+      function anneeCroisement(investiA, investiB, netA, netB) {
+        const a = 1 + netA / 100, b = 1 + netB / 100;
+        if (a === b) return null;
+        const diffLog = Math.log(b / a);
+        return diffLog === 0 ? null : Math.log(investiA / investiB) / diffLog;
+      }
+
+      function comparerContrats({ capital, horizonAnnees, contratA, contratB }) {
+        const netA = contratA.rendementPct - contratA.fraisGestionPct;
+        const netB = contratB.rendementPct - contratB.fraisGestionPct;
+        const investiA = capital * (1 - contratA.droitsEntreePct / 100);
+        const investiB = capital * (1 - contratB.droitsEntreePct / 100);
+        const amortissementA = pointAmortissement(capital, contratA.droitsEntreePct, netA);
+        const amortissementB = pointAmortissement(capital, contratB.droitsEntreePct, netB);
+
+        const serieAnnuelle = Array.from({ length: horizonAnnees + 1 }, (_, an) => ({
+          annee: an,
+          valeurA: investiA * Math.pow(1 + netA / 100, an),
+          valeurB: investiB * Math.pow(1 + netB / 100, an),
+          capitalInitial: capital,
+        }));
+
+        const xCroisement = anneeCroisement(investiA, investiB, netA, netB);
+        const croisementValide = xCroisement !== null && xCroisement > 0 && xCroisement <= horizonAnnees;
+        const croisementAnnee = croisementValide ? xCroisement : null;
+        const croisementValeur = croisementValide ? investiA * Math.pow(1 + netA / 100, xCroisement) : null;
+
+        const finalA = serieAnnuelle[horizonAnnees].valeurA;
+        const finalB = serieAnnuelle[horizonAnnees].valeurB;
+
+        const echeances = [1, 2, 3, 5, 7, 10, 12, 15, 20, 25, 30, 35, 40, 45, 50].filter((a) => a <= horizonAnnees);
+        if (!echeances.includes(horizonAnnees)) echeances.push(horizonAnnees);
+        const anneeCroisementArrondie = croisementValide ? Math.round(xCroisement) : null;
+        if (anneeCroisementArrondie > 0 && !echeances.includes(anneeCroisementArrondie)) echeances.push(anneeCroisementArrondie);
+        echeances.sort((a, b) => a - b);
+
+        const tableau = echeances.map((an) => {
+          const valeurA = investiA * Math.pow(1 + netA / 100, an);
+          const valeurB = investiB * Math.pow(1 + netB / 100, an);
+          const ecart = valeurB - valeurA;
+          return {
+            annee: an, valeurA, valeurB, ecart,
+            // seuil "egalite" arbitraire (< 50€), pour l'affichage du tableau uniquement — pas une égalité mathématique stricte
+            meilleur: Math.abs(ecart) < 50 ? "egalite" : ecart > 0 ? "B" : "A",
+            estCroisement: anneeCroisementArrondie !== null && an === anneeCroisementArrondie,
+            estDernier: an === horizonAnnees,
+          };
+        });
+
+        return {
+          netA, netB, investiA, investiB, amortissementA, amortissementB, croisementAnnee, croisementValeur,
+          serieAnnuelle, finalA, finalB, gainA: finalA - capital, gainB: finalB - capital,
+          ecartFinal: finalB - finalA, tableau,
+        };
+      }
+
+      // ---------------------------------------------------------------
+      // Données et hypothèses
+      // ---------------------------------------------------------------
+
+      const defaults = {
+        capital: 100000,
+        horizonAnnees: 10,
+        contratA: { nom: "Contrat Haut de Gamme", droitsEntreePct: 4.8, rendementPct: 4, fraisGestionPct: 1 },
+        contratB: { nom: "Contrat Classique", droitsEntreePct: 0, rendementPct: 2, fraisGestionPct: 1 }
+      };
+
+      const state = {
+        values: structuredClone(defaults)
+      };
+      document.body.dataset.mode = "comparateur";
+
+      const topLevelFieldDefinitions = [
+        { key: "capital", label: "Versement initial", min: 1000, max: 500000, step: 1000, suffix: "€" },
+        { key: "horizonAnnees", label: "Horizon de simulation", min: 1, max: 50, step: 1, suffix: "ans" }
+      ];
+
+      // Communs aux deux contrats — appliqués deux fois (A et B) sur leurs
+      // propres valeurs, cf. renderContractCard.
+      const contractFieldDefinitions = [
+        { key: "droitsEntreePct", label: "Droits d'entrée", min: 0, max: 10, step: 0.1, suffix: "%" },
+        { key: "rendementPct", label: "Rendement annuel", min: 0, max: 12, step: 0.1, suffix: "%" },
+        { key: "fraisGestionPct", label: "Frais de gestion annuels", min: 0, max: 3, step: 0.05, suffix: "%" }
+      ];
+
+      // ---------------------------------------------------------------
+      // Rendu des champs
+      // ---------------------------------------------------------------
+
+      let outputsRenderFrame = 0;
+      function scheduleRenderOutputs() {
+        if (outputsRenderFrame) return;
+        outputsRenderFrame = requestAnimationFrame(() => {
+          outputsRenderFrame = 0;
+          renderOutputs();
+        });
+      }
+
+      function updateContractNetDisplay(letter) {
+        const contrat = state.values[`contrat${letter}`];
+        const net = document.querySelector(`[data-net-display="${letter}"]`);
+        if (net) net.textContent = `${formatPercent(contrat.rendementPct - contrat.fraisGestionPct)} %`;
+      }
+
+      // Une carte "Contrat A"/"Contrat B" : nom éditable + les 3 curseurs
+      // partagés (via renderNumberField) + le rendement net en lecture
+      // seule. Appelée une fois par contrat pour ne pas dupliquer ce balisage.
+      function renderContractCard(letter, contratValues) {
+        const card = document.createElement("div");
+        card.className = "tool-result-card contract-card";
+
+        const nameInput = document.createElement("input");
+        nameInput.type = "text";
+        nameInput.className = "contract-name-input";
+        nameInput.value = contratValues.nom;
+        nameInput.setAttribute("aria-label", `Nom du contrat ${letter}`);
+        nameInput.addEventListener("input", () => {
+          contratValues.nom = nameInput.value;
+          scheduleRenderOutputs();
+        });
+        card.append(nameInput);
+
+        const fieldsWrap = document.createElement("div");
+        fieldsWrap.className = "tool-fields";
+        const fieldRefreshers = [];
+        contractFieldDefinitions.forEach((field) => {
+          fieldsWrap.append(renderNumberField(field, contratValues, fieldRefreshers, {
+            onValueChange: () => {
+              updateContractNetDisplay(letter);
+              scheduleRenderOutputs();
+            },
+            onCommit: () => renderOutputs()
+          }));
+        });
+        card.append(fieldsWrap);
+
+        const netDisplay = document.createElement("div");
+        netDisplay.className = "capital-shares";
+        netDisplay.innerHTML = `
+          <span>
+            <small>Rendement net / an</small>
+            <strong data-net-display="${letter}"></strong>
+          </span>
+        `;
+        card.append(netDisplay);
+
+        return card;
+      }
+
+      function renderFields() {
+        const fields = document.querySelector("#fields");
+        const fieldRefreshers = [];
+        fields.innerHTML = "";
+
+        topLevelFieldDefinitions.forEach((field) => {
+          fields.append(renderNumberField(field, state.values, fieldRefreshers, {
+            onValueChange: () => scheduleRenderOutputs(),
+            onCommit: () => renderOutputs()
+          }));
+        });
+
+        const contractFields = document.querySelector("#contract-fields");
+        contractFields.innerHTML = "";
+        contractFields.append(renderContractCard("A", state.values.contratA));
+        contractFields.append(renderContractCard("B", state.values.contratB));
+        updateContractNetDisplay("A");
+        updateContractNetDisplay("B");
+      }
+
+      // ---------------------------------------------------------------
+      // Rendu des résultats
+      // ---------------------------------------------------------------
+
+      const ICON_CROSSING = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h6l4 12h6"></path><path d="M4 18h6l4-12h6"></path></svg>';
+
+      function formatAmortissement(value) {
+        if (value === null) return "Non récupérable";
+        if (value === 0) return "Immédiat (0 frais)";
+        return `${formatPercent(value)} ${value >= 2 ? "ans" : "an"}`;
+      }
+
+      function formatEcart(value) {
+        const signe = value > 0 ? "+" : value < 0 ? "−" : "";
+        return `${signe}${formatMoney(Math.abs(value))}`;
+      }
+
+      function renderSummary(resultat) {
+        const summary = document.querySelector("#summary");
+        const { contratA, contratB, horizonAnnees } = state.values;
+
+        const gagnant = resultat.ecartFinal > 0 ? contratB.nom : resultat.ecartFinal < 0 ? contratA.nom : null;
+
+        const croisementBanner = resultat.croisementAnnee !== null ? `
+          <div class="tool-status-banner is-ok" role="status">
+            <span class="tool-status-icon" aria-hidden="true">${ICON_CROSSING}</span>
+            <div class="tool-status-copy">
+              <strong>Croisement à ${formatPercent(resultat.croisementAnnee)} ans</strong>
+              <span>Les deux contrats atteignent alors ${formatMoney(resultat.croisementValeur)}.</span>
+            </div>
+          </div>
+        ` : "";
+
+        const insight = gagnant
+          ? `Écart à l'échéance (${contratB.nom} − ${contratA.nom}) : ${formatEcart(resultat.ecartFinal)} — ${gagnant} l'emporte à ${horizonAnnees} ans.`
+          : `Écart à l'échéance (${contratB.nom} − ${contratA.nom}) : les deux contrats sont à égalité à ${horizonAnnees} ans.`;
+
+        summary.innerHTML = `
+          <article class="tool-result-card tool-result-editorial">
+            <div class="tool-summary-title">
+              <h2>Synthèse</h2>
+            </div>
+            <div class="tool-hero">
+              <div class="tool-hero-panel tool-hero-panel-blue">
+                <span class="tool-hero-label">Contrat A</span>
+                <strong class="tool-hero-amount">${formatMoney(resultat.finalA)}</strong>
+              </div>
+              <div class="tool-hero-panel tool-hero-panel-gold">
+                <span class="tool-hero-label">Contrat B</span>
+                <strong class="tool-hero-amount">${formatMoney(resultat.finalB)}</strong>
+              </div>
+            </div>
+            ${croisementBanner}
+            <div class="capital-metrics">
+              <span class="capital-metric-invested">
+                <small>Amortissement — ${contratA.nom}</small>
+                <strong>${formatAmortissement(resultat.amortissementA)}</strong>
+              </span>
+              <span class="capital-metric-interest">
+                <small>Amortissement — ${contratB.nom}</small>
+                <strong>${formatAmortissement(resultat.amortissementB)}</strong>
+              </span>
+            </div>
+            <div class="capital-shares">
+              <span>
+                <small>Gain — ${contratA.nom}</small>
+                <strong>${formatEcart(resultat.gainA)}</strong>
+              </span>
+              <span>
+                <small>Gain — ${contratB.nom}</small>
+                <strong>${formatEcart(resultat.gainB)}</strong>
+              </span>
+            </div>
+            <p class="capital-insight">${insight}</p>
+          </article>
+        `;
+      }
+
+      function renderChartComparaison(resultat) {
+        // serieAnnuelle démarre à l'année 0 (capital initial avant tout
+        // effet rendement) ; le graphique générique suppose une série
+        // 1-indexée (rows[i] = année i+1, comme les autres simulateurs) —
+        // on retire donc l'année 0, déjà représentée par la ligne de
+        // référence "capital initial".
+        const rows = resultat.serieAnnuelle.slice(1);
+        const capitalInitial = state.values.capital;
+
+        renderLineChart(rows, {
+          series: [
+            { role: "invested", label: "Capital initial", values: rows.map(() => capitalInitial) },
+            { role: "capital", label: "Contrat A", values: rows.map((r) => r.valeurA) },
+            { role: "gains", label: "Contrat B", values: rows.map((r) => r.valeurB) }
+          ],
+          ariaLabel: "Évolution de la valeur des deux contrats dans le temps"
+        });
+      }
+
+      function renderTableSynthese(resultat) {
+        const { contratA, contratB } = state.values;
+        const headers = ["Année", contratA.nom, contratB.nom, "Écart (B − A)", "Meilleur contrat"];
+        const mapper = (row) => [
+          row.annee,
+          formatMoney(row.valeurA),
+          formatMoney(row.valeurB),
+          formatEcart(row.ecart),
+          row.meilleur === "egalite" ? "Égalité" : row.meilleur === "A" ? contratA.nom : contratB.nom
+        ];
+
+        renderTable(headers, mapper, resultat.tableau, {
+          rowClassName: (row) => row.estCroisement ? "table-row-highlight" : ""
+        });
+      }
+
+      function renderOutputs() {
+        const resultat = comparerContrats(state.values);
+        renderSummary(resultat);
+        renderChartComparaison(resultat);
+        renderTableSynthese(resultat);
+      }
+
+      function render() {
+        renderFields();
+        renderOutputs();
+      }
+
+      // ---------------------------------------------------------------
+      // Actions et navigation
+      // ---------------------------------------------------------------
+
+      document.querySelector("#zero-fields").addEventListener("click", () => {
+        state.values.capital = 0;
+        withHeightTransition(document.querySelector(".tool-params"), render);
+      });
+
+      document.querySelector("#reset-fields").addEventListener("click", () => {
+        state.values = structuredClone(defaults);
+        withHeightTransition(document.querySelector(".tool-params"), render);
+      });
+
+      document.querySelectorAll(".tool-view-toggle button").forEach((button) => {
+        button.addEventListener("click", () => {
+          const applyView = () => {
+            document.querySelectorAll(".tool-view-toggle button").forEach((item) => {
+              item.classList.toggle("is-active", item === button);
+            });
+            document.querySelector("#chart-panel").hidden = button.dataset.view !== "chart";
+            document.querySelector("#table-panel").hidden = button.dataset.view !== "table";
+          };
+          if (document.startViewTransition) {
+            document.startViewTransition(applyView);
+          } else {
+            applyView();
+          }
+        });
+      });
+
+      render();
+    </script>
+  </body>
+</html>

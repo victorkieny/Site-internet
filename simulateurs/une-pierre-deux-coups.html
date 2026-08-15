@@ -12,8 +12,28 @@
   <body class="tool-body">
     <main class="tool-page" aria-labelledby="tool-page-title">
       <nav class="main-nav" aria-label="Navigation principale">
-        <a href="../index.html">Accueil</a>
-        <a href="../simulateurs.html" aria-current="page">Simulateurs</a>
+        <input type="checkbox" id="nav-toggle" class="nav-toggle-checkbox" aria-label="Menu de navigation">
+        <label for="nav-toggle" class="main-nav-scrim" aria-hidden="true"></label>
+        <div class="main-nav-panel">
+          <a href="../index.html">Accueil</a>
+          <a href="../simulateurs.html" aria-current="page">Simulateurs</a>
+          <a href="../ressources.html">Ressources</a>
+          <a href="../a-propos.html">À propos</a>
+          <a class="nav-cta" href="../rdv.html">
+            Prendre RDV
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M5 12h14"></path>
+              <path d="m13 6 6 6-6 6"></path>
+            </svg>
+          </a>
+        </div>
+        <label for="nav-toggle" class="nav-toggle" aria-hidden="true">
+          <svg class="nav-toggle-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 7h16"></path>
+            <path d="M4 12h16"></path>
+            <path d="M4 17h16"></path>
+          </svg>
+        </label>
       </nav>
       <nav class="tool-nav" aria-label="Navigation du simulateur">
         <h1 id="tool-page-title">Une pierre deux coups</h1>

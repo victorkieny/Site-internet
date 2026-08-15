@@ -2232,6 +2232,13 @@ body.resources-modal-open {
     linear-gradient(112deg, #313f4a 0%, #3c3b38 50%, #5a4732 100%);
 }
 
+.simulator-choice-comparateur {
+  background:
+    radial-gradient(circle at 50% 0%, rgba(140, 181, 210, 0.15), transparent 40%),
+    radial-gradient(circle at 50% 100%, rgba(210, 169, 101, 0.15), transparent 42%),
+    linear-gradient(112deg, #38424a 0%, #423f3a 55%, #6b5636 100%);
+}
+
 .simulator-choice-featured::before {
   content: "";
   position: absolute;
