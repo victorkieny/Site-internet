@@ -1115,10 +1115,16 @@ h3 {
    ratio 4:5 fixe (proportions du fichier fourni), même langage de matière
    que les autres cadres du site (bordure --line, ombre --shadow) plutôt
    qu'un cadre nu ou un avatar circulaire. 275px = 220px +25%, demandé par
-   Victor après le premier réglage. */
+   Victor après le premier réglage. display:block + margin:0 auto : sur
+   desktop la colonne fait exactement 275px donc ça ne change rien, mais sur
+   mobile .about-portrait-rail passe en pleine largeur (cf. media query plus
+   bas) — sans ça, une image (inline par défaut) reste collée à gauche au
+   lieu d'être centrée, signalé par Victor. */
 .about-portrait {
+  display: block;
   width: 100%;
   max-width: 275px;
+  margin: 0 auto;
   aspect-ratio: 4 / 5;
   object-fit: cover;
   border-radius: 18px;
