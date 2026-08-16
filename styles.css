@@ -7565,15 +7565,47 @@ body[data-mode="scpi"] .tool-field[data-field="dureeTotale"] .tool-input-wrap in
   .simulator-choice-grid {
     grid-template-columns: 1fr;
     width: min(100%, 420px);
+    gap: 12px;
   }
 
+  /* Cartes nettement réduites par rapport à la version précédente (titre à
+     3.15rem/13vw, padding 22px uniforme) : sur téléphone, empilées en 1
+     colonne, elles formaient 4 gros blocs répétitifs plutôt que des cartes
+     de choix élégantes. Titre resserré pour tenir sur une seule ligne même
+     pour "Une pierre deux coups"/"Comparateur de contrats" (vérifié à
+     375-430px), reste du contenu resserré en conséquence. */
   .simulator-choice {
     min-height: 0;
-    padding: 22px;
+    padding: 20px 22px;
+  }
+
+  .simulator-choice-featured {
+    gap: 9px;
   }
 
   .simulator-choice-featured h2 {
-    font-size: clamp(2.35rem, 13vw, 3.15rem);
+    font-size: clamp(1.5rem, 7vw, 1.85rem);
+    line-height: 1.05;
+  }
+
+  .simulator-choice-featured p {
+    font-size: 0.85rem;
+    line-height: 1.4;
+  }
+
+  .simulator-choice-tags {
+    padding-top: 2px;
+  }
+
+  .simulator-choice-tags span {
+    min-height: 24px;
+    padding: 0 9px;
+    font-size: 0.66rem;
+  }
+
+  .simulator-choice-action {
+    min-height: 30px;
+    padding-top: 10px;
   }
 
   .tool-page {
@@ -8313,10 +8345,36 @@ body[data-mode="scpi"] .tool-field[data-field="dureeTotale"] .tool-input-wrap in
 }
 
 @media (max-width: 560px) {
+  /* Pied de page beaucoup plus discret sur téléphone : margin-top/padding-top
+     divisés par ~3 (24px+24px de base → 4px+14px), texte légèrement réduit.
+     Sur .home-page en particulier, ce resserrement se cumulait avec le gap
+     de page (46px, cf. plus bas) pour un total proche de 95px de vide avant
+     le pied de page — beaucoup trop haut sur un écran de téléphone, cf.
+     capture. */
+  .site-footer {
+    margin-top: 4px;
+    padding-top: 14px;
+    gap: 10px;
+  }
+
+  .site-footer-note + .site-footer-bottom {
+    padding-top: 12px;
+  }
+
   .site-footer-bottom {
     flex-direction: column;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
+  }
+
+  .site-footer-copy,
+  .site-footer-links a,
+  .site-footer-email {
+    font-size: 0.78rem;
+  }
+
+  .site-footer-links {
+    gap: 4px 14px;
   }
 
   .page {
@@ -8330,8 +8388,8 @@ body[data-mode="scpi"] .tool-field[data-field="dureeTotale"] .tool-input-wrap in
   }
 
   .home-page {
-    padding: 68px 14px 46px;
-    gap: 46px;
+    padding: 68px 14px 32px;
+    gap: 28px;
   }
 
   .home-page::before {
@@ -8343,8 +8401,13 @@ body[data-mode="scpi"] .tool-field[data-field="dureeTotale"] .tool-input-wrap in
     padding: 16px 20px 32px;
   }
 
+  /* 96px → 68px : sur téléphone le logo dominait l'écran d'ouverture,
+     disproportionné par rapport à la phrase/au titre juste en dessous (cf.
+     capture) — même réduction reprise sur .resources-opening/.simulator-logo
+     et la règle .brand-logo générique ci-dessous, pour rester cohérent sur
+     les 4 écrans d'ouverture (accueil, ressources, à propos, simulateurs). */
   .home-hero .brand-logo {
-    width: 96px;
+    width: 68px;
     margin-bottom: 0;
   }
 
@@ -8356,51 +8419,103 @@ body[data-mode="scpi"] .tool-field[data-field="dureeTotale"] .tool-input-wrap in
   }
 
   .resources-opening .brand-logo {
-    width: 96px;
+    width: 68px;
     margin-bottom: 0;
   }
 
+  /* Le format "cartes qui se tirent" (empilées, tournées, décalées pour
+     laisser deviner la carte du dessous) fonctionne en largeur desktop mais
+     ne tient géométriquement pas sur téléphone : le peu d'espace qui dépasse
+     de sous la carte de devant (~45px max, plafonné par sa propre largeur)
+     ne peut jamais afficher "Diplômes & habilitations" en entier, quel que
+     soit le réglage — essayé et documenté sur plusieurs itérations,
+     abandonné ici. Sur téléphone, les deux cartes redeviennent deux blocs
+     simples, empilés verticalement, pleine largeur : plus de position:fixed
+     collée au bas de l'écran (qui laissait un grand vide au-dessus), plus de
+     rotation/décalage — juste deux boutons nets avec leur libellé complet et
+     lisible. Ce bloc redevient un enfant normal de la grille .resources-
+     opening (position: static), qui hérite donc de son gap: 40px partagé
+     avec le logo/la phrase/"Explorer" au-dessus — plus besoin de marge
+     dédiée. */
   .resources-opening-teasers {
-    width: min(94vw, 400px);
+    position: static;
+    width: 100%;
+    max-width: 340px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    transform: none;
   }
 
-  .resources-opening-teaser {
-    bottom: -58px;
-    width: min(84vw, 300px);
-    height: 176px;
-    padding-top: 26px;
-  }
-
-  /* Carte de devant resserrée (84vw au lieu de 92vw, ci-dessus) pour dégager
-     de la marge sur les côtés : sans ça, aucun décalage de la carte de fond
-     ne suffit à la faire dépasser, elle reste entièrement cachée derrière
-     "Partenaires" (bug signalé — "seule la carte partenaire apparaît").
-     Largeur propre, plus étroite que .resources-opening-teaser-front : une
-     carte de fond plus étroite laisse la place nécessaire au décalage tout
-     en limitant ce qui sort du viewport. Un léger débord à gauche est
-     volontaire et cohérent avec le reste de l'écran (cartes déjà pensées
-     pour déborder en bas, cf. .resources-opening-teaser bottom négatif). */
+  .resources-opening-teaser,
+  .resources-opening-teaser-front,
   .resources-opening-teaser-back {
-    width: min(58vw, 185px);
-    padding-left: 14px;
-    transform: translate(calc(-50% - 100px), 20px) rotate(-4deg) scale(0.94);
+    position: static;
+    z-index: auto;
+    width: 100%;
+    height: auto;
+    min-height: 88px;
+    padding: 18px 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--line);
+    border-radius: 22px;
+    box-shadow: 0 10px 26px rgba(43, 37, 30, 0.08);
+    transform: none;
   }
 
+  .resources-opening-teaser:active,
+  .resources-opening-teaser-front:active,
+  .resources-opening-teaser-back:active {
+    transform: scale(0.97);
+    transition: transform 100ms ease;
+  }
+
+  .resources-opening-teaser:hover,
+  .resources-opening-teaser:focus-visible,
+  .resources-opening-teaser-front:hover,
+  .resources-opening-teaser-front:focus-visible,
   .resources-opening-teaser-back:hover,
   .resources-opening-teaser-back:focus-visible {
-    transform: translate(calc(-50% - 110px), 10px) rotate(-6deg) scale(0.96);
+    transform: none;
+    box-shadow: 0 10px 26px rgba(43, 37, 30, 0.08);
   }
 
-  /* "Diplômes & habilitations" (ancien libellé : "Habilitations" seul) ne
-     tient plus dans la portion visible à cette largeur d'écran — la marge
-     disponible (~45px, plafonnée par la largeur de "Partenaires" devant)
-     ne dépend quasiment pas du décalage ci-dessus, donc pas de réglage qui
-     fasse mieux tenir la phrase entière ici. Taille réduite en
-     conséquence ; la carte une fois ouverte affiche de toute façon le
-     titre complet et net. À revoir séparément si ça reste trop serré. */
+  @media (prefers-reduced-motion: reduce) {
+    .resources-opening-teaser:active,
+    .resources-opening-teaser-front:active,
+    .resources-opening-teaser-back:active {
+      transform: none;
+    }
+  }
+
+  /* Petit chevron ">" en CSS pur (pas de nouvelle requête réseau) : seule
+     touche qui distingue visuellement ces deux boutons d'un simple texte,
+     pour signaler qu'ils s'ouvrent au tap — cohérent avec le chevron de
+     "Explorer" juste au-dessus, sans dupliquer son SVG. */
+  .resources-opening-teaser::after {
+    content: "";
+    width: 7px;
+    height: 7px;
+    margin-left: 12px;
+    border-right: 1.5px solid var(--muted);
+    border-top: 1.5px solid var(--muted);
+    transform: rotate(45deg);
+    flex-shrink: 0;
+  }
+
   .resources-opening-teaser-back .resources-opening-teaser-label {
-    max-width: 42px;
-    font-size: 0.82rem;
+    width: auto;
+    max-width: none;
+    text-align: center;
+    font-size: 1.5rem;
+  }
+
+  .resources-opening-teaser-front .resources-opening-teaser-label {
+    width: auto;
+    font-size: 1.5rem;
   }
 
   /* Révèle les 2 bandes supplémentaires du mur de partenaires (cf. règle de
@@ -8480,7 +8595,7 @@ body[data-mode="scpi"] .tool-field[data-field="dureeTotale"] .tool-input-wrap in
   }
 
   .brand-logo {
-    width: 96px;
+    width: 68px;
     margin-bottom: 0;
   }
 
@@ -8556,18 +8671,23 @@ body[data-mode="scpi"] .tool-field[data-field="dureeTotale"] .tool-input-wrap in
     width: min(84vw, 300px);
   }
 
+  /* gap porté de 24px (hérité du palier 900px) à 34px : logo/titre/intro
+     collaient directement au premier bloc de cartes, sans respiration entre
+     l'en-tête et le contenu — cf. captures mobile. */
   .simulator-page {
     padding: 68px 12px 34px;
+    gap: 34px;
   }
 
   /* Même padding-top (16px) qu'en mobile sur .home-hero/.resources-opening,
      pour garder le logo au même niveau à cette largeur aussi. */
   .simulator-header {
     padding-top: 16px;
+    gap: 16px;
   }
 
   .simulator-logo {
-    width: 96px;
+    width: 68px;
   }
 
   .simulator-title-block {
