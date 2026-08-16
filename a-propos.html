@@ -112,28 +112,13 @@
         </div>
       </footer>
     </main>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-    <script>
-      (function () {
-        var prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-        // Sous prefers-reduced-motion, on ne touche à rien : tout reste dans
-        // son état CSS par défaut (pleinement visible), aucune classe/inline
-        // style n'est jamais posée par GSAP, donc rien à désactiver en plus.
-        if (prefersReducedMotion || typeof gsap === "undefined") return;
-
-        // Les 3 sections (Parcours / Philosophie de conseil / Engagement)
-        // apparaissent directement dans le flux normal de la page, sans
-        // être masquées derrière un scroll — plus de ScrollTrigger, plus de
-        // bouton "Explorer" (essayés puis abandonnés : trop de complexité
-        // et d'aller-retours pour un simple problème de contenu caché).
-        // Seule animation restante : le fade-up du logo au chargement,
-        // même technique que le hero de l'accueil.
-        var openingLogo = document.querySelector(".about-opening .brand-logo");
-        if (openingLogo) {
-          gsap.set(openingLogo, { opacity: 0, y: 20 });
-          gsap.to(openingLogo, { opacity: 1, y: 0, duration: 0.7, ease: "power2.out" });
-        }
-      })();
-    </script>
+    <!-- Plus aucun script sur cette page : les 3 sections (Parcours /
+         Philosophie de conseil / Engagement) apparaissent directement dans
+         le flux normal de la page (plus de ScrollTrigger, plus de bouton
+         "Explorer", essayés puis abandonnés), et le logo reste fixe au
+         chargement — comme sur toutes les autres pages (accueil, ressources,
+         rdv, simulateurs), aucune n'anime son logo en fondu-montée. Signalé
+         par Victor : seule à-propos.html le faisait encore, c'était un
+         résidu, pas un choix voulu. -->
   </body>
 </html>

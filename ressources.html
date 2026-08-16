@@ -1035,12 +1035,23 @@
           // depuis l'écran d'accueil.
           var previousBackdrop = activeBackdrop && activeBackdrop !== backdrop ? activeBackdrop : null;
 
+          // true seulement si previousBackdrop vient du bloc juste en dessous
+          // (carte de fond ouverte en silence), jamais d'un vrai enchaînement
+          // utilisateur — distingue les deux cas plus bas : l'un doit garder
+          // l'animation de pile (rotation), l'autre non (cf. leur commentaire
+          // respectif à l'endroit où chacun est lu).
+          var syntheticPreviousBackdrop = false;
+
           // Invariant : "expertise" ne doit JAMAIS être visible sans
           // "partenaires" en arrière-plan décalée derrière — y compris si on
           // clique directement sur "expertise" sans être jamais passé par
           // "partenaires". Dans ce cas précis, on ouvre "partenaires" en
           // silence pour qu'elle serve de carte de fond dès la première
-          // apparition, exactement comme dans l'enchaînement normal.
+          // apparition, exactement comme dans l'enchaînement normal. Cette
+          // carte de fond reste néanmoins synthétique (l'utilisateur n'a rien
+          // enchaîné lui-même) : "expertise" doit s'ouvrir normalement (tirée
+          // de sa propre carte-amorce, cf. syntheticPreviousBackdrop plus
+          // bas), pas avec l'effet de bascule d'une vraie pile.
           if (id === "habilitations" && !previousBackdrop) {
             var partnersBackdrop = getBackdrop("partners");
             if (partnersBackdrop && partnersBackdrop !== backdrop) {
@@ -1059,6 +1070,7 @@
                 playPartnersContent(partnersCard);
               }
               previousBackdrop = partnersBackdrop;
+              syntheticPreviousBackdrop = true;
             }
           }
 
@@ -1152,15 +1164,23 @@
               }
             }
 
-            // Enchaînement (previousBackdrop) EN PREMIER : la nouvelle carte
-            // arrive légèrement pivotée/décalée en SENS OPPOSÉ de la carte de
-            // fond (rotate 6→0 contre -6 ci-dessus), façon carte à jouer
-            // posée en biais sur la pile, puis se redresse en position
-            // finale lisible — ce cas doit rester prioritaire sur
-            // hasTeaserOrigin (vrai dans tous les cas en usage normal),
-            // sinon l'enchaînement perdrait sa propre animation de pile au
-            // profit d'un tirage depuis la carte-amorce.
-            if (previousBackdrop) {
+            // Enchaînement RÉEL (previousBackdrop non synthétique) EN
+            // PREMIER : la nouvelle carte arrive légèrement pivotée/décalée
+            // en SENS OPPOSÉ de la carte de fond (rotate 6→0 contre -6
+            // ci-dessus), façon carte à jouer posée en biais sur la pile,
+            // puis se redresse en position finale lisible — ce cas doit
+            // rester prioritaire sur hasTeaserOrigin (vrai dans tous les cas
+            // en usage normal), sinon l'enchaînement perdrait sa propre
+            // animation de pile au profit d'un tirage depuis la
+            // carte-amorce. Signalé par Victor : cliquer directement sur
+            // "expertise" (jamais passé par "partenaires" avant) affichait
+            // quand même cette rotation, alors qu'aucun enchaînement n'a
+            // été fait par l'utilisateur — seule la carte de fond
+            // synthétique (cf. plus haut) était en cause. La rotation ne
+            // doit se voir que quand on bascule vraiment d'une carte déjà
+            // ouverte à l'autre, jamais sur un premier tirage, même quand ce
+            // premier tirage pose une carte de fond en silence.
+            if (previousBackdrop && !syntheticPreviousBackdrop) {
               gsap.fromTo(
                 card,
                 { opacity: 0, y: -12, scale: 0.95, x: 20, rotate: 6 },

@@ -482,6 +482,23 @@ h2 {
   outline-offset: 5px;
 }
 
+/* Feedback au press manquant jusqu'ici (seuls :hover/:focus-visible
+   existaient) : sur tactile, ni l'un ni l'autre ne se déclenche de façon
+   fiable au tap, donc rien ne confirmait visuellement l'appui avant la
+   navigation vers Google Calendar — contraire à la réactivité immédiate
+   attendue (cf. les autres cartes du site, qui ont toutes leur propre
+   :active). */
+.appointment:active {
+  transform: translateY(-2px) scale(0.98);
+  transition: transform 100ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .appointment:active {
+    transform: none;
+  }
+}
+
 .appointment:hover::before {
   opacity: 1;
   transform: scale(1.08);
@@ -2150,7 +2167,12 @@ body.resources-modal-open {
   display: grid;
   justify-items: center;
   text-align: center;
-  gap: 14px;
+  /* 14px → 28px : logo/titre/intro se touchaient presque, en particulier
+     sur rdv.html (logo bien visible juste au-dessus). Partagée avec
+     simulateurs.html — même bénéfice là-bas, jamais signalé comme un
+     problème mais cohérent avec le reste de l'aération faite sur cette
+     page. */
+  gap: 28px;
   padding-top: clamp(24px, 4vw, 48px);
 }
 
@@ -7995,13 +8017,28 @@ body[data-mode="scpi"] .tool-field[data-field="dureeTotale"] .tool-input-wrap in
        clamp(82px, 9svh, 108px), ce qui faisait démarrer le logo plus haut
        sur rdv.html que sur les autres pages à largeur desktop. */
     padding: clamp(112px, 12svh, 148px) clamp(32px, 3vw, 52px) clamp(44px, 5svh, 70px);
-    row-gap: clamp(8px, 1.2svh, 16px);
+    /* clamp(8px, 1.2svh, 16px) → clamp(28px, 4svh, 48px) : cette règle
+       s'applique à TOUT desktop ≥901px, indépendamment de la hauteur — le
+       cas des écrans vraiment courts est déjà couvert séparément par
+       @media (min-width: 901px) and (max-height: 880px) juste au-dessus
+       (row-gap: 9px, volontairement serré). Sur un écran de hauteur normale,
+       ces 8-16px laissaient le sous-titre presque coller aux cartes de
+       rendez-vous (mesuré : ~11px à 1440×900) — signalé par Victor. */
+    row-gap: clamp(28px, 4svh, 48px);
   }
 
   .page::before {
     top: 0;
     width: min(1100px, calc(100% - 40px));
     height: clamp(390px, 48svh, 520px);
+  }
+
+  /* +18px au-dessus du row-gap déjà en place entre le sous-titre et les 3
+     cartes : demandé par Victor après le premier correctif (initialement
+     38px, jugé ensuite trop généreux et réduit à 18px). .appointments
+     n'existe que sur rdv.html, sans effet sur les autres pages. */
+  .appointments {
+    margin-top: 18px;
   }
 
   .brand-logo {
@@ -8107,7 +8144,11 @@ body[data-mode="scpi"] .tool-field[data-field="dureeTotale"] .tool-input-wrap in
     grid-template-rows: auto auto auto auto;
     justify-items: center;
     padding: 72px 20px 44px;
-    row-gap: 0;
+    /* 0 → 34px : même valeur que .simulator-page à ce palier (cf.
+       simulateurs.html) — .page ne l'avait pas reçue faute d'être partagée
+       par cette page-là. Le header (logo/titre/intro) touchait directement
+       la première carte de rendez-vous, sans aucune respiration. */
+    row-gap: 34px;
     overflow-x: clip;
   }
 
@@ -8379,7 +8420,7 @@ body[data-mode="scpi"] .tool-field[data-field="dureeTotale"] .tool-input-wrap in
 
   .page {
     padding: 68px 14px 38px;
-    row-gap: 0;
+    row-gap: 34px;
   }
 
   .page::before {
@@ -8464,6 +8505,17 @@ body[data-mode="scpi"] .tool-field[data-field="dureeTotale"] .tool-input-wrap in
     border-radius: 22px;
     box-shadow: 0 10px 26px rgba(43, 37, 30, 0.08);
     transform: none;
+  }
+
+  /* Ordre visuel indépendant de l'ordre du DOM (habilitations, puis
+     partners — cf. markup, nécessaire au z-index desktop de la pile) :
+     "Partenaires" doit apparaître en premier sur téléphone. */
+  .resources-opening-teaser-front {
+    order: 1;
+  }
+
+  .resources-opening-teaser-back {
+    order: 2;
   }
 
   .resources-opening-teaser:active,
@@ -8683,7 +8735,7 @@ body[data-mode="scpi"] .tool-field[data-field="dureeTotale"] .tool-input-wrap in
      pour garder le logo au même niveau à cette largeur aussi. */
   .simulator-header {
     padding-top: 16px;
-    gap: 16px;
+    gap: 20px;
   }
 
   .simulator-logo {
