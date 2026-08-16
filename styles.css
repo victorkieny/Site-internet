@@ -1088,30 +1088,62 @@ h3 {
   text-align: center;
 }
 
-/* À propos — 3 sections empilées dans le flux normal de la page (Parcours /
-   Philosophie de conseil / Engagement), entre .about-opening et le footer.
-   Mise en page éditoriale à deux colonnes : une colonne de titre étroite
-   (.about-entry-heading — numéro, h2, trait doré, alignés à gauche) et une
-   colonne de texte à largeur de lecture confortable (.about-entry-body),
-   plutôt que le h2 centré + texte pleine largeur d'avant — pour aérer la
-   lecture et casser la répétition visuelle des 3 blocs. */
-.about-entry {
+/* À propos — mise en page façon bricepoitau.com : UNE photo, fixée dans une
+   colonne étroite à gauche (.about-portrait-rail, sticky), pendant que les 3
+   sections (Parcours / Philosophie de conseil / Engagement) s'enchaînent
+   dans une colonne de texte à droite (.about-sections) qui défile devant
+   elle. Demandé par Victor après un premier essai où la photo n'était liée
+   qu'à la section Parcours — il voulait qu'elle accompagne les 3 sections,
+   pas une seule. .about-content est le grid parent 2 colonnes ; .about-entry
+   n'est plus qu'un simple bloc empilé (numéro/titre puis texte) à l'intérieur
+   de la colonne de droite. */
+.about-content {
   width: min(100%, 900px);
   justify-self: center;
   display: grid;
-  grid-template-columns: minmax(200px, 240px) minmax(0, 1fr);
+  grid-template-columns: minmax(200px, 275px) minmax(0, 1fr);
   column-gap: clamp(48px, 6vw, 64px);
   align-items: start;
+}
+
+.about-portrait-rail {
+  position: sticky;
+  top: clamp(32px, 6vh, 64px);
+}
+
+/* Portrait éditorial : même largeur que la colonne de gauche (200-275px),
+   ratio 4:5 fixe (proportions du fichier fourni), même langage de matière
+   que les autres cadres du site (bordure --line, ombre --shadow) plutôt
+   qu'un cadre nu ou un avatar circulaire. 275px = 220px +25%, demandé par
+   Victor après le premier réglage. */
+.about-portrait {
+  width: 100%;
+  max-width: 275px;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+}
+
+/* Colonne de droite : les 3 <section class="about-entry"> + les traits
+   dorés (.home-hero-divider) qui les séparent s'enchaînent ici avec le même
+   gap que l'ancien espacement entre sections de .home-page-content. */
+.about-sections {
+  display: grid;
+  gap: clamp(48px, 8svh, 80px);
+}
+
+.about-entry {
+  display: grid;
+  gap: 20px;
   text-align: left;
 }
 
-.about-entry-heading {
+.about-entry-heading-row {
   display: flex;
   align-items: baseline;
   gap: clamp(12px, 2vw, 20px);
-  text-align: left;
-  position: sticky;
-  top: clamp(32px, 6vh, 64px);
 }
 
 /* Grand numéro pâle purement décoratif (aria-hidden dans le HTML) — le h2
@@ -1131,7 +1163,7 @@ h3 {
   gap: 6px;
 }
 
-.about-entry-heading h2 {
+.about-entry-heading-row h2 {
   text-align: left;
   transform-origin: left center;
   letter-spacing: -0.025em;
@@ -1141,7 +1173,7 @@ h3 {
    largeur/hauteur/couleur, cf. règle commune plus bas) — ici seule sa
    position change : aligné à gauche sous le h2 au lieu de centré sous un
    .section-heading. */
-.about-entry-heading .section-title-accent {
+.about-entry-heading-row .section-title-accent {
   justify-self: start;
   margin: 4px 0 0;
 }
@@ -1163,20 +1195,23 @@ h3 {
 }
 
 /* .home-hero-divider est centré par défaut via le justify-items: center de
-   son parent .home-hero — ici, inséré directement entre les .about-entry
-   comme enfant de #a-propos (.home-page, qui ne centre pas ses enfants par
-   défaut), il a besoin de son propre justify-self. */
+   son parent .home-hero — ici, inséré entre les .about-entry comme enfant de
+   .about-sections (qui ne centre pas ses enfants par défaut), il a besoin de
+   son propre justify-self. */
 #a-propos .home-hero-divider {
   justify-self: center;
 }
 
 @media (max-width: 720px) {
-  .about-entry {
+  /* Sous 720px : la photo passe au-dessus des 3 sections, dans le flux
+     normal (plus de colonne fixe à gauche — une photo "sticky" qui reste
+     collée en haut de tout un écran de texte n'a pas de sens sur mobile). */
+  .about-content {
     grid-template-columns: 1fr;
-    row-gap: 12px;
+    row-gap: 24px;
   }
 
-  .about-entry-heading {
+  .about-portrait-rail {
     position: static;
   }
 
