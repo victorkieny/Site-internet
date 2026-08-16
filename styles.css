@@ -1189,6 +1189,34 @@ h3 {
   }
 }
 
+/* Vidéo de présentation de la Fondation Epic (section Engagement), lue
+   directement sur le site — pas un lien qui renvoie vers YouTube.
+   youtube-nocookie.com : mode confidentialité renforcée de YouTube, aucun
+   cookie de tracking déposé tant que la vidéo n'est pas lancée. Même largeur
+   de lecture que le texte (.about-entry-body, max-width 680px) pour rester
+   dans l'alignement de la colonne ; même langage de matière que les cartes
+   du site (bordure --line, ombre --shadow partagée) plutôt qu'un cadre nu,
+   pour s'intégrer sans détonner. Aucune animation d'entrée : les 3 sections
+   de la page apparaissent déjà directement dans le flux normal (cf.
+   commentaire de fin de fichier HTML), la vidéo suit la même logique. */
+.about-video {
+  width: 100%;
+  max-width: 680px;
+  aspect-ratio: 16 / 9;
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  background: var(--surface);
+}
+
+.about-video iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
 /* Bouton "Découvrir FinzzAct" — pastille pleine dorée façon bricepoitau.com
    (même esprit, tokens --logo-gold/--interest-gold du site plutôt que ses
    couleurs à lui), même flèche que .cta-button/.nav-cta ailleurs sur le
