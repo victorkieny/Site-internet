@@ -8307,14 +8307,19 @@ body[data-mode="scpi"] .tool-field[data-field="dureeTotale"] .tool-input-wrap in
     overflow-x: clip;
   }
 
-  /* Ressources non concernée : ses cartes-amorce sont positionnées
-     indépendamment (position: fixed) et son pied de page est masqué à cette
-     largeur (cf. #ressources .site-footer plus haut) — rien à centrer là-bas.
-     Sur à-propos, le contenu (photo + 3 sections) dépasse presque toujours
-     100svh : align-content: center n'a alors aucun effet visible, seul le
-     cas où l'écran est très grand/le contenu très court en bénéficierait. */
+  /* #ressources incluse : à ce palier (≤900px), .resources-opening-teasers
+     repasse en flux normal (position: static, cf. plus bas) — ce n'est donc
+     PLUS le cas particulier "cartes fixées au viewport, rien à centrer" de
+     la version large. Son pied de page reste masqué (cf. #ressources
+     .site-footer plus haut), donc le contenu se centre dans tout l'espace
+     de la rangée 1fr — demandé par Victor : phrase/"Explorer"/cartes trop
+     collés sous la nav, avec un grand vide en dessous. Sur à-propos, le
+     contenu (photo + 3 sections) dépasse presque toujours 100svh :
+     align-content: center n'a alors aucun effet visible, seul le cas où
+     l'écran est très grand/le contenu très court en bénéficierait. */
   #accueil .home-page-content,
-  #a-propos .home-page-content {
+  #a-propos .home-page-content,
+  #ressources .home-page-content {
     align-content: center;
   }
 
@@ -8393,6 +8398,7 @@ body[data-mode="scpi"] .tool-field[data-field="dureeTotale"] .tool-input-wrap in
      ne règle que l'ordre de .main-nav par rapport à SES PROPRES frères, pas
      celui de ses enfants entre eux). Sans ce z-index, la marque et le
      bouton disparaissaient derrière le panneau plein écran une fois ouvert. */
+  /* Taille +30% (demandé par Victor) : 1.15/3.8vw/1.4rem → 1.5/4.9vw/1.82rem. */
   .main-nav a.nav-brand {
     display: inline-flex;
     align-items: center;
@@ -8401,7 +8407,7 @@ body[data-mode="scpi"] .tool-field[data-field="dureeTotale"] .tool-input-wrap in
     z-index: 6;
     color: var(--ink);
     font-family: var(--serif);
-    font-size: clamp(1.15rem, 3.8vw, 1.4rem);
+    font-size: clamp(1.5rem, 4.9vw, 1.82rem);
     font-weight: 400;
     letter-spacing: 0.01em;
     text-decoration: none;
@@ -8410,10 +8416,11 @@ body[data-mode="scpi"] .tool-field[data-field="dureeTotale"] .tool-input-wrap in
 
   /* Même emblème que le reste du site (.brand-logo), réduit à la taille
      d'une icône de marque à côté du nom — pas de largeur fluide ici, une
-     icône de repère reste à taille fixe quelle que soit la largeur. */
+     icône de repère reste à taille fixe quelle que soit la largeur.
+     26px → 34px : +30%, même demande que la taille du texte ci-dessus. */
   .main-nav a.nav-brand img {
-    width: 26px;
-    height: 26px;
+    width: 34px;
+    height: 34px;
   }
 
   .main-nav a.nav-brand:hover,
@@ -8675,6 +8682,16 @@ body[data-mode="scpi"] .tool-field[data-field="dureeTotale"] .tool-input-wrap in
   .simulator-frame-wrap iframe,
   .simulator-empty {
     min-height: 500px;
+  }
+
+  /* 40px (base, partagé logo/phrase/indication) → 24px : sans le logo
+     (masqué à ce palier), ce gap ne sépare plus que la phrase et
+     "Explorer" — puis, une fois les cartes-amorce repassées en flux normal
+     juste en dessous (cf. .resources-opening-teasers plus bas, qui hérite
+     de ce même gap partagé), aussi "Explorer" et la première carte. Réduit
+     par Victor : lu comme "trop de vide" dans les deux cas sur téléphone. */
+  .resources-opening {
+    gap: 24px;
   }
 
   /* Le format "cartes qui se tirent" (empilées, tournées, décalées pour
@@ -8998,9 +9015,14 @@ body[data-mode="scpi"] .tool-field[data-field="dureeTotale"] .tool-input-wrap in
     font-size: 0.94rem;
   }
 
+  /* padding-bottom : 0 (hérité du 2-value shorthand ci-dessous avant ce
+     correctif) → 14px, même valeur que l'espace ligne→contenu du pied de
+     page à ce palier (.site-footer, padding-top: 14px plus bas) — demandé
+     par Victor, la marque/le bouton hamburger touchaient quasiment le filet
+     sous eux, sans la respiration donnée au même filet côté pied de page. */
   .main-nav {
     top: 12px;
-    padding: 0 14px;
+    padding: 0 14px 14px;
   }
 
   /* gap porté de 24px (hérité du palier 900px) à 34px : logo/titre/intro
