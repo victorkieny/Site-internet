@@ -17,8 +17,11 @@
   <body>
     <main class="home-page" id="ressources">
       <nav class="main-nav" aria-label="Navigation principale">
+        <a class="nav-brand" href="index.html">
+          <img src="assets/logo-transparent.png" alt="" aria-hidden="true">
+          Victor Kieny
+        </a>
         <input type="checkbox" id="nav-toggle" class="nav-toggle-checkbox" aria-label="Menu de navigation">
-        <label for="nav-toggle" class="main-nav-scrim" aria-hidden="true"></label>
         <div class="main-nav-panel">
           <a href="index.html">Accueil</a>
           <a href="simulateurs.html">Simulateurs</a>
@@ -1521,7 +1524,32 @@
           var openingTeasers = document.querySelector(".resources-opening-teasers");
           if (openingTeasers) {
             gsap.set(openingTeasers, { opacity: 0, y: 20 });
-            openingTl.to(openingTeasers, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }, "-=0.2");
+            openingTl.to(
+              openingTeasers,
+              {
+                opacity: 1,
+                y: 0,
+                duration: 0.6,
+                ease: "power2.out",
+                // Sans ça, GSAP fige en style inline la valeur ABSOLUE (en px) du
+                // translateX(-50%) lu dans le CSS au moment de son premier
+                // gsap.set/to sur cet élément — .resources-opening-teasers est
+                // centré par CSS (position: fixed; left: 50%;
+                // transform: translateX(-50%)), une formule qui se recalcule
+                // normalement toute seule au redimensionnement de la fenêtre.
+                // Une fois GSAP passé dessus, ce style inline gagne toujours sur
+                // la règle CSS et reste figé à la largeur du chargement —
+                // signalé par Victor : les cartes se décentrent en agrandissant/
+                // rétrécissant la fenêtre en direct, mais se recentrent bien
+                // après un rechargement (qui repart de la formule CSS, avant que
+                // GSAP la fige à nouveau). clearProps rend la main au CSS une
+                // fois l'entrée jouée, qui reprend alors sa formule responsive.
+                onComplete: function () {
+                  gsap.set(openingTeasers, { clearProps: "transform" });
+                }
+              },
+              "-=0.2"
+            );
           }
         }
 

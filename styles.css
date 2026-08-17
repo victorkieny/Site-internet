@@ -118,8 +118,19 @@ svg {
   z-index: 1;
 }
 
+/* Taille fluide en une seule formule (plutôt que 3 paliers déconnectés :
+   150px par défaut, réduit à 76-104px ≥901px, réduit à 68px ≤560px) : entre
+   561px et 900px, aucun des deux paliers ne s'appliquait, le logo retombait
+   donc sur les 150px par défaut — plus gros qu'aux deux largeurs voisines.
+   Signalé par Victor : "passé en dessous d'une certaine largeur, le logo
+   devient énorme". clamp(68px, min(9vw, 10svh), 104px) élimine ce trou :
+   min(9vw, 10svh) suit la largeur ET la hauteur (jamais dominant sur un
+   écran large mais bas), et les deux bornes reproduisent les valeurs déjà
+   validées (68px en mobile étroit, ~76-104px en desktop), sans palier ni
+   saut visible entre les deux. Les media queries ci-dessous n'ont donc plus
+   besoin de redéfinir width, seulement margin-bottom. */
 .brand-logo {
-  width: 150px;
+  width: clamp(68px, min(9vw, 10svh), 104px);
   height: auto;
   margin-bottom: 4px;
 }
@@ -188,17 +199,23 @@ h1 {
 /* Nav mobile : menu hamburger en CSS pur (checkbox hack), sans JS — robuste
    par construction, fonctionne même sur les pages sans script (mentions
    légales, confidentialité). .nav-toggle-checkbox pilote l'état ouvert/fermé
-   via :checked, ciblant ses frères .main-nav-panel/.nav-toggle/.main-nav-scrim
-   par sélecteur ~. Sur desktop, tout ce bloc est invisible/neutre :
-   .main-nav-panel garde display:contents (ses <a> restent des enfants flex
-   directs de .main-nav, layout inchangé), le reste est display:none. */
+   via :checked, ciblant ses frères .main-nav-panel/.nav-toggle par sélecteur
+   ~. Sur desktop, tout ce bloc est invisible/neutre : .main-nav-panel garde
+   display:contents (ses <a> restent des enfants flex directs de .main-nav,
+   layout inchangé), le reste (.nav-brand, .nav-toggle-checkbox, .nav-toggle)
+   est display:none — la marque et le hamburger n'ont de sens qu'en dessous
+   de 901px, cf. @media (max-width: 900px) plus bas. */
 .main-nav-panel {
   display: contents;
 }
 
+/* .main-nav a.nav-brand (spécificité 0,2,1) plutôt que .nav-brand seul
+   (0,1,0) : sinon .main-nav a (0,1,1, display: inline-flex) l'emporterait
+   sur ce display: none malgré l'ordre des règles, la spécificité prime sur
+   l'ordre en cascade CSS. */
+.main-nav a.nav-brand,
 .nav-toggle-checkbox,
-.nav-toggle,
-.main-nav-scrim {
+.nav-toggle {
   display: none;
 }
 
@@ -795,6 +812,8 @@ h3 {
 .home-regulatory,
 .home-resources,
 .home-cta-final,
+.about-opening,
+.about-content,
 .resources-partners,
 .resources-habilitations {
   position: relative;
@@ -1092,11 +1111,22 @@ h3 {
    colonne étroite à gauche (.about-portrait-rail, sticky), pendant que les 3
    sections (Parcours / Philosophie de conseil / Engagement) s'enchaînent
    dans une colonne de texte à droite (.about-sections) qui défile devant
-   elle. Demandé par Victor après un premier essai où la photo n'était liée
-   qu'à la section Parcours — il voulait qu'elle accompagne les 3 sections,
-   pas une seule. .about-content est le grid parent 2 colonnes ; .about-entry
-   n'est plus qu'un simple bloc empilé (numéro/titre puis texte) à l'intérieur
-   de la colonne de droite. */
+   elle. .about-content est le grid parent 2 colonnes ; .about-entry n'est
+   qu'un simple bloc empilé (numéro/titre puis texte) à l'intérieur de la
+   colonne de droite.
+
+   Essai abandonné : faire suivre la hauteur de la photo à celle du texte de
+   Parcours via CSS subgrid (grid-row: 1 / -1 + grid-template-rows: subgrid
+   sur .about-portrait-rail). Ça fonctionnait pour la taille, mais ça CASSAIT
+   le position:sticky — un élément sticky doit être plus PETIT que son bloc
+   englobant pour avoir de la marge où "flotter" avant de se figer ; en
+   subgrid, l'élément qui s'étend sur toutes les rangées est forcé à occuper
+   EXACTEMENT la hauteur de son bloc englobant (aucune marge), donc il ne
+   fait plus que suivre le défilement au lieu de se figer. Signalé par
+   Victor : "elle monte comme le texte au scroll". Comme le ratio obtenu
+   (3:4) ne dépendait plus vraiment du texte dans la pratique (le plafond
+   max-height ne se déclenchait jamais), retour à cette structure simple
+   avec un ratio fixe — même rendu visuel, sticky à nouveau fonctionnel. */
 .about-content {
   width: min(100%, 900px);
   justify-self: center;
@@ -1108,28 +1138,30 @@ h3 {
 
 .about-portrait-rail {
   position: sticky;
-  top: clamp(32px, 6vh, 64px);
+  top: clamp(90px, 20svh, 220px);
 }
 
 /* Portrait éditorial : même largeur que la colonne de gauche (200-275px),
-   ratio 4:5 fixe (proportions du fichier fourni), même langage de matière
-   que les autres cadres du site (bordure --line, ombre --shadow) plutôt
-   qu'un cadre nu ou un avatar circulaire. 275px = 220px +25%, demandé par
-   Victor après le premier réglage. display:block + margin:0 auto : sur
-   desktop la colonne fait exactement 275px donc ça ne change rien, mais sur
-   mobile .about-portrait-rail passe en pleine largeur (cf. media query plus
-   bas) — sans ça, une image (inline par défaut) reste collée à gauche au
-   lieu d'être centrée, signalé par Victor. */
+   ratio 3:4 (un peu plus long que le 4:5 d'origine, validé par Victor),
+   même langage de matière que les autres cadres du site (bordure --line,
+   ombre --shadow) plutôt qu'un cadre nu ou un avatar circulaire. */
 .about-portrait {
   display: block;
   width: 100%;
   max-width: 275px;
+  aspect-ratio: 3 / 4;
   margin: 0 auto;
-  aspect-ratio: 4 / 5;
   object-fit: cover;
   border-radius: 18px;
   border: 1px solid var(--line);
   box-shadow: var(--shadow);
+  /* Sans ceci, la zone de l'image est blanche (fond par défaut du <img>)
+     tant qu'elle n'a pas fini de se redécoder à sa nouvelle taille — visible
+     un instant lors du redimensionnement qui la fait remonter au-dessus du
+     texte (changement de colonne à colonne unique, cf. .about-content plus
+     haut). --paper plutôt que blanc pur : se fond dans le fond de page au
+     lieu de trancher dessus. */
+  background: var(--paper);
 }
 
 /* Colonne de droite : les 3 <section class="about-entry"> + les traits
@@ -1208,8 +1240,15 @@ h3 {
   justify-self: center;
 }
 
-@media (max-width: 720px) {
-  /* Sous 720px : la photo passe au-dessus des 3 sections, dans le flux
+/* 720px → 900px : la photo passait au-dessus des 3 sections seulement sous
+   720px, mais le gros logo central (.about-opening, masqué dès 900px — cf.
+   @media (max-width: 900px) plus bas) disparaissait déjà avant ça. Entre
+   721px et 900px, résultat : plus de logo, mais la colonne sticky à gauche
+   encore en place — trop étroite pour ce palier, ni tout à fait desktop ni
+   tout à fait mobile. Signalé par Victor : "trop tard". Les deux paliers
+   sont maintenant synchronisés à 900px. */
+@media (max-width: 900px) {
+  /* Sous 900px : la photo passe au-dessus des 3 sections, dans le flux
      normal (plus de colonne fixe à gauche — une photo "sticky" qui reste
      collée en haut de tout un écran de texte n'a pas de sens sur mobile). */
   .about-content {
@@ -1525,7 +1564,8 @@ body.resources-modal-open {
    règles. */
 
 /* Même logo, mêmes proportions que sur l'accueil (.home-hero .brand-logo) :
-   .brand-logo (base) fixe déjà width: 150px, seul le centrage change ici. */
+   .brand-logo (base) fixe déjà la taille (formule fluide), seul le centrage
+   change ici. */
 .resources-opening .brand-logo {
   margin: 0 auto;
 }
@@ -2245,8 +2285,10 @@ body.resources-modal-open {
   padding-top: clamp(24px, 4vw, 48px);
 }
 
+/* Même formule fluide que .brand-logo (cf. commentaire détaillé plus haut) —
+   ici aussi le palier fixe à 150px laissait un trou entre 561px et 900px. */
 .simulator-logo {
-  width: 150px;
+  width: clamp(68px, min(9vw, 10svh), 104px);
   height: auto;
 }
 
@@ -7550,9 +7592,16 @@ body[data-mode="scpi"] .tool-field[data-field="dureeTotale"] .tool-input-wrap in
 }
 
 @media (max-width: 980px) {
+  /* margin: 0 auto — bug pré-existant repéré par Victor : dès qu'un item de
+     grille reçoit sa propre largeur explicite (ici width: min(100%,760px)),
+     "justify-items: normal" (valeur par défaut, jamais redéfinie sur
+     .simulator-workspace) ne l'étire plus mais l'aligne au DÉBUT de sa
+     piste au lieu de le centrer — la grille se retrouve plaquée à gauche
+     dès que la largeur disponible dépasse 760px. */
   .simulator-choice-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     width: min(100%, 760px);
+    margin: 0 auto;
   }
 
   .simulator-choice {
@@ -7656,6 +7705,7 @@ body[data-mode="scpi"] .tool-field[data-field="dureeTotale"] .tool-input-wrap in
   .simulator-choice-grid {
     grid-template-columns: 1fr;
     width: min(100%, 420px);
+    margin: 0 auto;
     gap: 12px;
   }
 
@@ -8110,13 +8160,10 @@ body[data-mode="scpi"] .tool-field[data-field="dureeTotale"] .tool-input-wrap in
     margin-top: 18px;
   }
 
+  /* Largeur déjà gérée par la formule fluide de .brand-logo (base) — ne
+     reste ici que le retrait du margin-bottom hérité du mobile. */
   .brand-logo {
-    width: clamp(76px, 7.5svh, 104px);
     margin-bottom: 0;
-  }
-
-  .simulator-logo {
-    width: clamp(76px, 7.5svh, 104px);
   }
 
   .title-block {
@@ -8212,7 +8259,11 @@ body[data-mode="scpi"] .tool-field[data-field="dureeTotale"] .tool-input-wrap in
     display: grid;
     grid-template-rows: auto auto auto auto;
     justify-items: center;
-    padding: 72px 20px 44px;
+    /* 72px → 88px : la nav gagne un filet de séparation en bas (cf.
+       .main-nav ci-dessous, border-bottom + un peu de padding) — sans cette
+       marge en plus, le trait pouvait passer sous la première carte au lieu
+       d'au-dessus. */
+    padding: 88px 20px 44px;
     /* 0 → 34px : même valeur que .simulator-page à ce palier (cf.
        simulateurs.html) — .page ne l'avait pas reçue faute d'être partagée
        par cette page-là. Le header (logo/titre/intro) touchait directement
@@ -8227,12 +8278,44 @@ body[data-mode="scpi"] .tool-field[data-field="dureeTotale"] .tool-input-wrap in
     height: 390px;
   }
 
+  /* min-height: 100svh + grid-template-rows: 1fr auto (règle de base) force
+     la première rangée (.home-page-content, qui contient .home-hero) à
+     s'étirer pour occuper tout l'espace vertical dispo dans ce minimum de
+     hauteur — pensé pour desktop où le logo/titre remplissaient
+     naturellement le premier écran. Sans le logo (masqué sous 900px, cf.
+     plus bas) et avec un contenu texte plus court, ça laissait un grand vide
+     — signalé par Victor. Premier essai : grid-template-rows: auto auto +
+     min-height: 0 (la page se dimensionne à son contenu). Mais ça détachait
+     alors le pied de page du bas de l'écran quand le contenu est court (vide
+     visible SOUS le pied de page, incohérent avec simulateurs/à-propos où le
+     contenu dépasse 100svh) — signalé par Victor à son tour. Retour à
+     min-height: 100svh + 1fr auto (le pied de page reste plaqué en bas,
+     comme partout ailleurs sur le site), mais avec .home-page-content centré
+     (align-content: center ci-dessous, scoped à #accueil/#a-propos) au lieu
+     d'aligné en haut (align-content: start, règle de base) : l'espace libre
+     de la rangée 1fr se répartit maintenant au-dessus ET en dessous du
+     contenu plutôt que de s'accumuler uniquement entre le CTA et le pied de
+     page. */
   .home-page {
     width: 100%;
     max-width: 100%;
-    padding: 72px 20px 56px;
+    min-height: 100svh;
+    grid-template-rows: 1fr auto;
+    /* 72px → 88px : même raison que .page ci-dessus (filet sous la nav). */
+    padding: 88px 20px 56px;
     gap: 56px;
     overflow-x: clip;
+  }
+
+  /* Ressources non concernée : ses cartes-amorce sont positionnées
+     indépendamment (position: fixed) et son pied de page est masqué à cette
+     largeur (cf. #ressources .site-footer plus haut) — rien à centrer là-bas.
+     Sur à-propos, le contenu (photo + 3 sections) dépasse presque toujours
+     100svh : align-content: center n'a alors aucun effet visible, seul le
+     cas où l'écran est très grand/le contenu très court en bénéficierait. */
+  #accueil .home-page-content,
+  #a-propos .home-page-content {
+    align-content: center;
   }
 
   .home-page::before {
@@ -8241,28 +8324,136 @@ body[data-mode="scpi"] .tool-field[data-field="dureeTotale"] .tool-input-wrap in
     height: 390px;
   }
 
-  /* Nav mobile : menu hamburger. Sur desktop .main-nav flotte en position
-     absolute au-dessus du hero (le padding-top de .page/.home-page/
-     .simulator-page réserve l'espace nécessaire). Deux tentatives CSS
-     précédentes (wrap libre, puis scroll horizontal) laissaient soit une
-     hauteur de nav imprévisible (chevauchement avec le logo), soit un
-     rendu peu soigné (CTA disproportionné, liens tronqués). Le hamburger
-     règle les deux : fermé, .main-nav ne occupe que la largeur du bouton
-     (hauteur fixe et minime, jamais de chevauchement) ; ouvert, un panneau
-     déroulant affiche les 4 liens + le CTA empilés proprement. */
+  /* min-height: 74svh (règle de base) réservait la bonne hauteur tant que
+     le logo faisait partie du contenu de .home-hero — sans lui (masqué
+     ci-dessous avec le reste des logos d'écran d'ouverture), ce minimum
+     fixe laissait un grand vide entre le CTA et le pied de page (align-
+     content: start empile le contenu en haut de cette hauteur réservée,
+     désormais trop grande pour ce qu'il reste). Signalé par Victor. Retiré
+     ici : .home-hero se dimensionne à son contenu, gap légèrement augmenté
+     pour compenser (24-36px → 28-44px) plutôt que de laisser un bloc figé
+     dicter la hauteur. */
+  .home-hero {
+    min-height: 0;
+    gap: clamp(28px, 4.5vw, 44px);
+  }
+
+  /* CTA empilés (plutôt que côte à côte) une fois le logo central absent :
+     à cette largeur, sans lui pour équilibrer, deux éléments côte à côte de
+     poids visuel très différent (bouton plein vs. simple lien) looks
+     tassés/désaxés — empilés, chacun respire et la hiérarchie (RDV
+     d'abord) est plus lisible. 16px → 28px : une fois empilés, les deux
+     éléments touchaient presque (bouton plein en haut, lien texte juste en
+     dessous) — signalé par Victor, plus d'air entre les deux. */
+  .home-hero-actions {
+    flex-direction: column;
+    gap: 28px;
+  }
+
+  /* Nav mobile/tablette : sous 901px, les liens centrés en pilule (nav de
+     base) ne tiennent plus horizontalement. .main-nav devient une barre
+     pleine largeur avec un repère de marque (.nav-brand) à gauche et le
+     bouton hamburger à droite — inspiré de bricepoitau.com, signalé par
+     Victor : fermé, une simple barre marque + bouton ; ouvert, .nav-toggle
+     se transforme en croix et .main-nav-panel devient un panneau plein
+     écran (à la manière d'un menu d'app) plutôt qu'un petit menu déroulant
+     ancré sous le bouton — jugé "pas très esthétique" dans sa version
+     précédente. */
+  /* Filet horizontal sous la marque/le hamburger, même traitement que le
+     pied de page (.site-footer, border-top: 1px solid var(--line)) : sépare
+     nettement l'en-tête du contenu plutôt que de laisser la marque et le
+     bouton flotter seuls, sans repère, au-dessus du titre — demandé par
+     Victor plutôt que le bouton hamburger seul "en case blanche". Le
+     padding-bottom crée un peu d'air entre la marque/le bouton et le trait ;
+     le padding-top des conteneurs de page (.page/.home-page/.simulator-page
+     ci-dessous) a été augmenté d'autant pour ne jamais chevaucher la
+     première carte de contenu. */
   .main-nav {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: clamp(14px, 2.2svh, 24px);
+    z-index: 6;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     width: auto;
-    padding: 0;
+    padding: 0 20px 12px;
+    border-bottom: 1px solid var(--line);
+    transform: none;
+  }
+
+  /* .main-nav a.nav-brand : même raison de spécificité que pour le
+     display: none de base (cf. commentaire plus haut) — sinon .main-nav a
+     (0,1,1) l'emporterait aussi ici sur .nav-brand seul (0,1,0).
+     position: relative + z-index : .nav-brand est un enfant non positionné
+     de .main-nav, donc peint AVANT (en dessous) les descendants positionnés
+     de .main-nav — dont .main-nav-panel (position: fixed, z-index: 5) une
+     fois ouvert — quel que soit le z-index de .main-nav lui-même (celui-ci
+     ne règle que l'ordre de .main-nav par rapport à SES PROPRES frères, pas
+     celui de ses enfants entre eux). Sans ce z-index, la marque et le
+     bouton disparaissaient derrière le panneau plein écran une fois ouvert. */
+  .main-nav a.nav-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+    z-index: 6;
+    color: var(--ink);
+    font-family: var(--serif);
+    font-size: clamp(1.15rem, 3.8vw, 1.4rem);
+    font-weight: 400;
+    letter-spacing: 0.01em;
+    text-decoration: none;
+    transition: color 200ms ease;
+  }
+
+  /* Même emblème que le reste du site (.brand-logo), réduit à la taille
+     d'une icône de marque à côté du nom — pas de largeur fluide ici, une
+     icône de repère reste à taille fixe quelle que soit la largeur. */
+  .main-nav a.nav-brand img {
+    width: 26px;
+    height: 26px;
+  }
+
+  .main-nav a.nav-brand:hover,
+  .main-nav a.nav-brand:focus-visible {
+    color: var(--logo-gold);
+  }
+
+  /* La marque apparaît maintenant dans la nav (.nav-brand ci-dessus) dès
+     901px : le garder EN PLUS, grand et centré, en haut de chaque écran
+     d'ouverture (accueil, ressources, à propos, simulateurs) ferait une
+     répétition — Victor : "on dirait que je martèle mon logo". Retiré ici,
+     le titre/la phrase de chaque page remonte directement sous la nav. */
+  .brand-logo,
+  .simulator-logo {
+    display: none;
+  }
+
+  /* À propos : .about-opening ne contenait QUE le logo (cf. a-propos.html)
+     — une fois celui-ci masqué, la section serait un bloc vide qui ne
+     ferait plus que garder son padding/margin, laissant un vide sans
+     raison au-dessus de "Parcours". Masquée entièrement plutôt que son
+     seul contenu. */
+  .about-opening {
+    display: none;
   }
 
   /* Case à cocher pilotant l'état ouvert/fermé, gardée dans le flux du
      tabulateur (donc accessible au clavier) mais visuellement masquée par
      clip plutôt que par opacity:0 en position absolute — elle n'a ainsi
-     aucune influence sur la taille de .main-nav, qui se limite au bouton
-     visible .nav-toggle ci-dessous. */
+     aucune influence sur la taille de .main-nav, qui se limite à la marque
+     et au bouton .nav-toggle. Épinglée en top:0/right:0 (plutôt que sa
+     position statique par défaut) pour rester sous .nav-toggle et ne
+     jamais chevaucher .nav-brand à gauche : les deux sont maintenant des
+     flex items visibles, la case (position: absolute, sortie du flux) se
+     serait sinon positionnée à l'emplacement du premier item. */
   .nav-toggle-checkbox {
     display: block;
     position: absolute;
+    top: 0;
+    right: 0;
     width: 1px;
     height: 1px;
     margin: -1px;
@@ -8273,10 +8464,15 @@ body[data-mode="scpi"] .tool-field[data-field="dureeTotale"] .tool-input-wrap in
     border: 0;
   }
 
+  /* position: relative + z-index : même raison que .nav-brand ci-dessus —
+     reste au-dessus du panneau plein écran une fois ouvert (c'est lui, sous
+     forme de croix, qui permet de le refermer). */
   .nav-toggle {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    position: relative;
+    z-index: 6;
     width: 44px;
     height: 44px;
     border: 1px solid var(--line);
@@ -8291,61 +8487,82 @@ body[data-mode="scpi"] .tool-field[data-field="dureeTotale"] .tool-input-wrap in
     color: var(--ink);
   }
 
+  /* Animation hamburger → croix : chaque trait pivote/se déplace autour de
+     son propre centre (transform-box: fill-box, sinon l'origine par défaut
+     est celle du <svg> entier, pas du <path>) pour se recomposer en X quand
+     le menu est ouvert — le retour visuel attendu (cf. capture Brice) plutôt
+     qu'une icône hamburger qui reste figée pendant que le panneau change. */
+  .nav-toggle-icon path {
+    transform-box: fill-box;
+    transform-origin: center;
+    transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1), opacity 200ms ease;
+  }
+
+  .nav-toggle-checkbox:checked ~ .nav-toggle .nav-toggle-icon path:first-child {
+    transform: translateY(5px) rotate(45deg);
+  }
+
+  .nav-toggle-checkbox:checked ~ .nav-toggle .nav-toggle-icon path:nth-child(2) {
+    opacity: 0;
+  }
+
+  .nav-toggle-checkbox:checked ~ .nav-toggle .nav-toggle-icon path:last-child {
+    transform: translateY(-5px) rotate(-45deg);
+  }
+
   .nav-toggle-checkbox:focus-visible ~ .nav-toggle {
     outline: 2px solid var(--interest-gold);
     outline-offset: 2px;
   }
 
-  .main-nav-scrim {
-    display: none;
-  }
-
-  .nav-toggle-checkbox:checked ~ .main-nav-scrim {
-    display: block;
-    position: fixed;
-    inset: 0;
-    z-index: 4;
-    background: rgba(43, 37, 30, 0.15);
-  }
-
+  /* Panneau plein écran : la marque et le bouton (devenu croix) restent
+     visibles au-dessus de lui, à leur place habituelle — pas de scrim
+     séparé à cliquer pour fermer (il n'y a plus d'"à côté" du panneau), la
+     croix suffit, comme chez Brice. */
   .main-nav-panel {
     display: flex;
     flex-direction: column;
-    align-items: stretch;
-    gap: 6px;
-    position: absolute;
-    top: calc(100% + 10px);
-    left: 50%;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: clamp(2px, 1.4svh, 10px);
+    position: fixed;
+    inset: 0;
     z-index: 5;
-    width: min(84vw, 320px);
-    padding: 10px;
-    border: 1px solid var(--line);
-    border-radius: 16px;
-    background: var(--surface);
-    box-shadow: var(--shadow);
+    padding: clamp(92px, 15svh, 124px) clamp(28px, 8vw, 56px) clamp(32px, 6svh, 56px);
+    background: rgba(242, 238, 230, 0.97);
+    -webkit-backdrop-filter: blur(20px) saturate(1.1);
+    backdrop-filter: blur(20px) saturate(1.1);
     opacity: 0;
     visibility: hidden;
-    transform: translate(-50%, -8px);
-    transition: opacity 200ms ease, transform 200ms ease, visibility 0s linear 200ms;
+    transform: translateY(-10px);
+    transition: opacity 240ms ease, transform 240ms cubic-bezier(0.22, 1, 0.36, 1), visibility 0s linear 240ms;
   }
 
   .nav-toggle-checkbox:checked ~ .main-nav-panel {
     opacity: 1;
     visibility: visible;
-    transform: translate(-50%, 0);
-    transition: opacity 200ms ease, transform 200ms ease, visibility 0s linear 0s;
+    transform: translateY(0);
+    transition: opacity 240ms ease, transform 240ms cubic-bezier(0.22, 1, 0.36, 1), visibility 0s linear 0s;
   }
 
   .main-nav-panel a {
     justify-content: flex-start;
     width: 100%;
-    min-height: 44px;
-    padding: 0 10px;
+    min-height: 0;
+    padding: 8px 0;
+    font-family: var(--serif);
+    font-size: clamp(1.6rem, 6.5vw, 2.05rem);
+    font-weight: 400;
   }
 
   .main-nav-panel a.nav-cta {
     justify-content: center;
-    margin-top: 4px;
+    width: auto;
+    margin-top: clamp(20px, 4svh, 32px);
+    padding: 0 26px;
+    font-family: var(--sans);
+    font-size: 1rem;
+    font-weight: 620;
   }
 
   .site-footer-bottom {
@@ -8412,7 +8629,14 @@ body[data-mode="scpi"] .tool-field[data-field="dureeTotale"] .tool-input-wrap in
   }
 
   .simulator-page {
-    padding: 72px 18px 42px;
+    /* 72px → 88px : même raison que .page/.home-page (filet sous la nav). */
+    padding: 88px 18px 42px;
+    /* auto 1fr auto (base) → auto auto auto : même correctif que .home-page
+       (cf. commentaire détaillé plus haut) — la rangée du milieu (.simulator-
+       workspace) n'a pas besoin de s'étirer sur mobile, .page le fait déjà
+       de son côté depuis longtemps (grid-template-rows: auto auto auto auto
+       dans son propre bloc ≤900px). */
+    grid-template-rows: auto auto auto;
     gap: 24px;
   }
 
@@ -8451,6 +8675,111 @@ body[data-mode="scpi"] .tool-field[data-field="dureeTotale"] .tool-input-wrap in
   .simulator-frame-wrap iframe,
   .simulator-empty {
     min-height: 500px;
+  }
+
+  /* Le format "cartes qui se tirent" (empilées, tournées, décalées pour
+     laisser deviner la carte du dessous) ne fonctionne qu'en fenêtre assez
+     large/"paysage" : dès que la largeur se resserre, la carte de fond
+     (position: fixed, ancrée au bas du viewport) déborde ou se retrouve
+     coupée sans assez de place pour respirer — signalé par Victor sur une
+     fenêtre Safari réduite mais pas franchement "mobile". Auparavant ce
+     correctif n'existait qu'en dessous de 560px (repris ici à 900px, le
+     même palier que le reste du mode mobile/tablette du site — nav comprise
+     — plutôt qu'un troisième seuil arbitraire) : les deux cartes redeviennent
+     deux blocs simples, empilés verticalement, pleine largeur — plus de
+     position: fixed collée au bas de l'écran, plus de rotation/décalage —
+     juste deux boutons nets avec leur libellé complet et lisible. Ce bloc
+     redevient un enfant normal de la grille .resources-opening (position:
+     static), qui hérite donc de son gap partagé avec le logo/la phrase/
+     "Explorer" au-dessus — plus besoin de marge dédiée. */
+  .resources-opening-teasers {
+    position: static;
+    width: 100%;
+    max-width: 340px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    transform: none;
+  }
+
+  .resources-opening-teaser,
+  .resources-opening-teaser-front,
+  .resources-opening-teaser-back {
+    position: static;
+    z-index: auto;
+    width: 100%;
+    height: auto;
+    min-height: 88px;
+    padding: 18px 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--line);
+    border-radius: 22px;
+    box-shadow: 0 10px 26px rgba(43, 37, 30, 0.08);
+    transform: none;
+  }
+
+  /* Ordre visuel indépendant de l'ordre du DOM (habilitations, puis
+     partners — cf. markup, nécessaire au z-index desktop de la pile) :
+     "Partenaires" doit apparaître en premier une fois les cartes à plat. */
+  .resources-opening-teaser-front {
+    order: 1;
+  }
+
+  .resources-opening-teaser-back {
+    order: 2;
+  }
+
+  .resources-opening-teaser:active,
+  .resources-opening-teaser-front:active,
+  .resources-opening-teaser-back:active {
+    transform: scale(0.97);
+    transition: transform 100ms ease;
+  }
+
+  .resources-opening-teaser:hover,
+  .resources-opening-teaser:focus-visible,
+  .resources-opening-teaser-front:hover,
+  .resources-opening-teaser-front:focus-visible,
+  .resources-opening-teaser-back:hover,
+  .resources-opening-teaser-back:focus-visible {
+    transform: none;
+    box-shadow: 0 10px 26px rgba(43, 37, 30, 0.08);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .resources-opening-teaser:active,
+    .resources-opening-teaser-front:active,
+    .resources-opening-teaser-back:active {
+      transform: none;
+    }
+  }
+
+  /* Petit chevron ">" en CSS pur (pas de nouvelle requête réseau) : seule
+     touche qui distingue visuellement ces deux boutons d'un simple texte,
+     pour signaler qu'ils s'ouvrent au tap — cohérent avec le chevron de
+     "Explorer" juste au-dessus, sans dupliquer son SVG. */
+  .resources-opening-teaser::after {
+    content: "";
+    width: 7px;
+    height: 7px;
+    margin-left: 12px;
+    border-right: 1.5px solid var(--muted);
+    border-top: 1.5px solid var(--muted);
+    transform: rotate(45deg);
+    flex-shrink: 0;
+  }
+
+  .resources-opening-teaser-back .resources-opening-teaser-label {
+    width: auto;
+    max-width: none;
+    text-align: center;
+  }
+
+  .resources-opening-teaser-front .resources-opening-teaser-label {
+    width: auto;
   }
 }
 
@@ -8511,131 +8840,22 @@ body[data-mode="scpi"] .tool-field[data-field="dureeTotale"] .tool-input-wrap in
     padding: 16px 20px 32px;
   }
 
-  /* 96px → 68px : sur téléphone le logo dominait l'écran d'ouverture,
-     disproportionné par rapport à la phrase/au titre juste en dessous (cf.
-     capture) — même réduction reprise sur .resources-opening/.simulator-logo
-     et la règle .brand-logo générique ci-dessous, pour rester cohérent sur
-     les 4 écrans d'ouverture (accueil, ressources, à propos, simulateurs). */
-  .home-hero .brand-logo {
-    width: 68px;
-    margin-bottom: 0;
-  }
+  /* La formule fluide de .brand-logo (base) descend déjà à 68px à cette
+     largeur, et margin: 0 auto (.home-hero/.resources-opening .brand-logo,
+     plus haut dans la feuille) annule déjà margin-bottom à toutes les
+     largeurs — plus besoin de le redire ici. */
 
-  /* Même padding-top (16px) et même taille de logo qu'en mobile sur
-     .home-hero ci-dessus, pour que le logo reste au même niveau sur les
-     deux pages à cette largeur aussi. */
+  /* Même padding-top (16px) qu'en mobile sur .home-hero ci-dessus, pour que
+     le logo reste au même niveau sur les deux pages à cette largeur aussi. */
   .resources-opening {
     padding: 16px 20px 32px;
   }
 
-  .resources-opening .brand-logo {
-    width: 68px;
-    margin-bottom: 0;
-  }
-
-  /* Le format "cartes qui se tirent" (empilées, tournées, décalées pour
-     laisser deviner la carte du dessous) fonctionne en largeur desktop mais
-     ne tient géométriquement pas sur téléphone : le peu d'espace qui dépasse
-     de sous la carte de devant (~45px max, plafonné par sa propre largeur)
-     ne peut jamais afficher "Diplômes & habilitations" en entier, quel que
-     soit le réglage — essayé et documenté sur plusieurs itérations,
-     abandonné ici. Sur téléphone, les deux cartes redeviennent deux blocs
-     simples, empilés verticalement, pleine largeur : plus de position:fixed
-     collée au bas de l'écran (qui laissait un grand vide au-dessus), plus de
-     rotation/décalage — juste deux boutons nets avec leur libellé complet et
-     lisible. Ce bloc redevient un enfant normal de la grille .resources-
-     opening (position: static), qui hérite donc de son gap: 40px partagé
-     avec le logo/la phrase/"Explorer" au-dessus — plus besoin de marge
-     dédiée. */
-  .resources-opening-teasers {
-    position: static;
-    width: 100%;
-    max-width: 340px;
-    margin: 0 auto;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    transform: none;
-  }
-
-  .resources-opening-teaser,
-  .resources-opening-teaser-front,
-  .resources-opening-teaser-back {
-    position: static;
-    z-index: auto;
-    width: 100%;
-    height: auto;
-    min-height: 88px;
-    padding: 18px 26px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid var(--line);
-    border-radius: 22px;
-    box-shadow: 0 10px 26px rgba(43, 37, 30, 0.08);
-    transform: none;
-  }
-
-  /* Ordre visuel indépendant de l'ordre du DOM (habilitations, puis
-     partners — cf. markup, nécessaire au z-index desktop de la pile) :
-     "Partenaires" doit apparaître en premier sur téléphone. */
-  .resources-opening-teaser-front {
-    order: 1;
-  }
-
-  .resources-opening-teaser-back {
-    order: 2;
-  }
-
-  .resources-opening-teaser:active,
-  .resources-opening-teaser-front:active,
-  .resources-opening-teaser-back:active {
-    transform: scale(0.97);
-    transition: transform 100ms ease;
-  }
-
-  .resources-opening-teaser:hover,
-  .resources-opening-teaser:focus-visible,
-  .resources-opening-teaser-front:hover,
-  .resources-opening-teaser-front:focus-visible,
-  .resources-opening-teaser-back:hover,
-  .resources-opening-teaser-back:focus-visible {
-    transform: none;
-    box-shadow: 0 10px 26px rgba(43, 37, 30, 0.08);
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .resources-opening-teaser:active,
-    .resources-opening-teaser-front:active,
-    .resources-opening-teaser-back:active {
-      transform: none;
-    }
-  }
-
-  /* Petit chevron ">" en CSS pur (pas de nouvelle requête réseau) : seule
-     touche qui distingue visuellement ces deux boutons d'un simple texte,
-     pour signaler qu'ils s'ouvrent au tap — cohérent avec le chevron de
-     "Explorer" juste au-dessus, sans dupliquer son SVG. */
-  .resources-opening-teaser::after {
-    content: "";
-    width: 7px;
-    height: 7px;
-    margin-left: 12px;
-    border-right: 1.5px solid var(--muted);
-    border-top: 1.5px solid var(--muted);
-    transform: rotate(45deg);
-    flex-shrink: 0;
-  }
-
-  .resources-opening-teaser-back .resources-opening-teaser-label {
-    width: auto;
-    max-width: none;
-    text-align: center;
-    font-size: 1.5rem;
-  }
-
+  /* Le format "cartes qui se tirent" est maintenant à plat dès 901px (cf.
+     @media (max-width: 900px) plus haut) — rien à refaire ici à ce palier,
+     seule la taille du libellé est encore resserrée juste en dessous. */
+  .resources-opening-teaser-back .resources-opening-teaser-label,
   .resources-opening-teaser-front .resources-opening-teaser-label {
-    width: auto;
     font-size: 1.5rem;
   }
 
@@ -8715,11 +8935,6 @@ body[data-mode="scpi"] .tool-field[data-field="dureeTotale"] .tool-input-wrap in
     font-size: 0.98rem;
   }
 
-  .brand-logo {
-    width: 68px;
-    margin-bottom: 0;
-  }
-
   .eyebrow {
     font-size: 0.84rem;
     line-height: 1.35;
@@ -8785,11 +9000,7 @@ body[data-mode="scpi"] .tool-field[data-field="dureeTotale"] .tool-input-wrap in
 
   .main-nav {
     top: 12px;
-    font-size: 0.82rem;
-  }
-
-  .main-nav-panel {
-    width: min(84vw, 300px);
+    padding: 0 14px;
   }
 
   /* gap porté de 24px (hérité du palier 900px) à 34px : logo/titre/intro
@@ -8805,10 +9016,6 @@ body[data-mode="scpi"] .tool-field[data-field="dureeTotale"] .tool-input-wrap in
   .simulator-header {
     padding-top: 16px;
     gap: 20px;
-  }
-
-  .simulator-logo {
-    width: 68px;
   }
 
   .simulator-title-block {
