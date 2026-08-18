@@ -654,14 +654,24 @@ h3 {
   width: min(100%, 1100px);
   justify-self: center;
   display: grid;
-  gap: 14px;
+  /* gap: 0 (contre 14px avant) : sur rdv.html, seule page avec 2 enfants
+     (.site-footer-note + .site-footer-bottom), ce gap s'ajoutait au
+     padding-top de .site-footer-note + .site-footer-bottom ci-dessous,
+     créant plus d'espace sous la note qu'au-dessus (padding-top de
+     .site-footer seul) — la note n'était donc jamais centrée entre les 2
+     séparateurs. Le seul espace au-dessus/en dessous de la note est
+     désormais porté explicitement (padding-top ici, margin-bottom sur
+     .site-footer-note juste en dessous), avec la même valeur des deux
+     côtés. Sans incidence sur les autres pages (un seul enfant, gap
+     inopérant). */
+  gap: 0;
   margin-top: 24px;
   padding-top: clamp(24px, 3vw, 32px);
   border-top: 1px solid var(--line);
 }
 
 .site-footer-note {
-  margin: 0;
+  margin: 0 0 clamp(24px, 3vw, 32px);
   color: rgba(81, 75, 68, 0.72);
   font-family: var(--sans);
   font-size: 1rem;
@@ -3302,9 +3312,20 @@ body.resources-modal-open {
   gap: 12px;
 }
 
+/* Ligne de résultats à 3 cartes du comparateur de contrats (contrat A /
+   contrat B / écart) — même langage visuel que .capital-metrics (carte
+   claire, libellé + valeur), étendue aux groupes de sélecteurs partagés
+   ci-dessous plutôt que dupliquée, avec sa propre grille à 3 colonnes. */
+.comparateur-results {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
 .capital-legend span,
 .capital-metrics span,
-.capital-shares span {
+.capital-shares span,
+.comparateur-results span {
   display: grid;
   gap: 5px;
   padding: 13px 14px;
@@ -3315,7 +3336,8 @@ body.resources-modal-open {
 
 .capital-legend small,
 .capital-metrics small,
-.capital-shares small {
+.capital-shares small,
+.comparateur-results small {
   color: var(--muted);
   font-size: 0.78rem;
   font-weight: 500;
@@ -3323,10 +3345,26 @@ body.resources-modal-open {
 
 .capital-legend strong,
 .capital-metrics strong,
-.capital-shares strong {
+.capital-shares strong,
+.comparateur-results strong {
   color: var(--ink);
   font-size: clamp(1.18rem, 1.65vw, 1.56rem);
   font-weight: 600;
+}
+
+.comparateur-results .comparateur-result-sub {
+  color: rgba(43, 37, 30, 0.5);
+  font-size: 0.72rem;
+  font-weight: 450;
+}
+
+/* "X est meilleur" sous l'écart à l'échéance : bien plus visible que la
+   légende "+X vs initial" des deux autres cartes (.comparateur-result-sub),
+   c'est le verdict de la carte, pas une note secondaire. */
+.comparateur-results .comparateur-result-verdict {
+  color: #2f6b52;
+  font-size: 0.92rem;
+  font-weight: 700;
 }
 
 .capital-legend span:first-child strong,
@@ -3334,21 +3372,34 @@ body.resources-modal-open {
   color: var(--invested-blue);
 }
 
-.capital-metrics span {
+.capital-metrics span,
+.comparateur-results span {
   border-radius: 20px;
   box-shadow: 0 16px 32px rgba(43, 37, 30, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.75);
 }
 
-.capital-metrics .capital-metric-invested {
+.capital-metrics .capital-metric-invested,
+.comparateur-results .capital-metric-invested {
   background:
     linear-gradient(160deg, rgba(255, 253, 250, 0.7), rgba(111, 139, 167, 0.16)),
     radial-gradient(circle at 0% 0%, rgba(111, 139, 167, 0.14), transparent 60%);
 }
 
-.capital-metrics .capital-metric-interest {
+.capital-metrics .capital-metric-interest,
+.comparateur-results .capital-metric-interest {
   background:
     linear-gradient(160deg, rgba(255, 253, 250, 0.78), rgba(223, 203, 168, 0.4)),
     radial-gradient(circle at 100% 0%, rgba(199, 174, 137, 0.3), transparent 62%);
+}
+
+.comparateur-results .capital-metric-ecart {
+  background:
+    linear-gradient(160deg, rgba(255, 253, 250, 0.72), rgba(58, 122, 92, 0.16)),
+    radial-gradient(circle at 100% 0%, rgba(58, 122, 92, 0.26), transparent 62%);
+}
+
+.comparateur-results .capital-metric-ecart strong {
+  color: #2f6b52;
 }
 
 .capital-legend span:last-child strong,
@@ -3460,6 +3511,16 @@ body.resources-modal-open {
   color: var(--interest-gold);
   font-size: clamp(0.98rem, 1.2vw, 1.14rem);
   font-weight: 560;
+}
+
+/* .capital-shares strong ci-dessus est doré par défaut (usage le plus
+   fréquent : un seul chiffre mis en avant) — un span explicitement
+   .capital-metric-invested (contrat classique, cf. comparateur-contrats.html
+   #amortissement) doit rester bleu malgré cette règle de même spécificité
+   déclarée après elle ; sélecteur plus spécifique pour trancher sans
+   dépendre de l'ordre. */
+.capital-shares .capital-metric-invested strong {
+  color: var(--invested-blue);
 }
 
 .scpi-summary-row .capital-shares small {
@@ -6349,10 +6410,6 @@ body[data-mode="av"] .av-result [data-av-value] {
   font-variant-numeric: tabular-nums;
 }
 
-body[data-mode="av"] .av-result .capital-visual > span {
-  transition: width 420ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
 body[data-mode="av"] .av-result .capital-breakdown-labels {
   align-items: baseline;
   font-size: 0.68rem;
@@ -6377,8 +6434,7 @@ body[data-mode="av"] .av-result .capital-breakdown-labels strong {
   letter-spacing: -0.01em;
 }
 
-body[data-mode="av"] .av-result .capital-metrics,
-body[data-mode="av"] .av-result .capital-shares {
+body[data-mode="av"] .av-result .capital-metrics {
   gap: 0;
   margin-top: 0;
   overflow: hidden;
@@ -6390,10 +6446,18 @@ body[data-mode="av"] .av-result .capital-shares {
     inset 0 1px 0 rgba(255, 255, 255, 0.78);
 }
 
-body[data-mode="av"] .av-result .capital-metrics > span,
-body[data-mode="av"] .av-result .capital-shares > span {
+/* Au-delà du palier @media (max-width: 980px) plus bas, qui empile les
+   cartes en 1 colonne : sinon les 3 cartes (investies / intérêts /
+   multiple) restent côte à côte sur une seule ligne. */
+@media (min-width: 981px) {
+  body[data-mode="av"] .av-result .capital-metrics {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+body[data-mode="av"] .av-result .capital-metrics > span {
   align-content: center;
-  min-height: 82px;
+  min-height: 148px;
   padding: 15px 18px;
   border: 0;
   border-right: 1px solid rgba(43, 37, 30, 0.07);
@@ -6403,18 +6467,15 @@ body[data-mode="av"] .av-result .capital-shares > span {
   transition: background 220ms ease, transform 220ms ease;
 }
 
-body[data-mode="av"] .av-result .capital-metrics > span:last-child,
-body[data-mode="av"] .av-result .capital-shares > span:last-child {
+body[data-mode="av"] .av-result .capital-metrics > span:last-child {
   border-right: 0;
 }
 
-body[data-mode="av"] .av-result .capital-metrics > span:hover,
-body[data-mode="av"] .av-result .capital-shares > span:hover {
+body[data-mode="av"] .av-result .capital-metrics > span:hover {
   background: rgba(255, 253, 250, 0.34);
 }
 
-body[data-mode="av"] .av-result .capital-metrics small,
-body[data-mode="av"] .av-result .capital-shares small {
+body[data-mode="av"] .av-result .capital-metrics small {
   color: rgba(43, 37, 30, 0.55);
   font-size: 0.67rem;
   font-weight: 650;
@@ -6422,8 +6483,7 @@ body[data-mode="av"] .av-result .capital-shares small {
   text-transform: uppercase;
 }
 
-body[data-mode="av"] .av-result .capital-metrics strong,
-body[data-mode="av"] .av-result .capital-shares strong {
+body[data-mode="av"] .av-result .capital-metrics strong {
   font-size: clamp(1.42rem, 2vw, 1.78rem);
   line-height: 1;
 }
@@ -6438,52 +6498,10 @@ body[data-mode="av"] .av-result .capital-metric-interest strong {
   font-weight: 400;
 }
 
-body[data-mode="av"] .av-result .capital-shares {
-  background: rgba(255, 253, 250, 0.34);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
-}
-
-body[data-mode="av"] .av-result .capital-shares > span {
-  min-height: 68px;
-}
-
-body[data-mode="av"] .av-result .capital-shares strong {
+body[data-mode="av"] .av-result .capital-metric-multiple strong {
   color: rgba(43, 37, 30, 0.82);
   font-family: var(--serif);
-  font-size: clamp(1.2rem, 1.7vw, 1.5rem);
   font-weight: 400;
-}
-
-body[data-mode="av"] .av-result .capital-insight {
-  position: relative;
-  padding: 16px 18px 16px 22px;
-  border: 0;
-  border-radius: 16px;
-  background: linear-gradient(90deg, rgba(199, 174, 137, 0.11), rgba(255, 253, 250, 0.24));
-}
-
-body[data-mode="av"] .av-result .capital-insight::before {
-  content: "";
-  position: absolute;
-  top: 12px;
-  bottom: 12px;
-  left: 0;
-  width: 3px;
-  border-radius: 999px;
-  background: linear-gradient(180deg, #7f9aaf, #b99761);
-}
-
-body[data-mode="av"] .av-result .capital-insight p {
-  color: rgba(43, 37, 30, 0.7);
-  font-size: 0.82rem;
-  font-weight: 450;
-  line-height: 1.55;
-}
-
-body[data-mode="av"] .av-result .capital-visual {
-  height: 2px;
-  margin-bottom: 9px;
-  opacity: 0.72;
 }
 
 body[data-mode="av"] #chart-panel {
@@ -7638,6 +7656,7 @@ body[data-mode="scpi"] .tool-field[data-field="dureeTotale"] .tool-input-wrap in
   .capital-heading,
   .capital-metrics,
   .capital-shares,
+  .comparateur-results,
   .fiscal-compare {
     grid-template-columns: 1fr;
   }
@@ -7650,14 +7669,12 @@ body[data-mode="scpi"] .tool-field[data-field="dureeTotale"] .tool-input-wrap in
     transform-origin: left center;
   }
 
-  body[data-mode="av"] .av-result .capital-metrics > span,
-  body[data-mode="av"] .av-result .capital-shares > span {
+  body[data-mode="av"] .av-result .capital-metrics > span {
     border-right: 0;
     border-bottom: 1px solid rgba(43, 37, 30, 0.07);
   }
 
-  body[data-mode="av"] .av-result .capital-metrics > span:last-child,
-  body[data-mode="av"] .av-result .capital-shares > span:last-child {
+  body[data-mode="av"] .av-result .capital-metrics > span:last-child {
     border-bottom: 0;
   }
 }
@@ -7783,6 +7800,7 @@ body[data-mode="scpi"] .tool-field[data-field="dureeTotale"] .tool-input-wrap in
   .capital-heading,
   .capital-metrics,
   .capital-shares,
+  .comparateur-results,
   .fiscal-compare {
     grid-template-columns: 1fr;
   }
@@ -8810,7 +8828,14 @@ body[data-mode="scpi"] .tool-field[data-field="dureeTotale"] .tool-input-wrap in
   .site-footer {
     margin-top: 4px;
     padding-top: 14px;
-    gap: 10px;
+    gap: 0;
+  }
+
+  /* Même valeur que padding-top ci-dessus (14px) : la note reste centrée
+     entre les 2 séparateurs à ce palier aussi (cf. commentaire sur
+     .site-footer plus haut). */
+  .site-footer-note {
+    margin-bottom: 14px;
   }
 
   .site-footer-note + .site-footer-bottom {
@@ -9093,6 +9118,14 @@ body[data-mode="scpi"] .tool-field[data-field="dureeTotale"] .tool-input-wrap in
   }
 }
 
+/* Un peu plus d'air entre le titre de page ("Comparateur de contrats") et
+   la section Hypothèses juste en dessous que le reste du site (.tool-nav
+   partagé) : cette page enchaîne directement plusieurs blocs et le titre
+   avait besoin de respirer davantage. */
+body[data-mode="comparateur"] .tool-nav {
+  margin-bottom: clamp(40px, 7svh, 68px);
+}
+
 /* Pages simulateur "hors gabarit" (Une pierre deux coups, Comparateur de
    contrats — simulateurs/une-pierre-deux-coups.html et
    simulateurs/comparateur-contrats.html) — même traitement des
@@ -9238,8 +9271,7 @@ body[data-mode="comparateur"] .tool-range::-moz-range-thumb {
 
 body[data-mode="pierre2coups"] .tool-params-title,
 body[data-mode="pierre2coups"] .tool-summary-title,
-body[data-mode="comparateur"] .tool-params-title,
-body[data-mode="comparateur"] .tool-summary-title {
+body[data-mode="comparateur"] .tool-params-title {
   display: flex;
   align-items: center;
   min-height: 32px;
@@ -9252,11 +9284,28 @@ body[data-mode="comparateur"] .tool-params-title {
   justify-content: space-between;
 }
 
+/* L'en-tête "Hypothèses"/Réinitialiser ne doit pas s'étirer sur toute la
+   largeur de la page (désormais 1 colonne pleine largeur) : cadrée sur la
+   même largeur que .comparateur-top-fields juste en dessous, avec laquelle
+   elle reste alignée. */
+body[data-mode="comparateur"] .tool-params-title {
+  max-width: 440px;
+  margin: 0 auto;
+}
+
+/* Les blocs empilés de .tool-layout (curseurs, cartes contrat, amortissement,
+   synthèse, graphique, tableau) ont tous le même espacement — y compris à
+   l'intérieur de #summary (bandeau de croisement + 3 cartes de résultat),
+   qui utilisait sinon le gap plus resserré de .tool-summary (12px, pensé
+   pour les autres pages) et cassait la régularité visuelle. */
+body[data-mode="comparateur"] .tool-summary {
+  gap: clamp(22px, 3vw, 38px);
+}
+
 body[data-mode="pierre2coups"] .tool-params-title h2,
 body[data-mode="pierre2coups"] .tool-summary-title h2,
 body[data-mode="pierre2coups"] #chart-panel .tool-card-title h2,
 body[data-mode="comparateur"] .tool-params-title h2,
-body[data-mode="comparateur"] .tool-summary-title h2,
 body[data-mode="comparateur"] #chart-panel .tool-card-title h2 {
   margin: 0;
   color: var(--ink);
@@ -9268,13 +9317,46 @@ body[data-mode="comparateur"] #chart-panel .tool-card-title h2 {
   transform-origin: left center;
 }
 
-/* Colonne de droite propre à ces pages : regroupe tool-summary et
-   tool-detail (chart + tableau) empilés, pour que tool-detail se place
-   directement sous tool-summary au lieu d'être un bloc pleine largeur sous
-   .tool-overview — sans toucher .tool-layout/.tool-overview/.tool-params/
-   .tool-detail, réutilisés tels quels par projection.html. Le 2e enfant
-   direct de .tool-overview (au lieu de .tool-summary seul) tombe
-   naturellement dans sa colonne de droite existante (minmax(0, 1fr)). */
+/* Rôles de série réattribués pour le code couleur de cette page (doré =
+   contrat haut de gamme, bleu = contrat classique, noir = capital initial,
+   cf. comparateur-contrats.html renderChartComparaison) : le rôle "capital"
+   porte ici la ligne de référence "Capital initial" (fine, en retrait,
+   comme "invested" ailleurs) et le rôle "invested" porte une courbe de
+   contrat à part entière (pleine épaisseur, comme "capital"/"gains"
+   ailleurs) — on échange donc leurs épaisseurs/opacités par défaut. */
+body[data-mode="comparateur"] #chart-panel .chart-line-capital {
+  stroke-width: 1.5;
+  opacity: 0.75;
+}
+
+body[data-mode="comparateur"] #chart-panel .chart-line-invested {
+  stroke-width: 4;
+  opacity: 1;
+}
+
+/* Repère "Croisement" plus sobre que le style doré/gras par défaut
+   (.chart-marker-label), pensé à l'origine pour un repère isolé — ici sur
+   fond de deux courbes déjà colorées. Même traitement que le libellé d'un
+   curseur (.tool-field > span en mode comparateur) : encre atténuée,
+   graisse 540, plutôt que le doré/gras d'origine. */
+body[data-mode="comparateur"] #chart-panel .chart-marker-line {
+  stroke: rgba(43, 37, 30, 0.38);
+}
+
+body[data-mode="comparateur"] #chart-panel .chart-marker-label {
+  fill: rgba(43, 37, 30, 0.68);
+  font-size: 14px;
+  font-weight: 540;
+}
+
+/* Colonne de droite propre à une page hors gabarit à 2 colonnes (Une
+   pierre deux coups) : regroupe tool-summary et tool-detail (chart +
+   tableau) empilés, pour que tool-detail se place directement sous
+   tool-summary au lieu d'être un bloc pleine largeur sous .tool-overview —
+   sans toucher .tool-layout/.tool-overview/.tool-params/.tool-detail,
+   réutilisés tels quels par projection.html. Le comparateur de contrats
+   n'a plus cette colonne : sa page est un empilement plein-largeur d'une
+   seule colonne (cf. .tool-layout, déjà en grille 1 colonne implicite). */
 .tool-secondary-column {
   display: flex;
   flex-direction: column;
@@ -9282,14 +9364,27 @@ body[data-mode="comparateur"] #chart-panel .tool-card-title h2 {
   min-width: 0;
 }
 
-/* La colonne de droite est plus étroite que l'ancienne largeur pleine
-   page du graphique/tableau : le tableau a besoin d'un peu plus de marge
-   pour rester lisible sans tronquer ses en-têtes. */
+/* Le tableau a besoin d'un peu plus de marge pour rester lisible sans
+   tronquer ses en-têtes que le style de base. */
 body[data-mode="pierre2coups"] .tool-table-wrap,
 body[data-mode="comparateur"] .tool-table-wrap {
   font-size: 0.76rem;
   min-height: 0;
   overflow-y: auto;
+}
+
+/* Colonnes 2/3 = contrat A (haut de gamme, doré) puis contrat B (classique,
+   bleu) — inverse de la règle générique (nth-child(2) bleu, nth-child(3)
+   doré, pensée pour "sommes investies"/"intérêts" ailleurs) : surchargée
+   ici pour respecter le code couleur propre à cette page. */
+body[data-mode="comparateur"] .tool-table-wrap th:nth-child(2),
+body[data-mode="comparateur"] .tool-table-wrap td:nth-child(2) {
+  color: var(--interest-gold);
+}
+
+body[data-mode="comparateur"] .tool-table-wrap th:nth-child(3),
+body[data-mode="comparateur"] .tool-table-wrap td:nth-child(3) {
+  color: var(--invested-blue);
 }
 
 body[data-mode="pierre2coups"] .tool-table-wrap th,
@@ -9299,22 +9394,11 @@ body[data-mode="comparateur"] .tool-table-wrap th {
 }
 
 /* .tool-layout est partagée avec projection.html (width: min(100%, 1120px))
-   — élargie ici (valeur propre à chaque page) pour que tout l'espace gagné
-   profite à la colonne de droite (graphique/tableau). */
-body[data-mode="pierre2coups"] .tool-layout {
-  width: min(100%, 1450px);
-}
-
+   — élargie ici (valeur propre à chaque page) pour laisser assez de place
+   aux cartes/graphique de ces mises en page plus chargées. */
+body[data-mode="pierre2coups"] .tool-layout,
 body[data-mode="comparateur"] .tool-layout {
-  width: min(100%, 1550px);
-}
-
-/* Comparateur de contrats a besoin d'une colonne Hypothèses plus large que
-   les 360px par défaut de .tool-overview, pour accueillir les deux cartes
-   Contrat A / Contrat B côte à côte (cf. .contract-fields plus bas) — sans
-   toucher à .tool-overview elle-même, utilisée telle quelle ailleurs. */
-body[data-mode="comparateur"] .tool-overview {
-  grid-template-columns: minmax(480px, 560px) minmax(0, 1fr);
+  width: min(100%, 1450px);
 }
 
 /* .tool-overview a déjà align-items: stretch (règle partagée inchangée),
@@ -9326,32 +9410,30 @@ body[data-mode="comparateur"] .tool-overview {
    (déjà overflow: auto) pour les lignes qui dépassent, plutôt que
    d'agrandir la carte. min-height: 0 à chaque étage grid/flex imbriqué :
    sans ça, la hauteur de contenu naturelle du tableau empêcherait tout
-   rétrécissement/scroll en amont. */
-body[data-mode="pierre2coups"] .tool-detail,
-body[data-mode="comparateur"] .tool-detail {
+   rétrécissement/scroll en amont. Propre à Une pierre deux coups (seule
+   page hors gabarit encore sur ce schéma 2 colonnes). */
+body[data-mode="pierre2coups"] .tool-detail {
   flex: 1;
   grid-template-rows: auto 1fr;
   min-height: 0;
 }
 
-body[data-mode="pierre2coups"] .tool-detail-panels,
-body[data-mode="comparateur"] .tool-detail-panels {
+body[data-mode="pierre2coups"] .tool-detail-panels {
   min-height: 0;
 }
 
 body[data-mode="pierre2coups"] .tool-chart-card,
-body[data-mode="pierre2coups"] .tool-table-card,
-body[data-mode="comparateur"] .tool-chart-card,
-body[data-mode="comparateur"] .tool-table-card {
+body[data-mode="pierre2coups"] .tool-table-card {
   grid-template-rows: auto 1fr;
   min-height: 0;
 }
 
 /* Comparateur de contrats (simulateurs/comparateur-contrats.html) — deux
-   cartes "Contrat A"/"Contrat B" côte à côte dans .tool-params. La carte
-   elle-même réutilise .tool-result-card (bordure/fond/ombre déjà partagés) ;
-   seuls la grille 2 colonnes, le nom éditable et le repère de croisement du
-   tableau sont propres à cette page. */
+   cartes "Contrat A"/"Contrat B" côte à côte, pleine largeur sous les
+   hypothèses générales. La carte elle-même réutilise .tool-result-card
+   (bordure/fond/ombre déjà partagés) ; seuls la grille 2 colonnes, la
+   légende de carte, le nom éditable et le repère de croisement du tableau
+   sont propres à cette page. */
 .contract-fields {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -9359,19 +9441,50 @@ body[data-mode="comparateur"] .tool-table-card {
   min-width: 0;
 }
 
-.contract-card {
-  min-width: 0;
+/* Versement initial / horizon de placement, les deux seuls champs communs
+   aux deux contrats — empilés et centrés au milieu de la page plutôt que
+   côte à côte : mis l'un sur l'autre, ils ne laissent pas croire que l'un
+   se rapporte au contrat A (à gauche) et l'autre au contrat B (à droite).
+   Classe dédiée plutôt que .tool-fields (qui impose gap:0 en mode
+   comparateur, pensé pour les curseurs empilés des cartes Contrat A/B) :
+   les enfants .tool-field/.tool-input-wrap/.tool-range gardent leur style
+   via leurs propres classes, indépendamment de celle du conteneur. */
+.comparateur-top-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+  width: min(100%, 440px);
+  margin: 0 auto;
 }
 
+.contract-card {
+  min-width: 0;
+  border-width: 2px;
+}
+
+/* Code couleur respecté partout : doré = contrat haut de gamme (A),
+   bleu = contrat classique (B), noir = capital initial uniquement. */
+.contract-card-a {
+  border-color: rgba(185, 151, 97, 0.55);
+}
+
+.contract-card-b {
+  border-color: rgba(111, 139, 167, 0.5);
+}
+
+/* Trait pointillé visible par défaut (pas seulement au survol/focus comme
+   avant) : signale que le nom est un champ éditable — le conseiller peut y
+   saisir le nom réel du contrat détenu par son client plutôt que de garder
+   "Contrat Haut de Gamme"/"Contrat Classique". */
 .contract-name-input {
   width: 100%;
   padding: 4px 2px 8px;
   border: 0;
-  border-bottom: 1px solid transparent;
+  border-bottom: 1px dashed rgba(43, 37, 30, 0.22);
   background: transparent;
   color: var(--ink);
   font-family: var(--serif);
-  font-size: clamp(1.05rem, 1.5vw, 1.24rem);
+  font-size: clamp(1.42rem, 1.8vw, 1.68rem);
   font-weight: 400;
   transform: scaleX(1.04);
   transform-origin: left center;
@@ -9380,7 +9493,8 @@ body[data-mode="comparateur"] .tool-table-card {
 
 .contract-name-input:hover,
 .contract-name-input:focus-visible {
-  border-bottom-color: rgba(185, 151, 97, 0.5);
+  border-bottom-style: solid;
+  border-bottom-color: rgba(185, 151, 97, 0.65);
 }
 
 .contract-name-input:focus-visible {
@@ -9393,4 +9507,28 @@ body[data-mode="comparateur"] .tool-table-card {
 .table-row-highlight td {
   background: rgba(199, 174, 137, 0.14);
   font-weight: 650;
+}
+
+/* Survol (comparateur de contrats uniquement, cf. renderTableSynthese) :
+   discret sur une ligne normale, nettement accentué sur la ligne déjà mise
+   en évidence (l'année de croisement) pour qu'elle se distingue davantage
+   des autres au passage de la souris. */
+body[data-mode="comparateur"] .tool-table-wrap tbody tr:hover td {
+  background: rgba(43, 37, 30, 0.035);
+}
+
+body[data-mode="comparateur"] .table-row-highlight:hover td {
+  background: rgba(199, 174, 137, 0.34);
+}
+
+/* Empilement mobile de .contract-fields : une media query dédiée ici
+   (plutôt qu'une entrée dans les listes de breakpoints déclarées plus haut
+   dans le fichier) car cette classe est définie après ces listes — à
+   spécificité égale, la déclaration la plus tardive l'emporte, donc une
+   entrée plus haut serait sans effet. .comparateur-top-fields est déjà en
+   1 colonne à toutes les tailles, pas besoin d'y ajouter une règle ici. */
+@media (max-width: 980px) {
+  .contract-fields {
+    grid-template-columns: 1fr;
+  }
 }
