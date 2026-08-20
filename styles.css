@@ -1656,6 +1656,26 @@ body.resources-modal-open {
   transition: color 200ms ease;
 }
 
+/* Deux formulations distinctes plutôt qu'un seul texte générique : sur
+   téléphone, "Explorer" seul ne dit pas COMMENT (glisser/cliquer), alors que
+   le geste change réellement d'une plateforme à l'autre (souris/molette sur
+   ordinateur, clic seul sur téléphone depuis le retrait du balayage pour
+   ouvrir la première carte, cf. handleHorizontalSwipe/isMobileNav dans le
+   script). 900px : même palier que le reste du site pour "mobile". */
+.resources-opening-hint-mobile {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .resources-opening-hint-desktop {
+    display: none;
+  }
+
+  .resources-opening-hint-mobile {
+    display: inline;
+  }
+}
+
 .resources-opening-hint:hover,
 .resources-opening-hint:focus-visible {
   color: var(--ink);
