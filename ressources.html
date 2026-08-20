@@ -526,6 +526,23 @@
     <script>
       (function () {
         var prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+        // Téléphone : la carte "de fond" se décale sur le CÔTÉ (au lieu de
+        // derrière, en diagonale, cf. valeurs desktop plus bas) — cohérent
+        // avec le balayage horizontal dédié à la bascule entre cartes sur ce
+        // format (cf. écouteurs touchmove plus bas), qui remplace le scroll
+        // vertical utilisé sur ordinateur. 900px : même palier que le reste
+        // du site pour "mobile".
+        function isMobileNav() {
+          return window.matchMedia("(max-width: 900px)").matches;
+        }
+
+        function stackOffsetTween(duration) {
+          return isMobileNav()
+            ? { x: "88%", y: 0, scale: 0.94, rotate: 0, duration: duration || 0.4, ease: "power2.out" }
+            : { x: -20, y: 14, scale: 0.96, rotate: -6, duration: duration || 0.4, ease: "power2.out" };
+        }
+
         var activeBackdrop = null;
         // Carte "de fond" visible en permanence derrière activeBackdrop une
         // fois qu'on a enchaîné (cf. openModal) — pas juste le temps d'une
@@ -1138,9 +1155,11 @@
             var previousCard = previousBackdrop.querySelector(".resources-modal-card");
             if (previousCard) {
               if (!prefersReducedMotion && typeof gsap !== "undefined") {
-                gsap.to(previousCard, { scale: 0.96, x: -20, y: 14, rotate: -6, duration: 0.4, ease: "power2.out" });
+                gsap.to(previousCard, stackOffsetTween());
               } else {
-                previousCard.style.transform = "translate(-20px, 14px) scale(0.96) rotate(-6deg)";
+                previousCard.style.transform = isMobileNav()
+                  ? "translateX(88%) scale(0.94)"
+                  : "translate(-20px, 14px) scale(0.96) rotate(-6deg)";
               }
             }
           }
@@ -1255,10 +1274,14 @@
 
           if (!prefersReducedMotion && typeof gsap !== "undefined") {
             if (frontCard) gsap.to(frontCard, { x: 0, y: 0, scale: 1, rotate: 0, duration: 0.45, ease: "power2.out" });
-            if (backCard) gsap.to(backCard, { x: -20, y: 14, scale: 0.96, rotate: -6, duration: 0.45, ease: "power2.out" });
+            if (backCard) gsap.to(backCard, stackOffsetTween(0.45));
           } else {
             if (frontCard) frontCard.style.transform = "";
-            if (backCard) backCard.style.transform = "translate(-20px, 14px) scale(0.96) rotate(-6deg)";
+            if (backCard) {
+              backCard.style.transform = isMobileNav()
+                ? "translateX(88%) scale(0.94)"
+                : "translate(-20px, 14px) scale(0.96) rotate(-6deg)";
+            }
           }
 
           lastTrigger = goingFront.querySelector(".resources-modal-close") || document.activeElement;
@@ -1486,11 +1509,35 @@
           { passive: true }
         );
 
+        // Bascule d'une carte à l'autre par balayage HORIZONTAL — dédiée au
+        // téléphone (cf. isMobileNav), déclenchée seulement si une carte est
+        // déjà ouverte. Un seul geste simple (peu importe le sens, il n'y a
+        // que 2 cartes) : basculer suffit, pas besoin de distinguer
+        // suivant/précédent.
+        function handleHorizontalSwipe(deltaX) {
+          if (Math.abs(deltaX) <= 12 || scrollIntentLocked || !activeBackdrop || !backgroundBackdrop) return;
+          bringToFront(backgroundBackdrop.getAttribute("data-modal-id"));
+          if (activeBackdrop) {
+            lockCardScroll(activeBackdrop.querySelector(".resources-modal-card"));
+          }
+          scrollIntentLocked = true;
+          setTimeout(function () {
+            scrollIntentLocked = false;
+          }, 700);
+        }
+
+        var touchStartX = null;
         var touchStartY = null;
         window.addEventListener(
           "touchstart",
           function (e) {
-            touchStartY = e.touches && e.touches.length ? e.touches[0].clientY : null;
+            if (!e.touches || !e.touches.length) {
+              touchStartX = null;
+              touchStartY = null;
+              return;
+            }
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
           },
           { passive: true }
         );
@@ -1498,8 +1545,36 @@
           "touchmove",
           function (e) {
             if (touchStartY === null || !e.touches || !e.touches.length) return;
+            var currentX = e.touches[0].clientX;
             var currentY = e.touches[0].clientY;
+
+            if (isMobileNav()) {
+              // Téléphone : plus aucune interception tant qu'aucune carte
+              // n'est ouverte — un balayage sur l'écran d'accueil ne fait
+              // plus rien, seul le clic sur une carte-amorce ouvre la
+              // première carte (cf. écouteurs click plus haut). Une fois une
+              // carte ouverte, le balayage VERTICAL redevient 100% natif
+              // (défilement normal du contenu, aucune interception — plus
+              // besoin du délai habilitationsEdgeReachedAt ici, qui ne
+              // s'applique qu'au chemin desktop/wheel plus bas dans
+              // handleScrollIntent) ; seul le balayage HORIZONTAL bascule
+              // vers l'autre carte.
+              if (!activeBackdrop) {
+                touchStartX = currentX;
+                touchStartY = currentY;
+                return;
+              }
+              var deltaX = touchStartX - currentX;
+              if (Math.abs(deltaX) > 12) {
+                handleHorizontalSwipe(deltaX);
+                touchStartX = currentX;
+              }
+              touchStartY = currentY;
+              return;
+            }
+
             handleScrollIntent(touchStartY - currentY);
+            touchStartX = currentX;
             touchStartY = currentY;
           },
           { passive: true }

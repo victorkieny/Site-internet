@@ -1264,6 +1264,11 @@ h3 {
   .about-content {
     grid-template-columns: 1fr;
     row-gap: 24px;
+    /* Marge propre à cette page, en plus du padding partagé de .home-page
+       (14-20px) : le texte justifié (.about-entry-body p) colle sinon
+       visiblement plus au bord que sur les autres pages, qui n'ont pas de
+       longs paragraphes à cette largeur. */
+    padding-inline: 10px;
   }
 
   .about-portrait-rail {
