@@ -18,6 +18,11 @@
 // valeur cible ; playReveal() l'applique au même moment qu'elle retire
 // .is-entering, sur le même tick.
 //
+// data-reveal-width / data-reveal-left (optionnels) : même principe que
+// data-reveal-height, pour un mouvement horizontal (ex. une colonne qui
+// se rétracte, un repère qui glisse le long d'un axe — "Investir en
+// financement").
+//
 // data-reveal-transform (optionnel) : même principe pour un mouvement de
 // transform plutôt qu'un fondu générique (ex. une barre qui se remplit
 // en largeur, scaleX(0) -> scaleX(1)) — indépendant de .is-entering, qui
@@ -44,6 +49,8 @@ export function playReveal(container) {
     els.forEach((el) => {
       el.classList.remove("is-entering");
       if (el.dataset.revealHeight) el.style.height = el.dataset.revealHeight;
+      if (el.dataset.revealWidth) el.style.width = el.dataset.revealWidth;
+      if (el.dataset.revealLeft) el.style.left = el.dataset.revealLeft;
       if (el.dataset.revealTransform) el.style.transform = el.dataset.revealTransform;
       if (el.dataset.revealDashoffset) el.style.strokeDashoffset = el.dataset.revealDashoffset;
       if (el.dataset.revealBg) el.style.background = el.dataset.revealBg;
@@ -56,6 +63,8 @@ export function playReveal(container) {
       els.forEach((el) => {
         el.classList.remove("is-entering");
         if (el.dataset.revealHeight) el.style.height = el.dataset.revealHeight;
+        if (el.dataset.revealWidth) el.style.width = el.dataset.revealWidth;
+        if (el.dataset.revealLeft) el.style.left = el.dataset.revealLeft;
         if (el.dataset.revealTransform) el.style.transform = el.dataset.revealTransform;
         if (el.dataset.revealDashoffset) el.style.strokeDashoffset = el.dataset.revealDashoffset;
         if (el.dataset.revealBg) el.style.background = el.dataset.revealBg;

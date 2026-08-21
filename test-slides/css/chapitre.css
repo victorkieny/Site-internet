@@ -230,7 +230,9 @@
 [data-reveal] {
   transition: opacity var(--chap-duration-move) var(--chap-ease-move),
     transform var(--chap-duration-move) var(--chap-ease-move),
-    height var(--chap-duration-move) var(--chap-ease-move);
+    height var(--chap-duration-move) var(--chap-ease-move),
+    width var(--chap-duration-move) var(--chap-ease-move),
+    left var(--chap-duration-move) var(--chap-ease-move);
 }
 
 [data-reveal].is-entering {
@@ -2311,20 +2313,18 @@
   white-space: nowrap;
 }
 
-.scpi-financement__block-a {
-  position: absolute;
-  transition: opacity var(--chap-duration-fade) linear;
-}
-
 .scpi-financement__bar {
   position: absolute;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  transition: opacity var(--chap-duration-fade) linear;
+  overflow: hidden;
 }
 
 .scpi-financement__bar-effort {
+  flex: none;
   box-sizing: border-box;
+  overflow: hidden;
   background: var(--encre);
   display: flex;
   align-items: center;
@@ -2332,20 +2332,13 @@
 }
 
 .scpi-financement__bar-revenu {
-  flex: 1;
+  flex: none;
   box-sizing: border-box;
+  overflow: hidden;
   background: var(--or);
   display: flex;
   align-items: center;
-  padding: 0.9375cqw 1.25cqw;
-}
-
-.scpi-financement__bar-revenu--flush {
-  padding: 0 1.25cqw;
-}
-
-.scpi-financement__bar-spacer {
-  flex: none;
+  padding-left: 1.25cqw;
 }
 
 .scpi-financement__bar-label {
@@ -2361,13 +2354,61 @@
   color: rgba(var(--chap-ink-rgb), 0.75);
 }
 
-.scpi-financement__block-c {
+.scpi-financement__resultat {
   position: absolute;
-  transition: opacity var(--chap-duration-fade) linear;
+  top: 4.375cqw;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 1.09375cqw;
 }
 
-.scpi-financement__block-d {
-  transition: opacity var(--chap-duration-fade) linear;
+.scpi-financement__resultat-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3125cqw;
+  padding-bottom: 1.09375cqw;
+  border-bottom: 0.078125cqw solid rgba(var(--chap-ink-rgb), 0.16);
+}
+
+.scpi-financement__resultat-row--last {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.scpi-financement__levier {
+  position: absolute;
+  top: 21.5cqw;
+  box-sizing: border-box;
+  display: flex;
+  align-items: baseline;
+  gap: 0.78125cqw;
+}
+
+.scpi-financement__levier-kicker {
+  font-weight: 700;
+  font-size: 0.7421875cqw;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: rgba(var(--chap-ink-rgb), 0.5);
+}
+
+.scpi-financement__levier-value {
+  font-family: var(--font-serif-chapitre);
+  font-weight: 400;
+  font-size: 1.71875cqw;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--or);
+}
+
+.scpi-financement__levier-pct {
+  font-family: var(--font-sans-chapitre);
+  font-size: 0.9375cqw;
+  font-weight: 450;
+  color: rgba(var(--chap-ink-rgb), 0.6);
 }
 
 .scpi-financement__axis {
@@ -2400,53 +2441,6 @@
 
 .scpi-financement__axis-label--center {
   transform: translateX(-50%);
-}
-
-.scpi-financement__axis-label--transmission {
-  transform: translateX(-50%);
-  color: rgba(var(--chap-ink-rgb), 0.65);
-}
-
-.scpi-financement__transmission {
-  position: absolute;
-  inset: 0;
-}
-
-.scpi-financement__divider {
-  position: absolute;
-  left: 75cqw;
-  top: 2.34375cqw;
-  width: 0.078125cqw;
-  height: 16.09375cqw;
-  background: repeating-linear-gradient(
-    to bottom,
-    rgba(var(--chap-ink-rgb), 0.4) 0 0.234375cqw,
-    transparent 0.234375cqw 0.625cqw
-  );
-}
-
-.scpi-financement__block-e {
-  position: absolute;
-  left: 76.25cqw;
-  top: 6.71875cqw;
-  width: 14.0625cqw;
-  height: 11.71875cqw;
-  box-sizing: border-box;
-  border: 0.078125cqw solid rgba(var(--chap-ink-rgb), 0.22);
-  border-top: 0.15625cqw solid var(--encre);
-  padding: 1.25cqw 1.40625cqw;
-  display: flex;
-  flex-direction: column;
-  gap: 0.625cqw;
-}
-
-.scpi-financement__block-e-note {
-  margin: auto 0 0;
-  font-weight: 450;
-  font-size: 0.9765625cqw;
-  line-height: 1.4;
-  text-wrap: pretty;
-  color: rgba(var(--chap-ink-rgb), 0.65);
 }
 
 .scpi-financement__footnote {

@@ -1,33 +1,60 @@
 import { euro, escapeHtml } from "../editable.js";
-import { renderChapRail } from "./_chapitre.js";
+import { renderChapRail, formatPct } from "./_chapitre.js";
 
-// Gabarit "Investir en financement" (chapitre SCPI, import Claude
-// Design) — UNE SEULE slide en révélation progressive à 3 états (Phase 1
-// Constitution / Phase 2 Perception / Phase 3 Transmission), même
-// mécanisme stepForward/stepBackward que "Fiscalité des rachats" et
-// "Impact fiscal" (opts.stateIndex direct, pas de morphing entre
-// couches) — jamais 3 slides séparées.
+// Gabarit "Investir en financement" (chapitre SCPI) — UNE SEULE slide en
+// révélation progressive à 5 états (opts.stateIndex direct, pas de
+// morphing entre couches), qui raconte le mécanisme du levier de crédit
+// dans l'ordre :
+//   1. la mensualité de financement brute, colonne pleine (encre) ;
+//   2. les revenus SCPI montent depuis le bas de la colonne et absorbent
+//      une partie de la mensualité : il ne reste que l'effort net à la
+//      charge de l'investisseur ;
+//   3. l'axe se compresse au premier tiers (la colonne + son repère de
+//      durée glissent vers la gauche) pour laisser la place au bilan ;
+//   4. le bilan : effort réel cumulé sur toute la durée, en regard du
+//      patrimoine immobilier détenu ;
+//   5. l'effet de levier (gain en euros et en %), toujours dérivé des
+//      montants ci-dessus, jamais saisi en dur.
 //
-// Barre "mensualité" (état 1, gauche) : effort d'épargne net (encre) au-
-// dessus, revenus SCPI (or) en dessous, hauteurs proportionnelles au
-// ratio revenu/mensualité — jamais saisies en dur (même principe que les
-// répartitions dérivées, charte CLAUDE.md). États 2-3 : cette barre reste
-// affichée mais s'estompe (l'attention se déplace vers la suite), jamais
-// retirée du DOM — la mise en page ne bouge pas.
+// Colonne "mensualité" (état 1, pleine hauteur) : effort d'épargne net
+// (encre) qui se rétracte, revenus SCPI (or) qui montent depuis le bas
+// — hauteurs proportionnelles au ratio revenu/mensualité, jamais saisies
+// en dur (même principe que les répartitions dérivées, charte
+// CLAUDE.md). La somme des deux hauteurs reste constante à chaque
+// instant de la transition (même durée/easing, deltas opposés) : jamais
+// de trou ni de chevauchement pendant l'animation.
 const BAR_HEIGHT_CQW = 11.71875; // 150px à 1280 de large
 
-const PHASES = [
+// Largeur utile de la scène (cqw) : .scpi-financement__stage fait
+// 100% de .scpi-financement, elle-même en retrait du padding horizontal
+// de la scène (4.84375cqw de chaque côté) — 100 - 2×4.84375.
+const STAGE_W = 90.3125;
+const THIRD_W = STAGE_W / 3;
+const RESULT_GAP = 3.125;
+const RESULT_LEFT = THIRD_W + RESULT_GAP;
+const RESULT_W = STAGE_W - RESULT_LEFT;
+
+const ETAPES = [
   {
-    eyebrow: "Étape 1 sur 3 · Phase 1 — Constitution du patrimoine",
-    desc: (v) => `Capital SCPI cible de ${v.capital}, financé sur ${v.duree} ans.`,
+    eyebrow: "Étape 1 sur 5 · La mensualité de financement",
+    desc: (v) => `Investir en SCPI à crédit représente un effort mensuel de ${v.finM}.`,
   },
   {
-    eyebrow: "Étape 2 sur 3 · Phase 2 — Perception de revenus",
-    desc: () => `À l'issue du financement, les revenus SCPI deviennent un complément de revenu viager.`,
+    eyebrow: "Étape 2 sur 5 · Les revenus SCPI réduisent l'effort",
+    desc: (v) =>
+      `Les revenus SCPI (${v.revM}) viennent compenser une grande partie de la mensualité : il ne reste que ${v.effM} à la charge de l'investisseur.`,
   },
   {
-    eyebrow: "Étape 3 sur 3 · Phase 3 — Transmission",
-    desc: () => `Le capital et les revenus accumulés sont transmis aux bénéficiaires.`,
+    eyebrow: "Étape 3 sur 5 · Sur toute la durée du financement",
+    desc: (v) => `Cet effort net de ${v.effM} est maintenu pendant ${v.duree} ans.`,
+  },
+  {
+    eyebrow: "Étape 4 sur 5 · Le bilan à l'issue du financement",
+    desc: (v) => `${v.effM} pendant ${v.duree} ans représente un effort réel de ${v.effortTotal}, pour un patrimoine immobilier de ${v.capital}.`,
+  },
+  {
+    eyebrow: "Étape 5 sur 5 · L'effet de levier",
+    desc: (v) => `Soit un gain de ${v.levier} par rapport à l'effort fourni, ${v.levierPctSigned}.`,
   },
 ];
 
@@ -35,66 +62,85 @@ function values(slide) {
   const financementMensuel = slide.financementMensuel;
   const revenuMensuel = slide.revenuMensuel;
   const effort = financementMensuel - revenuMensuel;
+  const duree = slide.dureeAnnees;
+  const effortTotal = effort * duree * 12;
+  const capitalCible = slide.capitalCible;
+  const levier = capitalCible - effortTotal;
+  const levierPct = (levier / effortTotal) * 100;
   const hRev = (BAR_HEIGHT_CQW * revenuMensuel) / financementMensuel;
   const hEff = BAR_HEIGHT_CQW - hRev;
   return {
-    capital: euro.format(slide.capitalCible),
-    duree: slide.dureeAnnees,
+    duree,
+    capital: euro.format(capitalCible),
     finM: `${euro.format(financementMensuel)}/mois`,
     revM: `${euro.format(revenuMensuel)}/mois`,
     effM: `${euro.format(effort)}/mois`,
+    effortTotal: euro.format(effortTotal),
+    levier: `+${euro.format(levier)}`,
+    levierPctSigned: `+${formatPct(levierPct)}`,
     td: slide.tauxDistribution,
     tf: slide.tauxFinancement,
     hEff,
+    hRev,
   };
 }
 
 export function render(slide, opts = {}) {
-  const stateIndex = Math.min(Math.max(opts.stateIndex ?? 0, 0), 2);
+  const stateIndex = Math.min(Math.max(opts.stateIndex ?? 0, 0), ETAPES.length - 1);
   const animate = !!opts.animate;
   const v = values(slide);
-  const phase = PHASES[stateIndex];
+  const etape = ETAPES[stateIndex];
 
-  const opacityAB = stateIndex === 0 ? 1 : stateIndex === 1 ? 0.35 : 0.24;
-  const showC = stateIndex >= 1;
-  const cEntering = animate && stateIndex === 1;
-  const opacityC = stateIndex === 1 ? 1 : 0.45;
-  const widthC = stateIndex === 1 ? 25 : 21.875;
-  const widthD = stateIndex === 1 ? 40.3125 : 25;
-  const showE = stateIndex >= 2;
-  const eEntering = animate && stateIndex === 2;
+  // État 2 (index 1) : les revenus SCPI montent depuis le bas, l'effort
+  // se rétracte d'autant — voir en-tête de fichier.
+  const revenuGrowing = animate && stateIndex === 1;
+  const revenuHeight = stateIndex >= 1 ? v.hRev : 0;
+  const effortHeight = stateIndex >= 1 ? v.hEff : BAR_HEIGHT_CQW;
+  const effortLabel = stateIndex >= 1 ? `Effort d'épargne net · ${v.effM}` : `Mensualité de financement · ${v.finM}`;
 
-  const blockD = showC
+  // État 3 (index 2) : la colonne (largeur) et son repère de durée
+  // glissent du plein axe au premier tiers.
+  const axisShrinking = animate && stateIndex === 2;
+  const barWidth = stateIndex >= 2 ? THIRD_W : STAGE_W;
+  const tickLeft = stateIndex >= 2 ? THIRD_W : STAGE_W;
+
+  const barAttrs = axisShrinking ? ` data-reveal data-reveal-width="${THIRD_W}cqw"` : "";
+  const barStyle = axisShrinking ? `width:${STAGE_W}cqw` : `width:${barWidth}cqw`;
+  const tickAttrs = axisShrinking ? ` data-reveal data-reveal-left="${THIRD_W}cqw"` : "";
+  const tickStyle = axisShrinking ? `left:${STAGE_W}cqw` : `left:${tickLeft}cqw`;
+
+  const effortAttrs = revenuGrowing ? ` data-reveal data-reveal-height="${v.hEff}cqw"` : "";
+  const effortStyle = revenuGrowing ? `height:${BAR_HEIGHT_CQW}cqw` : `height:${effortHeight}cqw`;
+  const revenuAttrs = revenuGrowing ? ` data-reveal data-reveal-height="${v.hRev}cqw"` : "";
+  const revenuStyle = revenuGrowing ? `height:0cqw` : `height:${revenuHeight}cqw`;
+
+  // État 4 (index 3) : bilan (effort réel cumulé / patrimoine détenu).
+  const showResultat = stateIndex >= 3;
+  const resultatEntering = animate && stateIndex === 3;
+  const resultatHtml = showResultat
     ? `
-      <div class="scpi-financement__bar scpi-financement__block-d${cEntering ? " is-entering" : ""}"${cEntering ? " data-reveal" : ""} style="left:50cqw;top:6.71875cqw;width:${widthD}cqw;height:${BAR_HEIGHT_CQW}cqw;opacity:${opacityC}">
-        <div class="scpi-financement__bar-spacer" style="height:${v.hEff}cqw"></div>
-        <div class="scpi-financement__bar-revenu scpi-financement__bar-revenu--flush">
-          ${stateIndex === 1 ? `<span class="scpi-financement__bar-label">Aucun effort d'épargne restant</span>` : ""}
+      <div class="scpi-financement__resultat${resultatEntering ? " is-entering" : ""}"${resultatEntering ? " data-reveal" : ""} style="left:${RESULT_LEFT}cqw;width:${RESULT_W}cqw">
+        <div class="scpi-financement__resultat-row">
+          <span class="scpi-financement__kicker">${escapeHtml(v.effM)} pendant ${v.duree} ans</span>
+          <span class="scpi-financement__value">${v.effortTotal}</span>
         </div>
-      </div>
-    `
-    : "";
-
-  const blockC = showC
-    ? `
-      <div class="scpi-financement__block-c${cEntering ? " is-entering" : ""}"${cEntering ? " data-reveal" : ""} style="left:51.25cqw;top:5.78125cqw;width:${widthC}cqw;opacity:${opacityC}">
-        <span class="scpi-financement__kicker">Complément de revenu viager</span>
-        <span class="scpi-financement__value">${v.revM}</span>
-      </div>
-    `
-    : "";
-
-  const blockE = showE
-    ? `
-      <div class="scpi-financement__transmission${eEntering ? " is-entering" : ""}"${eEntering ? " data-reveal" : ""}>
-        <div class="scpi-financement__divider"></div>
-        <div class="scpi-financement__block-e">
-          <span class="scpi-financement__kicker">Transmis</span>
+        <div class="scpi-financement__resultat-row scpi-financement__resultat-row--last">
+          <span class="scpi-financement__kicker">Patrimoine immobilier détenu</span>
           <span class="scpi-financement__value">${v.capital}</span>
-          <p class="scpi-financement__block-e-note">de capital, plus les revenus accumulés.</p>
         </div>
-        <div class="scpi-financement__tick" style="left:75cqw"></div>
-        <span class="scpi-financement__axis-label scpi-financement__axis-label--transmission" style="left:75cqw">Transmission</span>
+      </div>
+    `
+    : "";
+
+  // État 5 (index 4) : effet de levier, toujours dérivé des montants
+  // ci-dessus (jamais saisi en dur — charte CLAUDE.md).
+  const showLevier = stateIndex >= 4;
+  const levierEntering = animate && stateIndex === 4;
+  const levierHtml = showLevier
+    ? `
+      <div class="scpi-financement__levier${levierEntering ? " is-entering" : ""}"${levierEntering ? " data-reveal" : ""} style="left:${RESULT_LEFT}cqw;width:${RESULT_W}cqw">
+        <span class="scpi-financement__levier-kicker">Effet de levier</span>
+        <span class="scpi-financement__levier-value">${v.levier} <span class="scpi-financement__levier-pct">(${v.levierPctSigned})</span></span>
       </div>
     `
     : "";
@@ -105,34 +151,28 @@ export function render(slide, opts = {}) {
 
       <div class="scpi-financement__intro">
         <h1 class="chap-title scpi-financement__title">${escapeHtml(slide.titre)}</h1>
-        <span class="scpi-financement__eyebrow">${escapeHtml(phase.eyebrow)}</span>
-        <p class="scpi-financement__desc">${escapeHtml(phase.desc(v))}</p>
+        <span class="scpi-financement__eyebrow">${escapeHtml(etape.eyebrow)}</span>
+        <p class="scpi-financement__desc">${escapeHtml(etape.desc(v))}</p>
       </div>
 
       <div class="scpi-financement__stage">
-        <div class="scpi-financement__block-a" style="left:0;top:2.34375cqw;width:23.4375cqw;opacity:${opacityAB}">
-          <span class="scpi-financement__kicker">Mensualité de financement</span>
-          <span class="scpi-financement__value">${v.finM}</span>
-        </div>
-
-        <div class="scpi-financement__bar" style="left:0;top:6.71875cqw;width:50cqw;height:${BAR_HEIGHT_CQW}cqw;opacity:${opacityAB}">
-          <div class="scpi-financement__bar-effort" style="height:${v.hEff}cqw">
-            <span class="scpi-financement__bar-label">Effort d'épargne net · ${v.effM}</span>
+        <div class="scpi-financement__bar"${barAttrs} style="left:0;top:6.71875cqw;height:${BAR_HEIGHT_CQW}cqw;${barStyle}">
+          <div class="scpi-financement__bar-effort"${effortAttrs} style="${effortStyle}">
+            <span class="scpi-financement__bar-label">${escapeHtml(effortLabel)}</span>
           </div>
-          <div class="scpi-financement__bar-revenu">
+          <div class="scpi-financement__bar-revenu"${revenuAttrs} style="${revenuStyle}">
             <span class="scpi-financement__bar-label scpi-financement__bar-label--ink">Revenus SCPI · ${v.revM}</span>
           </div>
         </div>
 
-        ${blockC}
-        ${blockD}
-        ${blockE}
+        ${resultatHtml}
+        ${levierHtml}
 
         <div class="scpi-financement__axis"></div>
         <div class="scpi-financement__tick" style="left:0"></div>
-        <div class="scpi-financement__tick" style="left:50cqw"></div>
+        <div class="scpi-financement__tick"${tickAttrs} style="${tickStyle}"></div>
         <span class="scpi-financement__axis-label" style="left:0">Aujourd'hui</span>
-        <span class="scpi-financement__axis-label scpi-financement__axis-label--center" style="left:50cqw">Année ${v.duree} · fin du financement</span>
+        <span class="scpi-financement__axis-label scpi-financement__axis-label--center"${tickAttrs} style="${tickStyle}">${v.duree} ans</span>
       </div>
 
       <p class="scpi-financement__footnote">Hypothèses · taux de distribution SCPI ${escapeHtml(v.td)}/an hors revalorisation · taux de financement ${escapeHtml(v.tf)} assurance incluse · montants moyens sur les ${v.duree} premières années · données brutes de fiscalité et de prélèvements sociaux.</p>
