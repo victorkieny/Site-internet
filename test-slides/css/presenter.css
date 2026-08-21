@@ -129,6 +129,26 @@
   }
 }
 
+/* Repère slide/état/id (voir presenter.html) : bandeau plein largeur
+   dédié plutôt qu'une place de plus à trouver dans la toolbar — jamais
+   tronqué, contrairement à .presenter__title (ellipsis dès que la
+   toolbar est étroite). */
+.presenter__position {
+  flex: none;
+  margin: 0;
+  padding: 0.35rem 1.25rem;
+  border-bottom: 1px solid var(--color-line);
+  background: var(--color-paper-alt);
+  font-size: 0.8rem;
+  color: var(--color-ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.presenter__position strong {
+  color: var(--color-ink);
+  font-weight: 600;
+}
+
 .presenter__main {
   flex: 1 1 auto;
   min-height: 0;

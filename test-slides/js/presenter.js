@@ -23,6 +23,7 @@ const nextEl = document.getElementById("presenterNext");
 const thumbsEl = document.getElementById("presenterThumbs");
 const notesEl = document.getElementById("presenterNotes");
 const titleEl = document.getElementById("presenterTitle");
+const positionEl = document.getElementById("presenterPosition");
 const openAudienceBtn = document.getElementById("openAudience");
 const navPrevBtn = document.getElementById("navPrev");
 const navNextBtn = document.getElementById("navNext");
@@ -115,6 +116,7 @@ function renderCurrent(animate = false) {
   const n = stateCount(slide);
   const etatSuffix = n > 1 ? ` · état ${stateIndex + 1}/${n}` : "";
   titleEl.textContent = `${slide.title || slide.titre || slide.id} — ${currentIndex + 1}/${deck.slides.length}${etatSuffix}`;
+  positionEl.innerHTML = `Slide <strong>${currentIndex + 1}</strong>/${deck.slides.length} · état <strong>${stateIndex + 1}</strong>/${n} · id : <strong>${slide.id}</strong>`;
   notesEl.value = notes[slide.id] || "";
 }
 

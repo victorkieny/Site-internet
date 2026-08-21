@@ -31,6 +31,11 @@
     <button type="button" class="presenter__open-btn" id="openAudience">Ouvrir l'écran auditoire</button>
   </header>
 
+  <!-- Repère slide/état/id, jamais tronqué (contrairement à
+       presenter__title, réduit par ellipsis dans une toolbar étroite) —
+       pour désigner précisément une slide/un état lors d'un retour. -->
+  <p class="presenter__position" id="presenterPosition"></p>
+
   <div class="presenter__main">
     <section class="presenter__current presenter-preview" id="presenterCurrent"></section>
 
