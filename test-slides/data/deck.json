@@ -399,7 +399,8 @@
         { "numero": "03", "libelle": "Préconisations" }
       ],
       "titre": "Comment ça marche ?",
-      "actifs": ["Bureaux", "Commerces", "Santé", "Hôtellerie"]
+      "actifs": ["Bureaux", "Commerces", "Santé", "Hôtellerie"],
+      "states": [{}, {}, {}, {}]
     },
     {
       "id": "scpi-atouts",
