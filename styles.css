@@ -8335,7 +8335,7 @@ body[data-mode="scpi"] .tool-field[data-field="dureeTotale"] .tool-input-wrap in
      contenu dépasse 100svh) — signalé par Victor à son tour. Retour à
      min-height: 100svh + 1fr auto (le pied de page reste plaqué en bas,
      comme partout ailleurs sur le site), mais avec .home-page-content centré
-     (align-content: center ci-dessous, scoped à #accueil/#a-propos) au lieu
+     (align-content: center ci-dessous, scoped à #accueil/#ressources) au lieu
      d'aligné en haut (align-content: start, règle de base) : l'espace libre
      de la rangée 1fr se répartit maintenant au-dessus ET en dessous du
      contenu plutôt que de s'accumuler uniquement entre le CTA et le pied de
@@ -8357,14 +8357,23 @@ body[data-mode="scpi"] .tool-field[data-field="dureeTotale"] .tool-input-wrap in
      la version large. Son pied de page reste masqué (cf. #ressources
      .site-footer plus haut), donc le contenu se centre dans tout l'espace
      de la rangée 1fr — demandé par Victor : phrase/"Explorer"/cartes trop
-     collés sous la nav, avec un grand vide en dessous. Sur à-propos, le
-     contenu (photo + 3 sections) dépasse presque toujours 100svh :
-     align-content: center n'a alors aucun effet visible, seul le cas où
-     l'écran est très grand/le contenu très court en bénéficierait. */
+     collés sous la nav, avec un grand vide en dessous. */
   #accueil .home-page-content,
-  #a-propos .home-page-content,
   #ressources .home-page-content {
     align-content: center;
+  }
+
+  /* #a-propos exclue du centrage ci-dessus : son contenu (photo + 3
+     sections) dépasse presque toujours 100svh, et align-content: center
+     déborde alors À PARTS ÉGALES au-dessus ET en dessous de la zone dispo
+     (comportement par défaut "unsafe" de l'alignement CSS quand le contenu
+     est plus grand que son conteneur) — le haut du contenu (la photo)
+     remontait au-dessus du padding-top prévu, jusqu'à toucher la nav.
+     Signalé par Victor. Repasse donc en align-content: start (valeur de
+     base de .home-page-content), qui respecte le padding-top dans tous les
+     cas. */
+  #a-propos .home-page-content {
+    align-content: start;
   }
 
   .home-page::before {
