@@ -27,7 +27,16 @@ import { renderChapRail, formatPct } from "./_chapitre.js";
 // CLAUDE.md). La somme des deux hauteurs reste constante à chaque
 // instant de la transition (même durée/easing, deltas opposés) : jamais
 // de trou ni de chevauchement pendant l'animation.
-const BAR_HEIGHT_CQW = 11.71875; // 150px à 1280 de large
+// Même hauteur que les colonnes du diagramme de levier
+// (LEVIER_BAR_MAX_CQW) : une seule échelle de "colonne" sur toute la
+// slide, pas une par visualisation. AXIS_TOP_CQW doit rester égal à la
+// valeur posée dans chapitre.css (.scpi-financement__axis, top) : la
+// colonne repose sur l'axe, son top se déduit de sa hauteur plutôt que
+// d'être saisi en dur en plus (jamais désynchronisé si l'une des deux
+// valeurs change).
+const AXIS_TOP_CQW = 18.4375;
+const BAR_HEIGHT_CQW = 13.75;
+const BAR_TOP_CQW = AXIS_TOP_CQW - BAR_HEIGHT_CQW;
 
 // État 1 : la colonne se construit visuellement mois après mois plutôt
 // que d'apparaître comme un bloc plein — un segment par année de
@@ -228,9 +237,9 @@ export function render(slide, opts = {}) {
       <div class="scpi-financement__stage">
         ${
           stateIndex === 0
-            ? `<div class="scpi-financement__bar" style="left:0;top:6.71875cqw;height:${BAR_HEIGHT_CQW}cqw;width:${STAGE_W}cqw">${barSegmentsHtml(v.duree, effortLabel)}</div>`
+            ? `<div class="scpi-financement__bar" style="left:0;top:${BAR_TOP_CQW}cqw;height:${BAR_HEIGHT_CQW}cqw;width:${STAGE_W}cqw">${barSegmentsHtml(v.duree, effortLabel)}</div>`
             : `
-        <div class="scpi-financement__bar"${barAttrs} style="left:0;top:6.71875cqw;height:${BAR_HEIGHT_CQW}cqw;${barStyle}">
+        <div class="scpi-financement__bar"${barAttrs} style="left:0;top:${BAR_TOP_CQW}cqw;height:${BAR_HEIGHT_CQW}cqw;${barStyle}">
           <div class="scpi-financement__bar-effort"${effortAttrs} style="${effortStyle}">
             <span class="scpi-financement__bar-label">${escapeHtml(effortLabel)}</span>
           </div>
