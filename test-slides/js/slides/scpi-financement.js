@@ -107,7 +107,7 @@ function values(slide) {
 // "Effort réel") reste au ton neutre, seul l'écart au sommet passe en
 // or : c'est cet écart, pas la colonne entière, qui EST l'effet de
 // levier.
-const LEVIER_BAR_MAX_CQW = 16.875; // hauteur de la colonne "Patrimoine détenu" (2x)
+const LEVIER_BAR_MAX_CQW = 13.75; // hauteur de la colonne "Patrimoine détenu"
 
 function barSegmentsHtml(count, label) {
   const segments = Array.from(
@@ -169,11 +169,13 @@ export function render(slide, opts = {}) {
     `
     : "";
 
-  // État 5 (index 4) : effet de levier — diagramme à côté des deux
+  // État 5 (index 4) : effet de levier — diagramme sous les deux
   // montants ci-dessus (pas en dessous de l'axe) : deux colonnes à
   // l'échelle l'une de l'autre, l'écart au sommet de "Patrimoine
   // détenu" (en or) EST le levier, montants toujours dérivés (jamais
-  // saisis en dur — charte CLAUDE.md).
+  // saisis en dur — charte CLAUDE.md). Hauteur calée pour laisser la
+  // place au texte EN DESSOUS des colonnes avant l'axe (voir
+  // LEVIER_BAR_MAX_CQW).
   const showLevier = stateIndex >= 4;
   const levierEntering = animate && stateIndex === 4;
   const patrimoineBarH = LEVIER_BAR_MAX_CQW;
@@ -188,10 +190,8 @@ export function render(slide, opts = {}) {
             <div class="scpi-financement__levier-bar-gap"${levierEntering ? ` data-reveal data-reveal-height="${gapBarH}cqw"` : ""} style="height:${levierEntering ? 0 : gapBarH}cqw"></div>
           </div>
         </div>
-        <div class="scpi-financement__levier-text">
-          <span class="scpi-financement__levier-kicker">Effet de levier</span>
-          <span class="scpi-financement__levier-value">${v.levier} <span class="scpi-financement__levier-pct">(${v.levierPctSigned})</span></span>
-        </div>
+        <span class="scpi-financement__levier-kicker">Effet de levier</span>
+        <span class="scpi-financement__levier-value">${v.levier} <span class="scpi-financement__levier-pct">(${v.levierPctSigned})</span></span>
       </div>
     `
     : "";

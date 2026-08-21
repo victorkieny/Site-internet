@@ -2439,15 +2439,9 @@
   flex: none;
   box-sizing: border-box;
   display: flex;
-  align-items: flex-end;
-  gap: 1.25cqw;
-}
-
-.scpi-financement__levier-text {
-  display: flex;
   flex-direction: column;
-  gap: 0.3125cqw;
-  padding-bottom: 0.46875cqw;
+  align-items: flex-start;
+  gap: 0.625cqw;
 }
 
 /* Deux colonnes à l'échelle l'une de l'autre : "Effort réel" (encre,
@@ -2459,7 +2453,7 @@
   display: flex;
   align-items: flex-end;
   gap: 3.125cqw;
-  height: 16.875cqw;
+  height: 13.75cqw;
 }
 
 .scpi-financement__levier-bar {
