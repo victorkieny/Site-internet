@@ -278,14 +278,14 @@ export function render(slide, opts = {}) {
   // vocabulaire que le bilan/l'effet de levier) plutôt qu'une légende
   // discrète : c'est la conclusion de la slide, elle doit se voir. Le
   // patrimoine (85 000 €) n'est pas répété ici, déjà lisible sur l'axe.
-  // Centré sous la ligne (AXIS_END_CQW/2), en dessous du repère "25 ans"
-  // plutôt qu'à côté (même largeur/hauteur de ligne, les deux se
-  // chevaucheraient sinon).
+  // Centré sous la flèche au bout de la ligne (AXIS_END_CQW — l'axe est
+  // déjà rétracté à ce stade, voir axisWidth) plutôt qu'à côté du
+  // diagramme ou sous le milieu de la ligne.
   const showViager = stateIndex >= 5;
   const viagerEntering = animate && stateIndex === 5;
   const viagerHtml = showViager
     ? `
-      <div class="scpi-financement__viager${viagerEntering ? " is-entering" : ""}"${viagerEntering ? " data-reveal" : ""} style="left:${AXIS_END_CQW / 2}cqw">
+      <div class="scpi-financement__viager${viagerEntering ? " is-entering" : ""}"${viagerEntering ? " data-reveal" : ""} style="left:${AXIS_END_CQW}cqw">
         <span class="scpi-financement__viager-kicker">Puis, à vie</span>
         <span class="scpi-financement__viager-value">${v.revM}</span>
       </div>
@@ -330,7 +330,9 @@ export function render(slide, opts = {}) {
         ${resultatHtml}
         ${levierHtml}
 
-        <div class="scpi-financement__axis"${axisAttrs} style="${axisStyle}"></div>
+        <div class="scpi-financement__axis"${axisAttrs} style="${axisStyle}">
+          <span class="scpi-financement__axis-arrow"></span>
+        </div>
         <div class="scpi-financement__tick" style="left:0"></div>
         <div class="scpi-financement__tick"${tickAttrs} style="${tickStyle}"></div>
         <span class="scpi-financement__axis-label" style="left:0">Aujourd'hui</span>

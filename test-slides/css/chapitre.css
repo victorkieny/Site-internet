@@ -2627,6 +2627,22 @@
   background: rgba(var(--chap-ink-rgb), 0.3);
 }
 
+/* Pointe vers l'avant : le temps continue au-delà du financement
+   (état 6, "Puis, à vie") — enfant de .scpi-financement__axis, se
+   déplace donc avec elle quand sa largeur change (right:0 suit
+   toujours son bout, pas de valeur à resynchroniser séparément). */
+.scpi-financement__axis-arrow {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translate(50%, -50%);
+  width: 0;
+  height: 0;
+  border-top: 0.3125cqw solid transparent;
+  border-bottom: 0.3125cqw solid transparent;
+  border-left: 0.46875cqw solid rgba(var(--chap-ink-rgb), 0.3);
+}
+
 .scpi-financement__tick {
   position: absolute;
   top: 18.4375cqw;
