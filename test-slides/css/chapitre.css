@@ -2645,17 +2645,34 @@
 /* État 6 : les revenus se poursuivent à vie une fois le financement
    soldé — sous le repère "25 ans" plutôt qu'une nouvelle case, pour
    rester un simple prolongement de l'axe (pas un nouveau calcul, voir
-   scpi-financement.js). */
+   scpi-financement.js). Kicker + grande valeur (même vocabulaire que le
+   bilan/l'effet de levier), pas une légende discrète : c'est la
+   conclusion de la slide. */
 .scpi-financement__viager {
   position: absolute;
-  top: 21cqw;
+  top: 19.6875cqw;
   transform: translateX(-100%);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.234375cqw;
+}
+
+.scpi-financement__viager-kicker {
   font-weight: 700;
-  font-size: 0.65625cqw;
-  line-height: 1.35;
-  letter-spacing: 0.1em;
+  font-size: 0.8203125cqw;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  text-align: right;
+  white-space: nowrap;
+  color: rgba(var(--chap-ink-rgb), 0.55);
+}
+
+.scpi-financement__viager-value {
+  font-family: var(--font-serif-chapitre);
+  font-weight: 400;
+  font-size: 1.71875cqw;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
   color: var(--or);
 }

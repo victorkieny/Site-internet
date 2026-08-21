@@ -253,11 +253,19 @@ export function render(slide, opts = {}) {
   // État 6 (index 5) : les revenus se poursuivent à vie une fois le
   // financement soldé — même montant qu'aux états 2-3 (v.revM), mais
   // affiché comme un repère de durée qui prolonge l'axe au-delà de
-  // "25 ans", pas un nouveau calcul.
+  // "25 ans", pas un nouveau calcul. Kicker + grande valeur (même
+  // vocabulaire que le bilan/l'effet de levier) plutôt qu'une légende
+  // discrète : c'est la conclusion de la slide, elle doit se voir. Le
+  // patrimoine (85 000 €) n'est pas répété ici, déjà lisible sur l'axe.
   const showViager = stateIndex >= 5;
   const viagerEntering = animate && stateIndex === 5;
   const viagerHtml = showViager
-    ? `<span class="scpi-financement__viager${viagerEntering ? " is-entering" : ""}"${viagerEntering ? " data-reveal" : ""} style="left:${STAGE_W}cqw">Puis ${v.revM} à vie<br>sur les ${v.capital} de patrimoine</span>`
+    ? `
+      <div class="scpi-financement__viager${viagerEntering ? " is-entering" : ""}"${viagerEntering ? " data-reveal" : ""} style="left:${STAGE_W}cqw">
+        <span class="scpi-financement__viager-kicker">Puis, à vie</span>
+        <span class="scpi-financement__viager-value">${v.revM}</span>
+      </div>
+    `
     : "";
 
   // État 4 (bilan) : bloc centré par rapport au TITRE, donc sur la
