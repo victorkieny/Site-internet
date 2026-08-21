@@ -25,6 +25,17 @@ import { renderChapRail, formatPct } from "./_chapitre.js";
 // de trou ni de chevauchement pendant l'animation.
 const BAR_HEIGHT_CQW = 11.71875; // 150px à 1280 de large
 
+// État 1 : la colonne se construit visuellement mois après mois plutôt
+// que d'apparaître comme un bloc plein — un segment par année de
+// financement (slide.dureeAnnees, jamais un nombre saisi en dur),
+// balayés de gauche à droite via animation-delay (CSS pur, voir
+// chapitre.css .scpi-financement__bar-segment : indépendant d'opts.
+// animate, pour rejouer à chaque fois qu'on arrive/revient sur cet
+// état, y compris à l'ouverture de la slide). Distinct du mécanisme
+// data-reveal (transition JS d'un état à l'autre) utilisé partout
+// ailleurs sur cette slide.
+const SEGMENT_STEP_MS = 16;
+
 // Largeur utile de la scène (cqw) : .scpi-financement__stage fait
 // 100% de .scpi-financement, elle-même en retrait du padding horizontal
 // de la scène (4.84375cqw de chaque côté) — 100 - 2×4.84375.
@@ -83,6 +94,19 @@ function values(slide) {
     hEff,
     hRev,
   };
+}
+
+function barSegmentsHtml(count, label) {
+  const segments = Array.from(
+    { length: count },
+    (_, i) => `<span class="scpi-financement__bar-segment" style="animation-delay:${i * SEGMENT_STEP_MS}ms"></span>`
+  ).join("");
+  return `
+    <div class="scpi-financement__bar-segments">
+      ${segments}
+      <span class="scpi-financement__bar-label scpi-financement__bar-label--overlay">${escapeHtml(label)}</span>
+    </div>
+  `;
 }
 
 export function render(slide, opts = {}) {
@@ -156,6 +180,10 @@ export function render(slide, opts = {}) {
       </div>
 
       <div class="scpi-financement__stage">
+        ${
+          stateIndex === 0
+            ? `<div class="scpi-financement__bar" style="left:0;top:6.71875cqw;height:${BAR_HEIGHT_CQW}cqw;width:${STAGE_W}cqw">${barSegmentsHtml(v.duree, effortLabel)}</div>`
+            : `
         <div class="scpi-financement__bar"${barAttrs} style="left:0;top:6.71875cqw;height:${BAR_HEIGHT_CQW}cqw;${barStyle}">
           <div class="scpi-financement__bar-effort"${effortAttrs} style="${effortStyle}">
             <span class="scpi-financement__bar-label">${escapeHtml(effortLabel)}</span>
@@ -164,6 +192,8 @@ export function render(slide, opts = {}) {
             <span class="scpi-financement__bar-label scpi-financement__bar-label--ink">Revenus SCPI · ${v.revM}</span>
           </div>
         </div>
+        `
+        }
 
         ${resultatHtml}
         ${levierHtml}

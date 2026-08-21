@@ -2356,6 +2356,53 @@
   color: rgba(var(--chap-ink-rgb), 0.75);
 }
 
+/* État 1 : la colonne balayée segment par segment (mois/années de
+   mensualité), gauche à droite — voir scpi-financement.js
+   barSegmentsHtml(). Animation CSS pure (animation-delay par segment),
+   pas le mécanisme data-reveal (transition JS d'un état à l'autre) —
+   celle-ci doit rejouer à chaque montée sur cet état, y compris la
+   toute première fois (avant qu'aucun changement d'état n'ait eu
+   lieu). */
+.scpi-financement__bar-segments {
+  position: relative;
+  height: 100%;
+  display: flex;
+  align-items: stretch;
+  gap: 0.078125cqw;
+}
+
+.scpi-financement__bar-segment {
+  flex: 1 1 0;
+  min-width: 0;
+  background: var(--encre);
+  transform-origin: bottom;
+  animation: scpi-bar-segment-in var(--chap-duration-move) var(--chap-ease-move) backwards;
+}
+
+@keyframes scpi-bar-segment-in {
+  from {
+    opacity: 0;
+    transform: scaleY(0.15);
+  }
+  to {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scpi-financement__bar-segment {
+    animation: none;
+  }
+}
+
+.scpi-financement__bar-label--overlay {
+  position: absolute;
+  left: 1.25cqw;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
 .scpi-financement__resultat {
   position: absolute;
   top: 4.375cqw;
