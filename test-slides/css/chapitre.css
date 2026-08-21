@@ -2403,10 +2403,20 @@
   transform: translateY(-50%);
 }
 
+/* Bilan (état 4+) : texte à gauche (montants), diagramme d'effet de
+   levier à droite dès l'état 5 (voir scpi-financement.js) — même
+   rangée, "à côté de" 40 500 € et 85 000 €, pas en dessous de l'axe. */
 .scpi-financement__resultat {
   position: absolute;
   top: 4.375cqw;
   box-sizing: border-box;
+  display: flex;
+  align-items: flex-start;
+  gap: 3.125cqw;
+}
+
+.scpi-financement__resultat-text {
+  flex: none;
   display: flex;
   flex-direction: column;
   gap: 1.09375cqw;
@@ -2426,12 +2436,47 @@
 }
 
 .scpi-financement__levier {
-  position: absolute;
-  top: 21.5cqw;
+  flex: none;
   box-sizing: border-box;
   display: flex;
-  align-items: baseline;
-  gap: 0.78125cqw;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.625cqw;
+}
+
+/* Deux colonnes à l'échelle l'une de l'autre : "Effort réel" (encre,
+   base commune) et "Patrimoine détenu", dont seul l'écart au sommet
+   (scpi-financement__levier-bar-gap, or) EST l'effet de levier — pas
+   deux barres de couleurs différentes sans lien visuel entre elles. */
+.scpi-financement__levier-diagram {
+  flex: none;
+  display: flex;
+  align-items: flex-end;
+  gap: 1.5625cqw;
+  height: 8.4375cqw;
+}
+
+.scpi-financement__levier-bar {
+  flex: none;
+  width: 3.125cqw;
+  box-sizing: border-box;
+}
+
+.scpi-financement__levier-bar--effort {
+  background: var(--encre);
+}
+
+.scpi-financement__levier-bar--patrimoine {
+  position: relative;
+  background: rgba(var(--chap-ink-rgb), 0.18);
+}
+
+.scpi-financement__levier-bar-gap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  background: var(--or);
 }
 
 .scpi-financement__levier-kicker {

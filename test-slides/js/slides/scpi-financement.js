@@ -82,6 +82,8 @@ function values(slide) {
   const hEff = BAR_HEIGHT_CQW - hRev;
   return {
     duree,
+    capitalRaw: capitalCible,
+    effortTotalRaw: effortTotal,
     capital: euro.format(capitalCible),
     finM: `${euro.format(financementMensuel)}/mois`,
     revM: `${euro.format(revenuMensuel)}/mois`,
@@ -95,6 +97,14 @@ function values(slide) {
     hRev,
   };
 }
+
+// Diagramme de l'effet de levier (état 5) : deux colonnes à l'échelle
+// l'une de l'autre (pas juste deux hauteurs arbitraires) — "Patrimoine
+// détenu" est toujours la plus grande, sa base (jusqu'à la hauteur de
+// "Effort réel") reste au ton neutre, seul l'écart au sommet passe en
+// or : c'est cet écart, pas la colonne entière, qui EST l'effet de
+// levier.
+const LEVIER_BAR_MAX_CQW = 8.4375; // hauteur de la colonne "Patrimoine détenu"
 
 function barSegmentsHtml(count, label) {
   const segments = Array.from(
@@ -141,9 +151,9 @@ export function render(slide, opts = {}) {
   // État 4 (index 3) : bilan (effort réel cumulé / patrimoine détenu).
   const showResultat = stateIndex >= 3;
   const resultatEntering = animate && stateIndex === 3;
-  const resultatHtml = showResultat
+  const resultatTextHtml = showResultat
     ? `
-      <div class="scpi-financement__resultat${resultatEntering ? " is-entering" : ""}"${resultatEntering ? " data-reveal" : ""} style="left:${RESULT_LEFT}cqw;width:${RESULT_W}cqw">
+      <div class="scpi-financement__resultat-text${resultatEntering ? " is-entering" : ""}"${resultatEntering ? " data-reveal" : ""}>
         <div class="scpi-financement__resultat-row">
           <span class="scpi-financement__kicker">${escapeHtml(v.effM)} pendant ${v.duree} ans</span>
           <span class="scpi-financement__value">${v.effortTotal}</span>
@@ -156,18 +166,35 @@ export function render(slide, opts = {}) {
     `
     : "";
 
-  // État 5 (index 4) : effet de levier, toujours dérivé des montants
-  // ci-dessus (jamais saisi en dur — charte CLAUDE.md).
+  // État 5 (index 4) : effet de levier — diagramme à côté des deux
+  // montants ci-dessus (pas en dessous de l'axe) : deux colonnes à
+  // l'échelle l'une de l'autre, l'écart au sommet de "Patrimoine
+  // détenu" (en or) EST le levier, montants toujours dérivés (jamais
+  // saisis en dur — charte CLAUDE.md).
   const showLevier = stateIndex >= 4;
   const levierEntering = animate && stateIndex === 4;
+  const patrimoineBarH = LEVIER_BAR_MAX_CQW;
+  const effortBarH = LEVIER_BAR_MAX_CQW * (v.effortTotalRaw / v.capitalRaw);
+  const gapBarH = patrimoineBarH - effortBarH;
   const levierHtml = showLevier
     ? `
-      <div class="scpi-financement__levier${levierEntering ? " is-entering" : ""}"${levierEntering ? " data-reveal" : ""} style="left:${RESULT_LEFT}cqw;width:${RESULT_W}cqw">
+      <div class="scpi-financement__levier${levierEntering ? " is-entering" : ""}"${levierEntering ? " data-reveal" : ""}>
+        <div class="scpi-financement__levier-diagram">
+          <div class="scpi-financement__levier-bar scpi-financement__levier-bar--effort"${levierEntering ? ` data-reveal data-reveal-height="${effortBarH}cqw"` : ""} style="height:${levierEntering ? 0 : effortBarH}cqw"></div>
+          <div class="scpi-financement__levier-bar scpi-financement__levier-bar--patrimoine"${levierEntering ? ` data-reveal data-reveal-height="${patrimoineBarH}cqw"` : ""} style="height:${levierEntering ? 0 : patrimoineBarH}cqw">
+            <div class="scpi-financement__levier-bar-gap"${levierEntering ? ` data-reveal data-reveal-height="${gapBarH}cqw"` : ""} style="height:${levierEntering ? 0 : gapBarH}cqw"></div>
+          </div>
+        </div>
         <span class="scpi-financement__levier-kicker">Effet de levier</span>
         <span class="scpi-financement__levier-value">${v.levier} <span class="scpi-financement__levier-pct">(${v.levierPctSigned})</span></span>
       </div>
     `
     : "";
+
+  const resultatHtml =
+    showResultat || showLevier
+      ? `<div class="scpi-financement__resultat" style="left:${RESULT_LEFT}cqw;width:${RESULT_W}cqw">${resultatTextHtml}${levierHtml}</div>`
+      : "";
 
   return `
     <div class="scpi-financement">
@@ -196,7 +223,6 @@ export function render(slide, opts = {}) {
         }
 
         ${resultatHtml}
-        ${levierHtml}
 
         <div class="scpi-financement__axis"></div>
         <div class="scpi-financement__tick" style="left:0"></div>
