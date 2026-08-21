@@ -2276,16 +2276,6 @@
   font-size: max(1.7rem, 3.125cqw);
 }
 
-.scpi-financement__eyebrow {
-  margin-top: 1.09375cqw;
-  font-weight: 700;
-  font-size: 0.8203125cqw;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  white-space: nowrap;
-  color: rgba(var(--chap-ink-rgb), 0.45);
-}
-
 .scpi-financement__desc {
   margin: 0.9375cqw 0 0;
   font-weight: 450;
@@ -2419,7 +2409,6 @@
    au lieu de rester collé au bloc de texte avec un grand vide à droite. */
 .scpi-financement__resultat {
   position: absolute;
-  top: 4.375cqw;
   box-sizing: border-box;
   display: flex;
   align-items: flex-start;
@@ -2450,9 +2439,15 @@
   flex: none;
   box-sizing: border-box;
   display: flex;
+  align-items: flex-end;
+  gap: 1.25cqw;
+}
+
+.scpi-financement__levier-text {
+  display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 0.625cqw;
+  gap: 0.3125cqw;
+  padding-bottom: 0.46875cqw;
 }
 
 /* Deux colonnes à l'échelle l'une de l'autre : "Effort réel" (encre,
@@ -2463,13 +2458,13 @@
   flex: none;
   display: flex;
   align-items: flex-end;
-  gap: 1.5625cqw;
-  height: 8.4375cqw;
+  gap: 3.125cqw;
+  height: 16.875cqw;
 }
 
 .scpi-financement__levier-bar {
   flex: none;
-  width: 3.125cqw;
+  width: 6.25cqw;
   box-sizing: border-box;
 }
 
@@ -2546,6 +2541,24 @@
 
 .scpi-financement__axis-label--center {
   transform: translateX(-50%);
+}
+
+/* État 6 : les revenus se poursuivent à vie une fois le financement
+   soldé — sous le repère "25 ans" plutôt qu'une nouvelle case, pour
+   rester un simple prolongement de l'axe (pas un nouveau calcul, voir
+   scpi-financement.js). */
+.scpi-financement__viager {
+  position: absolute;
+  top: 21cqw;
+  transform: translateX(-100%);
+  font-weight: 700;
+  font-size: 0.65625cqw;
+  line-height: 1.35;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-align: right;
+  white-space: nowrap;
+  color: var(--or);
 }
 
 .scpi-financement__footnote {

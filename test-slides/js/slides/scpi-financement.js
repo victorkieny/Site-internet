@@ -2,7 +2,7 @@ import { euro, escapeHtml } from "../editable.js";
 import { renderChapRail, formatPct } from "./_chapitre.js";
 
 // Gabarit "Investir en financement" (chapitre SCPI) — UNE SEULE slide en
-// révélation progressive à 5 états (opts.stateIndex direct, pas de
+// révélation progressive à 6 états (opts.stateIndex direct, pas de
 // morphing entre couches), qui raconte le mécanisme du levier de crédit
 // dans l'ordre :
 //   1. la mensualité de financement brute, colonne pleine (encre) ;
@@ -14,7 +14,11 @@ import { renderChapRail, formatPct } from "./_chapitre.js";
 //   4. le bilan : effort réel cumulé sur toute la durée, en regard du
 //      patrimoine immobilier détenu ;
 //   5. l'effet de levier (gain en euros et en %), toujours dérivé des
-//      montants ci-dessus, jamais saisi en dur.
+//      montants ci-dessus, jamais saisi en dur ;
+//   6. les revenus SCPI se poursuivent à vie une fois le financement
+//      soldé — même montant (v.revM) qu'aux états 2-3, mais calculé sur
+//      les 85 000 € de patrimoine désormais détenus en pleine propriété,
+//      plus sur l'effort de 40 500 € qui n'a plus cours.
 //
 // Colonne "mensualité" (état 1, pleine hauteur) : effort d'épargne net
 // (encre) qui se rétracte, revenus SCPI (or) qui montent depuis le bas
@@ -47,25 +51,24 @@ const RESULT_W = STAGE_W - RESULT_LEFT;
 
 const ETAPES = [
   {
-    eyebrow: "Étape 1 sur 5 · La mensualité de financement",
     desc: (v) => `Investir en SCPI à crédit représente un effort mensuel de ${v.finM}.`,
   },
   {
-    eyebrow: "Étape 2 sur 5 · Les revenus SCPI réduisent l'effort",
     desc: (v) =>
       `Les revenus SCPI (${v.revM}) viennent compenser une grande partie de la mensualité : il ne reste que ${v.effM} à la charge de l'investisseur.`,
   },
   {
-    eyebrow: "Étape 3 sur 5 · Sur toute la durée du financement",
     desc: (v) => `Cet effort net de ${v.effM} est maintenu pendant ${v.duree} ans.`,
   },
   {
-    eyebrow: "Étape 4 sur 5 · Le bilan à l'issue du financement",
     desc: (v) => `${v.effM} pendant ${v.duree} ans représente un effort réel de ${v.effortTotal}, pour un patrimoine immobilier de ${v.capital}.`,
   },
   {
-    eyebrow: "Étape 5 sur 5 · L'effet de levier",
     desc: (v) => `Soit un gain de ${v.levier} par rapport à l'effort fourni, ${v.levierPctSigned}.`,
+  },
+  {
+    desc: (v) =>
+      `Une fois le financement soldé, ces ${v.revM} de loyers se poursuivent à vie — calculés sur les ${v.capital} de patrimoine détenu, non plus sur l'effort de ${v.effortTotal}.`,
   },
 ];
 
@@ -104,7 +107,7 @@ function values(slide) {
 // "Effort réel") reste au ton neutre, seul l'écart au sommet passe en
 // or : c'est cet écart, pas la colonne entière, qui EST l'effet de
 // levier.
-const LEVIER_BAR_MAX_CQW = 8.4375; // hauteur de la colonne "Patrimoine détenu"
+const LEVIER_BAR_MAX_CQW = 16.875; // hauteur de la colonne "Patrimoine détenu" (2x)
 
 function barSegmentsHtml(count, label) {
   const segments = Array.from(
@@ -185,15 +188,35 @@ export function render(slide, opts = {}) {
             <div class="scpi-financement__levier-bar-gap"${levierEntering ? ` data-reveal data-reveal-height="${gapBarH}cqw"` : ""} style="height:${levierEntering ? 0 : gapBarH}cqw"></div>
           </div>
         </div>
-        <span class="scpi-financement__levier-kicker">Effet de levier</span>
-        <span class="scpi-financement__levier-value">${v.levier} <span class="scpi-financement__levier-pct">(${v.levierPctSigned})</span></span>
+        <div class="scpi-financement__levier-text">
+          <span class="scpi-financement__levier-kicker">Effet de levier</span>
+          <span class="scpi-financement__levier-value">${v.levier} <span class="scpi-financement__levier-pct">(${v.levierPctSigned})</span></span>
+        </div>
       </div>
     `
     : "";
 
+  // État 6 (index 5) : les revenus se poursuivent à vie une fois le
+  // financement soldé — même montant qu'aux états 2-3 (v.revM), mais
+  // affiché comme un repère de durée qui prolonge l'axe au-delà de
+  // "25 ans", pas un nouveau calcul.
+  const showViager = stateIndex >= 5;
+  const viagerEntering = animate && stateIndex === 5;
+  const viagerHtml = showViager
+    ? `<span class="scpi-financement__viager${viagerEntering ? " is-entering" : ""}"${viagerEntering ? " data-reveal" : ""} style="left:${STAGE_W}cqw">Puis ${v.revM} à vie<br>sur les ${v.capital} de patrimoine</span>`
+    : "";
+
+  // État 4 (texte seul, pas encore le diagramme de levier) : le bloc
+  // est centré dans l'espace disponible plutôt que collé à gauche —
+  // space-between n'a de sens qu'à partir de l'état 5, quand le
+  // diagramme doit rejoindre le bout de l'axe (voir plus haut).
+  // top réduit à l'état 5 : le diagramme (2x plus grand que le premier
+  // jet) a besoin de toute la hauteur disponible avant l'axe.
+  const resultatJustify = showLevier ? "space-between" : "center";
+  const resultatTop = showLevier ? 0.3125 : 4.375;
   const resultatHtml =
     showResultat || showLevier
-      ? `<div class="scpi-financement__resultat" style="left:${RESULT_LEFT}cqw;width:${RESULT_W}cqw">${resultatTextHtml}${levierHtml}</div>`
+      ? `<div class="scpi-financement__resultat" style="left:${RESULT_LEFT}cqw;top:${resultatTop}cqw;width:${RESULT_W}cqw;justify-content:${resultatJustify}">${resultatTextHtml}${levierHtml}</div>`
       : "";
 
   return `
@@ -202,7 +225,6 @@ export function render(slide, opts = {}) {
 
       <div class="scpi-financement__intro">
         <h1 class="chap-title scpi-financement__title">${escapeHtml(slide.titre)}</h1>
-        <span class="scpi-financement__eyebrow">${escapeHtml(etape.eyebrow)}</span>
         <p class="scpi-financement__desc">${escapeHtml(etape.desc(v))}</p>
       </div>
 
@@ -229,6 +251,7 @@ export function render(slide, opts = {}) {
         <div class="scpi-financement__tick"${tickAttrs} style="${tickStyle}"></div>
         <span class="scpi-financement__axis-label" style="left:0">Aujourd'hui</span>
         <span class="scpi-financement__axis-label scpi-financement__axis-label--center"${tickAttrs} style="${tickStyle}">${v.duree} ans</span>
+        ${viagerHtml}
       </div>
 
       <p class="scpi-financement__footnote">Hypothèses · taux de distribution SCPI ${escapeHtml(v.td)}/an hors revalorisation · taux de financement ${escapeHtml(v.tf)} assurance incluse · montants moyens sur les ${v.duree} premières années · données brutes de fiscalité et de prélèvements sociaux.</p>
