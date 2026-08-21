@@ -1,5 +1,5 @@
 import { escapeHtml } from "../editable.js";
-import { renderChapRail, renderRailEtapes } from "./_chapitre.js";
+import { renderChapRail, iconSvg } from "./_chapitre.js";
 
 // Gabarit "Comment ça marche" (chapitre SCPI, import Claude Design
 // "Gabarits chapitre SCPI") — schéma statique (pas de révélation
@@ -10,11 +10,14 @@ import { renderChapRail, renderRailEtapes } from "./_chapitre.js";
 // convertis en cqw — voir chapitre.css en tête de fichier), pas
 // réinventée.
 
-function boxHtml({ left, top, width, height, cls, kicker, titre, texte, extra }) {
+function boxHtml({ left, top, width, height, cls, icon, kicker, titre, texte, extra }) {
   return `
     <div class="scpi-mecanisme__box${cls ? " " + cls : ""}" style="left:${left}cqw;top:${top}cqw;width:${width}cqw;height:${height}cqw">
       ${kicker ? `<span class="scpi-mecanisme__box-kicker">${escapeHtml(kicker)}</span>` : ""}
-      <span class="scpi-mecanisme__box-titre">${escapeHtml(titre)}</span>
+      <span class="scpi-mecanisme__box-head">
+        ${icon ? iconSvg(icon, "rgba(var(--chap-ink-rgb),.65)") : ""}
+        <span class="scpi-mecanisme__box-titre">${escapeHtml(titre)}</span>
+      </span>
       ${texte ? `<p class="scpi-mecanisme__box-texte">${escapeHtml(texte)}</p>` : ""}
       ${extra || ""}
     </div>
@@ -33,7 +36,6 @@ export function render(slide) {
   return `
     <div class="scpi-mecanisme">
       ${renderChapRail(slide)}
-      ${renderRailEtapes(slide.railEtapes, slide.railActive)}
 
       <div class="scpi-mecanisme__intro">
         <h1 class="chap-title scpi-mecanisme__title">${escapeHtml(slide.titre)}</h1>
@@ -52,22 +54,23 @@ export function render(slide) {
           <line x1="858" y1="246" x2="749" y2="246" stroke="rgba(var(--chap-ink-rgb),.45)" stroke-width="1.2" marker-end="url(#scpi-ar-d)"/>
         </svg>
 
-        ${boxHtml({ left: 33.4375, top: 0, width: 23.4375, height: 5.625, cls: "scpi-mecanisme__box--amf", titre: "L'AMF", texte: "Autorité des marchés financiers" })}
+        ${boxHtml({ left: 33.4375, top: 0, width: 23.4375, height: 5.625, cls: "scpi-mecanisme__box--amf", icon: "bouclier", titre: "L'AMF", texte: "Autorité des marchés financiers" })}
         <span class="scpi-mecanisme__amf-note" style="left:46.25cqw;top:6.5625cqw">Agrément et contrôle</span>
 
-        ${boxHtml({ left: 0, top: 13.125, width: 21.25, height: 12.1875, kicker: "Associé", titre: "L'investisseur", texte: "Souscrit des parts et perçoit les revenus distribués." })}
+        ${boxHtml({ left: 0, top: 13.125, width: 21.25, height: 12.1875, icon: "personne", kicker: "Associé", titre: "L'investisseur", texte: "Souscrit des parts et perçoit les revenus distribués." })}
         ${boxHtml({
           left: 32.265625,
           top: 13.125,
           width: 25.78125,
           height: 12.1875,
           cls: "scpi-mecanisme__box--vehicule",
+          icon: "immeuble",
           kicker: "Le véhicule",
           titre: "La SCPI",
           texte: "Un parc d'actifs immobiliers professionnels, mutualisé entre les associés.",
           extra: `<div class="scpi-mecanisme__actifs">${actifsHtml}</div>`,
         })}
-        ${boxHtml({ left: 69.0625, top: 13.125, width: 21.25, height: 12.1875, kicker: "L'exploitant", titre: "La société de gestion", texte: "Achat, location, travaux, reporting : le parc est géré clé en main." })}
+        ${boxHtml({ left: 69.0625, top: 13.125, width: 21.25, height: 12.1875, icon: "cle", kicker: "L'exploitant", titre: "La société de gestion", texte: "Achat, location, travaux, reporting : le parc est géré clé en main." })}
 
         ${flowLabelHtml(21.25, 13.59375, 11.015625, "Souscription de parts")}
         ${flowLabelHtml(21.25, 19.84375, 11.015625, "Distribution de revenus", true)}

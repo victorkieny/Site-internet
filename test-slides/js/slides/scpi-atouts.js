@@ -1,13 +1,15 @@
 import { escapeHtml } from "../editable.js";
-import { renderChapRail, renderRailEtapes } from "./_chapitre.js";
+import { renderChapRail } from "./_chapitre.js";
 
 // Gabarit "Les atouts" (chapitre SCPI, import Claude Design) —
 // PARAMÉTRIQUE : un seul gabarit pour les 4 atouts (rendement / risque /
-// sur-mesure / gestion), pas un fichier par atout. La slide déclare
-// `atoutActif` (1-4, voir deck.json) ; tout le reste (chaîne des 4
-// repères, celui actif en or avec caret sur la règle, puces qui suivent)
-// se déduit d'ATOUTS ci-dessous, copie fixe du système (identique pour
-// tout client, voir charte CLAUDE.md "texte de narration").
+// sur-mesure / gestion), pas un fichier par atout. UNE SEULE slide en
+// révélation progressive à 4 états (opts.stateIndex, voir deck.json
+// "states" — même mécanisme que "Investir en financement"), pas 4
+// slides séparées : le repère actif (chaîne des 4 repères, or + caret
+// sur la règle) et les puces qui suivent se déduisent d'ATOUTS
+// ci-dessous, copie fixe du système (identique pour tout client, voir
+// charte CLAUDE.md "texte de narration").
 //
 // L'espacement du bloc de puces (margin-top/gap) varie légèrement selon
 // leur nombre (2-3 puces : plus espacé ; 4 puces : resserré) — repris tel
@@ -52,8 +54,9 @@ const ATOUTS = [
 
 const CARET_LEFT = [12.5, 37.5, 62.5, 87.5]; // % — centre de chaque quart (repère actif)
 
-export function render(slide) {
-  const activeIndex = Math.min(Math.max((slide.atoutActif || 1) - 1, 0), ATOUTS.length - 1);
+export function render(slide, opts = {}) {
+  const animate = !!opts.animate;
+  const activeIndex = Math.min(Math.max(opts.stateIndex ?? 0, 0), ATOUTS.length - 1);
   const atout = ATOUTS[activeIndex];
 
   const circles = ATOUTS.map((a, i) => {
@@ -87,11 +90,10 @@ export function render(slide) {
   return `
     <div class="scpi-atouts">
       ${renderChapRail(slide)}
-      ${renderRailEtapes(slide.railEtapes, slide.railActive)}
 
       <div class="scpi-atouts__intro">
         <h1 class="chap-title scpi-atouts__title">Les atouts</h1>
-        <span class="scpi-atouts__eyebrow">Atout ${activeIndex + 1} sur ${ATOUTS.length} · ${escapeHtml(atout.label)}</span>
+        <span class="scpi-atouts__eyebrow${animate ? " is-entering" : ""}"${animate ? " data-reveal" : ""}>Atout ${activeIndex + 1} sur ${ATOUTS.length} · ${escapeHtml(atout.label)}</span>
       </div>
 
       <div class="scpi-atouts__stage">
@@ -103,7 +105,7 @@ export function render(slide) {
         <div class="scpi-atouts__rule">
           <div class="scpi-atouts__caret" style="left:${CARET_LEFT[activeIndex]}%"></div>
         </div>
-        <div class="scpi-atouts__bullets" style="margin-top:${atout.bulletsTop}cqw;gap:${atout.bulletsGap}cqw">
+        <div class="scpi-atouts__bullets${animate ? " is-entering" : ""}"${animate ? " data-reveal" : ""} style="margin-top:${atout.bulletsTop}cqw;gap:${atout.bulletsGap}cqw">
           ${bullets}
         </div>
       </div>

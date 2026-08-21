@@ -115,6 +115,16 @@ export const ICONS = {
   // dessus, deux tranches en dessous), pas un symbole monétaire.
   capital:
     '<ellipse cx="12" cy="5.6" rx="7.4" ry="2.4"/><path d="M4.6 5.6v5.6c0 1.3 3.3 2.4 7.4 2.4s7.4-1.1 7.4-2.4V5.6"/><path d="M4.6 11.2v6.2c0 1.3 3.3 2.4 7.4 2.4s7.4-1.1 7.4-2.4v-6.2"/>',
+  // Immeuble (façade + grille de fenêtres) — le parc d'actifs de la SCPI
+  // elle-même ("Comment ça marche"), à distinguer de "cle" (la société
+  // de gestion qui l'exploite) et "personne" (l'investisseur qui la
+  // détient) sur le même schéma.
+  immeuble: '<rect x="4.5" y="4" width="15" height="17"/><path d="M4.5 9.5H19.5M4.5 14H19.5M9 4V21M15 4V21"/>',
+  // Clé — la société de gestion ("Comment ça marche") : c'est elle qui
+  // détient les clés du parc au quotidien (achat, location, travaux),
+  // par opposition à "immeuble" (le parc lui-même, détenu par les
+  // associés) sur le même schéma.
+  cle: '<circle cx="7" cy="12" r="3.6"/><path d="M10.4 12H20M15.5 12V15.5M19 12V15"/>',
 };
 
 export function iconSvg(name, color, size = 38) {

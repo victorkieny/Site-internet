@@ -1,5 +1,5 @@
 import { euro, escapeHtml } from "../editable.js";
-import { renderChapRail, renderRailEtapes } from "./_chapitre.js";
+import { renderChapRail } from "./_chapitre.js";
 
 // Gabarit "Investir en financement" (chapitre SCPI, import Claude
 // Design) — UNE SEULE slide en révélation progressive à 3 états (Phase 1
@@ -102,7 +102,6 @@ export function render(slide, opts = {}) {
   return `
     <div class="scpi-financement">
       ${renderChapRail(slide)}
-      ${renderRailEtapes(slide.railEtapes, slide.railActive)}
 
       <div class="scpi-financement__intro">
         <h1 class="chap-title scpi-financement__title">${escapeHtml(slide.titre)}</h1>

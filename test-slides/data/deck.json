@@ -398,13 +398,11 @@
         { "numero": "02", "libelle": "Ingénieries" },
         { "numero": "03", "libelle": "Préconisations" }
       ],
-      "railEtapes": ["Mécanisme", "Acquisition", "Au quotidien"],
-      "railActive": 1,
-      "titre": "Comment ça marche",
+      "titre": "Comment ça marche ?",
       "actifs": ["Bureaux", "Commerces", "Santé", "Hôtellerie"]
     },
     {
-      "id": "scpi-atouts-rendement",
+      "id": "scpi-atouts",
       "type": "scpi-atouts",
       "client": "Prénom Nom",
       "date": "2026-09-17",
@@ -414,54 +412,7 @@
         { "numero": "02", "libelle": "Ingénieries" },
         { "numero": "03", "libelle": "Préconisations" }
       ],
-      "railEtapes": ["Mécanisme", "Acquisition", "Au quotidien"],
-      "railActive": 1,
-      "atoutActif": 1
-    },
-    {
-      "id": "scpi-atouts-risque",
-      "type": "scpi-atouts",
-      "client": "Prénom Nom",
-      "date": "2026-09-17",
-      "chapitreActif": 2,
-      "chapitres": [
-        { "numero": "01", "libelle": "Constat" },
-        { "numero": "02", "libelle": "Ingénieries" },
-        { "numero": "03", "libelle": "Préconisations" }
-      ],
-      "railEtapes": ["Mécanisme", "Acquisition", "Au quotidien"],
-      "railActive": 1,
-      "atoutActif": 2
-    },
-    {
-      "id": "scpi-atouts-sur-mesure",
-      "type": "scpi-atouts",
-      "client": "Prénom Nom",
-      "date": "2026-09-17",
-      "chapitreActif": 2,
-      "chapitres": [
-        { "numero": "01", "libelle": "Constat" },
-        { "numero": "02", "libelle": "Ingénieries" },
-        { "numero": "03", "libelle": "Préconisations" }
-      ],
-      "railEtapes": ["Mécanisme", "Acquisition", "Au quotidien"],
-      "railActive": 1,
-      "atoutActif": 3
-    },
-    {
-      "id": "scpi-atouts-gestion",
-      "type": "scpi-atouts",
-      "client": "Prénom Nom",
-      "date": "2026-09-17",
-      "chapitreActif": 2,
-      "chapitres": [
-        { "numero": "01", "libelle": "Constat" },
-        { "numero": "02", "libelle": "Ingénieries" },
-        { "numero": "03", "libelle": "Préconisations" }
-      ],
-      "railEtapes": ["Mécanisme", "Acquisition", "Au quotidien"],
-      "railActive": 1,
-      "atoutActif": 4
+      "states": [{}, {}, {}, {}]
     },
     {
       "id": "scpi-financement",
@@ -474,8 +425,6 @@
         { "numero": "02", "libelle": "Ingénieries" },
         { "numero": "03", "libelle": "Préconisations" }
       ],
-      "railEtapes": ["Mécanisme", "Acquisition", "Au quotidien"],
-      "railActive": 2,
       "titre": "Investir en financement",
       "capitalCible": 85000,
       "dureeAnnees": 25,

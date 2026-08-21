@@ -1995,6 +1995,18 @@
   border-top: 0.15625cqw solid var(--or);
 }
 
+.scpi-mecanisme__box-head {
+  display: flex;
+  align-items: center;
+  gap: 0.625cqw;
+}
+
+.scpi-mecanisme__box-head .chap-icon {
+  flex: none;
+  width: 1.875cqw;
+  height: 1.875cqw;
+}
+
 .scpi-mecanisme__box-kicker {
   font-weight: 700;
   font-size: 0.7421875cqw;
