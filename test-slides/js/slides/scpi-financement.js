@@ -207,16 +207,21 @@ export function render(slide, opts = {}) {
     : "";
 
   // État 4 (texte seul, pas encore le diagramme de levier) : le bloc
-  // est centré dans l'espace disponible plutôt que collé à gauche —
-  // space-between n'a de sens qu'à partir de l'état 5, quand le
-  // diagramme doit rejoindre le bout de l'axe (voir plus haut).
+  // est centré par rapport au TITRE, donc sur la pleine largeur de la
+  // scène (left:0/width:STAGE_W) — pas seulement dans l'espace à droite
+  // de la colonne, qui centrerait par rapport à un axe décalé vers la
+  // droite. space-between (sur la largeur RESULT_LEFT/RESULT_W plus
+  // étroite) n'a de sens qu'à partir de l'état 5, quand le diagramme
+  // doit rejoindre le bout de l'axe (voir plus haut).
   // top réduit à l'état 5 : le diagramme (2x plus grand que le premier
   // jet) a besoin de toute la hauteur disponible avant l'axe.
   const resultatJustify = showLevier ? "space-between" : "center";
+  const resultatLeft = showLevier ? RESULT_LEFT : 0;
+  const resultatWidth = showLevier ? RESULT_W : STAGE_W;
   const resultatTop = showLevier ? 0.3125 : 4.375;
   const resultatHtml =
     showResultat || showLevier
-      ? `<div class="scpi-financement__resultat" style="left:${RESULT_LEFT}cqw;top:${resultatTop}cqw;width:${RESULT_W}cqw;justify-content:${resultatJustify}">${resultatTextHtml}${levierHtml}</div>`
+      ? `<div class="scpi-financement__resultat" style="left:${resultatLeft}cqw;top:${resultatTop}cqw;width:${resultatWidth}cqw;justify-content:${resultatJustify}">${resultatTextHtml}${levierHtml}</div>`
       : "";
 
   return `
