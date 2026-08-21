@@ -183,7 +183,7 @@ export function render(slide, opts = {}) {
   const gapBarH = patrimoineBarH - effortBarH;
   const levierHtml = showLevier
     ? `
-      <div class="scpi-financement__levier${levierEntering ? " is-entering" : ""}"${levierEntering ? " data-reveal" : ""}>
+      <div class="scpi-financement__levier${levierEntering ? " is-entering" : ""}"${levierEntering ? " data-reveal" : ""} style="left:${STAGE_W}cqw">
         <div class="scpi-financement__levier-diagram">
           <div class="scpi-financement__levier-bar scpi-financement__levier-bar--effort"${levierEntering ? ` data-reveal data-reveal-height="${effortBarH}cqw"` : ""} style="height:${levierEntering ? 0 : effortBarH}cqw"></div>
           <div class="scpi-financement__levier-bar scpi-financement__levier-bar--patrimoine"${levierEntering ? ` data-reveal data-reveal-height="${patrimoineBarH}cqw"` : ""} style="height:${levierEntering ? 0 : patrimoineBarH}cqw">
@@ -206,23 +206,15 @@ export function render(slide, opts = {}) {
     ? `<span class="scpi-financement__viager${viagerEntering ? " is-entering" : ""}"${viagerEntering ? " data-reveal" : ""} style="left:${STAGE_W}cqw">Puis ${v.revM} à vie<br>sur les ${v.capital} de patrimoine</span>`
     : "";
 
-  // État 4 (texte seul, pas encore le diagramme de levier) : le bloc
-  // est centré par rapport au TITRE, donc sur la pleine largeur de la
-  // scène (left:0/width:STAGE_W) — pas seulement dans l'espace à droite
-  // de la colonne, qui centrerait par rapport à un axe décalé vers la
-  // droite. space-between (sur la largeur RESULT_LEFT/RESULT_W plus
-  // étroite) n'a de sens qu'à partir de l'état 5, quand le diagramme
-  // doit rejoindre le bout de l'axe (voir plus haut).
-  // top réduit à l'état 5 : le diagramme (2x plus grand que le premier
-  // jet) a besoin de toute la hauteur disponible avant l'axe.
-  const resultatJustify = showLevier ? "space-between" : "center";
-  const resultatLeft = showLevier ? RESULT_LEFT : 0;
-  const resultatWidth = showLevier ? RESULT_W : STAGE_W;
-  const resultatTop = showLevier ? 0.3125 : 4.375;
-  const resultatHtml =
-    showResultat || showLevier
-      ? `<div class="scpi-financement__resultat" style="left:${resultatLeft}cqw;top:${resultatTop}cqw;width:${resultatWidth}cqw;justify-content:${resultatJustify}">${resultatTextHtml}${levierHtml}</div>`
-      : "";
+  // État 4 (bilan) : bloc centré par rapport au TITRE, donc sur la
+  // pleine largeur de la scène (left:0/width:STAGE_W). Position FIXE :
+  // aux états 5-6, le diagramme de levier apparaît comme un élément
+  // indépendant ancré à droite (voir levierHtml, left:STAGE_W) plutôt
+  // que comme un second enfant du même conteneur flex — sinon ce bloc
+  // se déplacerait pour laisser sa place, comme avant cette correction.
+  const resultatHtml = showResultat
+    ? `<div class="scpi-financement__resultat" style="left:0;top:4.375cqw;width:${STAGE_W}cqw">${resultatTextHtml}</div>`
+    : "";
 
   return `
     <div class="scpi-financement">
@@ -250,6 +242,7 @@ export function render(slide, opts = {}) {
         }
 
         ${resultatHtml}
+        ${levierHtml}
 
         <div class="scpi-financement__axis"></div>
         <div class="scpi-financement__tick" style="left:0"></div>

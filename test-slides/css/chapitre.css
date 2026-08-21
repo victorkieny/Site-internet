@@ -2411,8 +2411,7 @@
   position: absolute;
   box-sizing: border-box;
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
+  justify-content: center;
 }
 
 .scpi-financement__resultat-text {
@@ -2435,13 +2434,28 @@
   border-bottom: none;
 }
 
+/* Indépendant de .scpi-financement__resultat (voir scpi-financement.js) :
+   ancré à droite (transform:translateX(-100%) depuis left:STAGE_W,
+   même bout d'axe que "25 ans") plutôt que second enfant d'un même
+   conteneur flex — le bloc central ne doit pas se déplacer pour lui
+   laisser sa place. */
 .scpi-financement__levier {
-  flex: none;
+  position: absolute;
+  top: 0.3125cqw;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 0.625cqw;
+  transform: translateX(-100%);
+}
+
+/* [data-reveal].is-entering (générique, voir plus haut) pose son propre
+   transform:scale() pour le fondu d'entrée — sans cette redéfinition
+   plus spécifique, il écraserait le translateX(-100%) ci-dessus le
+   temps de l'animation et le bloc sauterait de position. */
+.scpi-financement__levier[data-reveal].is-entering {
+  transform: translateX(-100%) scale(0.94);
 }
 
 /* Deux colonnes à l'échelle l'une de l'autre : "Effort réel" (encre,
