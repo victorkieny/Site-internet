@@ -68,6 +68,36 @@
   color: var(--color-ink-soft);
 }
 
+/* Navigation tactile (étape suivante/précédente — révélation progressive
+   ou changement de slide, voir presenter.js goNext/goPrev) : le clavier
+   (flèches) reste le principal moyen de naviguer sur un poste de
+   présentation classique, mais un poste consulté sur mobile (pas de
+   clavier) n'a que ces boutons — plus le tap direct sur la scène
+   courante (voir setupNav) pour avancer. */
+.presenter__nav {
+  flex: none;
+  display: flex;
+  gap: 0.4rem;
+}
+
+.presenter__nav-btn {
+  flex: none;
+  border: 1px solid var(--color-line);
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-size: 1.15rem;
+  line-height: 1;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.presenter__nav-btn:hover {
+  border-color: var(--color-gold);
+  color: var(--color-gold);
+}
+
 .presenter__open-btn {
   flex: none;
   border: 1px solid var(--color-line);
@@ -89,6 +119,16 @@
   color: var(--color-gold);
 }
 
+/* Sous ce seuil, la fenêtre popup ouverte par ce bouton (voir
+   presenter.js:openAudienceWindow) n'a plus de sens — un mobile n'a pas
+   de second écran à y projeter — et la toolbar est trop étroite pour
+   title + nav + timer + ce bouton à la fois : on lui rend sa place. */
+@media (max-width: 780px) {
+  .presenter__open-btn {
+    display: none;
+  }
+}
+
 .presenter__main {
   flex: 1 1 auto;
   min-height: 0;
@@ -101,6 +141,7 @@
   min-height: 0;
   padding: 0.5rem;
   box-sizing: border-box;
+  cursor: pointer;
   /* Centrage + ajustement de .slide__stage : voir .presenter-preview. */
 }
 
@@ -117,6 +158,39 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
+}
+
+/* Sous ce seuil, .presenter__side gardant sa largeur fixe (--sidebar-width,
+   ~340px par défaut) ne laisserait quasiment plus rien à .presenter__current
+   sur un écran de mobile — la scène courante, pourtant l'essentiel de ce
+   panneau, deviendrait invisible. On empile verticalement (courante en
+   premier, pleine largeur) plutôt que côte à côte ; le panneau bascule en
+   défilement pour absorber la hauteur cumulée. La poignée de
+   redimensionnement horizontal (--x) n'a plus de sens dans un empilement,
+   elle est masquée ; --next/--thumbs restent utilisables (axe encore
+   pertinent : hauteur des blocs empilés). */
+@media (max-width: 780px) {
+  .presenter__main {
+    flex-direction: column;
+    padding: 0.75rem;
+    gap: 0.75rem;
+    overflow-y: auto;
+  }
+
+  .presenter__current {
+    flex: none;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    padding: 0;
+  }
+
+  .splitter--x {
+    display: none;
+  }
+
+  .presenter__side {
+    width: 100%;
+  }
 }
 
 .presenter__block {

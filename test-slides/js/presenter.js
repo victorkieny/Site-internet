@@ -24,6 +24,8 @@ const thumbsEl = document.getElementById("presenterThumbs");
 const notesEl = document.getElementById("presenterNotes");
 const titleEl = document.getElementById("presenterTitle");
 const openAudienceBtn = document.getElementById("openAudience");
+const navPrevBtn = document.getElementById("navPrev");
+const navNextBtn = document.getElementById("navNext");
 const clockEl = document.getElementById("presenterClock");
 const elapsedEl = document.getElementById("presenterElapsed");
 const pointerDotEl = document.getElementById("presenterPointerDot");
@@ -247,6 +249,22 @@ function setupKeyboard() {
   });
 }
 
+// Boutons ‹ › (toolbar) + tap direct sur la scène courante — même geste
+// que le clic sur la scène en aperçu solo (voir js/app.js) : nécessaire
+// sur un poste consulté au doigt (mobile), sans clavier. Garde identique
+// à app.js : ignore un clic sur un contrôle interactif d'une slide
+// "calculator" (input/bouton/lien/texte éditable), pour ne pas avancer
+// par-dessus une saisie.
+function setupNav() {
+  navPrevBtn.addEventListener("click", goPrev);
+  navNextBtn.addEventListener("click", goNext);
+
+  currentEl.addEventListener("click", (e) => {
+    if (e.target.closest('input, button, a, [contenteditable="true"]')) return;
+    goNext();
+  });
+}
+
 function setupNotes() {
   notesEl.addEventListener("input", () => {
     const slide = currentSlide();
@@ -406,6 +424,7 @@ async function init() {
   pristineById = new Map(deck.slides.map((s) => [s.id, cloneDeep(s)]));
 
   setupKeyboard();
+  setupNav();
   setupNotes();
   setupTimer();
   setupPointer();
