@@ -346,7 +346,7 @@ body.is-resizing-y * {
    lisibilité empêchent le texte de rétrécir avec le panneau et il
    déborde. Requête de container (pas de viewport) car ce panneau est
    redimensionnable par le splitter, indépendamment de la fenêtre. */
-@container (max-width: 780px), (max-height: 440px) {
+@container (max-width: 780px) or (max-height: 440px) {
   .presenter-preview .slide__stage {
     position: absolute;
     top: 50%;

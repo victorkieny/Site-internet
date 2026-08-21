@@ -57,7 +57,12 @@
     padding: 0;
   }
 
-  .slide__stage {
+  /* Scopé à .slide > .slide__stage (pas .slide__stage seul) : les
+     panneaux d'aperçu du présentateur (.presenter-preview, voir
+     presenter.css) rendent aussi un .slide__stage mais ne sont pas des
+     .slide — --mobile-gutter n'y est pas défini, et leur propre repli
+     (basé sur leur container, pas le viewport) s'applique déjà. */
+  .slide > .slide__stage {
     position: absolute;
     top: 50%;
     left: 50%;
