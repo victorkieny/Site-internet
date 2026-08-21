@@ -2581,10 +2581,17 @@
   font-size: max(1.7rem, 3.125cqw);
 }
 
+/* Hauteur réservée au cas le plus haut (texte le plus long, "Liquidité
+   des parts") : .scpi-cadence__stage est centré verticalement dans la
+   slide (margin:auto 0) — sans ce plancher, sa hauteur varie avec le
+   texte de la dernière case révélée, et le centrage déplace les 3
+   blocs d'un état à l'autre (même cause que .scpi-atouts__stage, voir
+   plus haut dans ce fichier). */
 .scpi-cadence__stage {
   margin: auto 0;
   display: flex;
   gap: 2.34375cqw;
+  min-height: 13.4375cqw;
 }
 
 .scpi-cadence__box {
