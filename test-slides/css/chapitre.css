@@ -1,0 +1,2449 @@
+/* Système "chapitrage" — handoff design_handoff_slide_patrimoine +
+   slides assurance vie. Partagé par tous les gabarits à chapitres
+   numérotés (01 Constat, 02 Recommandations, 03 Mise en œuvre).
+
+   Toutes les valeurs de référence (px, à 1280 de large) sont converties
+   en cqw sur la base 1cqw = 12.8px à 1280px (100cqw = 1280px) : à la
+   largeur de référence, chaque valeur est donc pixel-exacte au handoff ;
+   en dessous ou au-dessus, tout se met à l'échelle proportionnellement
+   ensemble (texte compris), sans recalcul de mise en page — l'équivalent
+   du transform:scale() recommandé par les handoffs, obtenu ici par
+   container query CSS (voir .slide__stage dans slides.css) plutôt que
+   par un scale du DOM, pour un rendu de texte net à toute taille.
+   Un palier de secours (max(floor, Ncqw)) est ajouté aux grandes valeurs
+   d'affichage pour rester lisible sur une scène très réduite.
+
+   --chap-ink-rgb porte la couleur de texte/trait de chaque slide (encre
+   sur fond papier, papier sur fond encre), posée une fois sur
+   .slide__stage.slide--<type> ci-dessous ; tout le reste (rail, rail
+   d'étapes, contenu) l'hérite plutôt que de choisir sa propre couleur —
+   un futur gabarit sur fond encre n'a qu'à changer cette seule valeur. */
+
+/* ---------- Fond par gabarit ---------- */
+
+/* Sélecteur composé (pas de descendance) : .slide__stage et
+   .slide--<type> sont posées sur le même élément par
+   deck.js:renderStageHtml ("slide__stage slide--<type>"), pas sur deux
+   nœuds parent/enfant — un sélecteur avec espace ne matcherait rien. */
+.slide__stage.slide--constat {
+  background: var(--encre);
+  --chap-ink-rgb: var(--papier-rgb);
+}
+
+.slide__stage.slide--section-title,
+.slide__stage.slide--chap-regles,
+.slide__stage.slide--epargne-dormante,
+.slide__stage.slide--deux-poches,
+.slide__stage.slide--impact-fiscal,
+.slide__stage.slide--fiscalite-rachats,
+.slide__stage.slide--transmission,
+.slide__stage.slide--synthese-chapitre,
+.slide__stage.slide--scpi-mecanisme,
+.slide__stage.slide--scpi-atouts,
+.slide__stage.slide--scpi-financement {
+  background: var(--papier);
+  --chap-ink-rgb: var(--encre-rgb);
+}
+
+.slide--constat .slide__content,
+.slide--section-title .slide__content,
+.slide--chap-regles .slide__content,
+.slide--epargne-dormante .slide__content,
+.slide--deux-poches .slide__content,
+.slide--impact-fiscal .slide__content,
+.slide--fiscalite-rachats .slide__content,
+.slide--transmission .slide__content,
+.slide--synthese-chapitre .slide__content,
+.slide--scpi-mecanisme .slide__content,
+.slide--scpi-atouts .slide__content,
+.slide--scpi-financement .slide__content {
+  padding: 0;
+  color: rgb(var(--chap-ink-rgb));
+}
+
+/* ---------- Rail d'en-tête (partagé) ---------- */
+
+.chap-rail {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2.34375cqw;
+  padding-bottom: 1.09375cqw;
+  border-bottom: 0.078125cqw solid rgba(var(--chap-ink-rgb), 0.22);
+}
+
+.chap-rail__left {
+  display: flex;
+  align-items: center;
+  gap: 1.71875cqw;
+}
+
+.chap-logo {
+  height: 3.28125cqw;
+  width: auto;
+  display: block;
+  flex: none;
+}
+
+.chap-logo-sep {
+  flex: none;
+  width: 0.078125cqw;
+  height: 2.03125cqw;
+  background: rgba(199, 174, 137, 0.5);
+}
+
+.chap-nav {
+  display: flex;
+  align-items: baseline;
+  gap: 2.03125cqw;
+}
+
+.chap-nav__item {
+  display: flex;
+  align-items: baseline;
+  gap: 0.78125cqw;
+  opacity: 0.34;
+}
+
+.chap-nav__item--active {
+  opacity: 1;
+}
+
+.chap-nav__num {
+  font-family: var(--font-serif-chapitre);
+  font-weight: 400;
+  font-size: 1.171875cqw;
+  line-height: 1;
+}
+
+.chap-nav__item--active .chap-nav__num {
+  color: var(--or);
+}
+
+.chap-nav__label {
+  font-weight: 700;
+  font-size: 0.8203125cqw;
+  line-height: 1;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.chap-nav__item--active .chap-nav__label {
+  color: rgba(var(--chap-ink-rgb), 0.78);
+}
+
+.chap-meta {
+  flex: none;
+  font-weight: 450;
+  font-size: 0.9765625cqw;
+  line-height: 1;
+  white-space: nowrap;
+  color: rgba(var(--chap-ink-rgb), 0.45);
+}
+
+/* ---------- Rail d'étapes imbriqué (RailEtapes.dc.html) ----------
+   Paramétrique : nombre d'étapes et libellés variables (voir
+   js/slides/_chapitre.js renderRailEtapes). Réutilisable tel quel pour
+   PER, SCPI — rien de spécifique à l'assurance vie ici. */
+
+.rail-etapes {
+  flex: none;
+  margin-top: 1.09375cqw;
+  display: grid;
+  column-gap: 0.9375cqw;
+  width: 100%;
+}
+
+.rail-step {
+  display: flex;
+  flex-direction: column;
+  gap: 0.703125cqw;
+}
+
+.rail-step__track {
+  height: 0.15625cqw;
+  transition: background var(--chap-duration-fade) linear;
+}
+
+.rail-step__row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.625cqw;
+}
+
+.rail-step__num {
+  font-family: var(--font-serif-chapitre);
+  font-weight: 400;
+  font-size: 1.171875cqw;
+  line-height: 1;
+  transition: color var(--chap-duration-fade) linear;
+}
+
+.rail-step__label {
+  font-weight: 700;
+  font-size: 0.7421875cqw;
+  line-height: 1;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition: color var(--chap-duration-fade) linear;
+}
+
+.rail-step--now .rail-step__track { background: var(--or); }
+.rail-step--past .rail-step__track { background: rgba(var(--chap-ink-rgb), 0.42); }
+.rail-step--next .rail-step__track { background: rgba(var(--chap-ink-rgb), 0.13); }
+
+.rail-step--now .rail-step__num { color: var(--or); }
+.rail-step--past .rail-step__num { color: rgba(var(--chap-ink-rgb), 0.5); }
+.rail-step--next .rail-step__num { color: rgba(var(--chap-ink-rgb), 0.3); }
+
+.rail-step--now .rail-step__label { color: rgba(var(--chap-ink-rgb), 0.85); }
+.rail-step--past .rail-step__label { color: rgba(var(--chap-ink-rgb), 0.5); }
+.rail-step--next .rail-step__label { color: rgba(var(--chap-ink-rgb), 0.3); }
+
+/* ---------- Titres de narration fixe (nowrap + repli borné) ----------
+   Texte écrit par nous, identique pour tout client (charte CLAUDE.md) :
+   jamais de wrap, un plancher de taille absorbe les titres inhabituels.
+   Réutilisé par tous les gabarits de contenu de ce chapitre. */
+
+.chap-title {
+  font-family: var(--font-serif-chapitre);
+  font-weight: 400;
+  letter-spacing: -0.025em;
+  line-height: 1.08;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* ---------- Révélation animée (voir js/reveal.js) ----------
+   Un élément neuf dans un état de révélation progressive porte
+   data-reveal + la classe .is-entering dans le HTML lui-même (posé par
+   le renderer, à l'état "de départ") ; playReveal() retire la classe une
+   fois l'élément dans le DOM, ce qui déclenche la transition vers l'état
+   normal — seul moyen de "transitionner" ici puisque chaque changement
+   d'état remplace tout le HTML de la slide (pas de patch DOM ciblé, donc
+   pas de transition CSS spontanée). Un seul vocabulaire visuel partout
+   (fondu + léger zoom), pas une variante par slide. */
+
+[data-reveal] {
+  transition: opacity var(--chap-duration-move) var(--chap-ease-move),
+    transform var(--chap-duration-move) var(--chap-ease-move),
+    height var(--chap-duration-move) var(--chap-ease-move);
+}
+
+[data-reveal].is-entering {
+  opacity: 0;
+  transform: scale(0.94);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal] {
+    transition: none;
+  }
+}
+
+/* ---------- Gabarit "Constat" ---------- */
+
+.constat {
+  height: 100%;
+  box-sizing: border-box;
+  padding: 2.8125cqw 4.84375cqw 4.21875cqw;
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-sans-chapitre);
+}
+
+.constat__title-block {
+  flex: none;
+  padding-top: 2.03125cqw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.constat__rule {
+  margin-top: 1.5625cqw;
+  width: 5.46875cqw;
+  height: 0.15625cqw;
+  background: var(--or);
+  display: block;
+}
+
+.constat__title {
+  margin: 0;
+  max-width: 85%;
+  font-family: var(--font-serif-chapitre);
+  font-weight: 400;
+  font-size: max(1.9rem, 4.0625cqw);
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  text-align: center;
+  color: rgb(var(--chap-ink-rgb));
+  /* Le titre Constat peut contenir un nom/texte client non maîtrisé :
+     pas de nowrap, il passe à la ligne plutôt que de déborder (charte
+     CLAUDE.md, catégorie "texte pouvant contenir des données client"). */
+}
+
+.constat__kpis {
+  /* Rapprochés du titre (marge fixe, pas margin-top:auto) : c'est
+     désormais .constat__objectifs qui absorbe l'espace disponible en bas
+     de la scène, pas un vide au milieu entre le titre et les KPI. */
+  margin-top: 3.125cqw;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1px 1fr 1px 1fr;
+  column-gap: 3.4375cqw;
+  align-items: end;
+}
+
+.constat__kpi-rule {
+  background: rgba(var(--chap-ink-rgb), 0.18);
+  height: 9.21875cqw;
+}
+
+/* Hauteur toujours réservée (voir constat__kpi-rule, seul élément fixe
+   de la rangée) : ni le repère ni le KPI--empty ne changent la hauteur
+   de la grille selon l'état de révélation. */
+.constat__kpi-rule--hidden {
+  background: transparent;
+}
+
+.constat__kpi--empty {
+  height: 9.21875cqw;
+}
+
+.constat__kpi {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.703125cqw;
+  text-align: center;
+}
+
+.constat__kpi-label {
+  font-weight: 700;
+  font-size: 0.8203125cqw;
+  line-height: 1;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.constat__kpi-value {
+  font-family: var(--font-serif-chapitre);
+  font-weight: 400;
+  font-size: max(2.2rem, 5.15625cqw);
+  line-height: 0.9;
+  letter-spacing: -0.05em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.constat__kpi-note {
+  font-weight: 450;
+  font-size: 1.0546875cqw;
+  line-height: 1.4;
+  white-space: nowrap;
+  color: rgba(var(--chap-ink-rgb), 0.6);
+}
+
+/* Enveloppes (barre + registre), révélées ensemble à l'état 2 — voir
+   constat.js. margin-top:auto (comme .constat__objectifs plus bas) :
+   flexbox répartit l'espace disponible à parts égales entre les deux
+   marges auto de ce conteneur, le bloc se retrouve centré, à égale
+   distance des KPI au-dessus et des objectifs en dessous. Toujours
+   rendu (même à l'état 1) pour que cette distance ne bouge pas quand le
+   bloc apparaît — seule son opacité change, pas sa présence dans le
+   flux (même logique que .deux-poches__practice--invisible). */
+.constat__enveloppes {
+  flex: none;
+  margin-top: auto;
+  width: 100%;
+}
+
+.constat__enveloppes--invisible {
+  opacity: 0;
+}
+
+.constat__bar {
+  flex: none;
+  width: 100%;
+  display: flex;
+  height: 0.9375cqw;
+}
+
+.constat__registre {
+  flex: none;
+  margin-top: 1.09375cqw;
+  width: 100%;
+  display: grid;
+  /* grid-template-columns fixé en style inline (nombre de supports variable,
+     3 à 6) — repeat(var(...)) n'est pas fiable dans tous les moteurs CSS. */
+  column-gap: var(--registre-gap, 2.03125cqw);
+}
+
+.constat__support {
+  display: flex;
+  flex-direction: column;
+  gap: 0.46875cqw;
+  padding-top: 1.09375cqw;
+  border-top: 0.15625cqw solid transparent;
+}
+
+.constat__support--empty {
+  height: 0;
+}
+
+.constat__support-nom {
+  font-weight: 450;
+  font-size: 1.328125cqw;
+  line-height: 1.1;
+}
+
+.constat__support-montant {
+  font-family: var(--font-serif-chapitre);
+  font-weight: 400;
+  font-size: max(1.1rem, 2.03125cqw);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.constat__support-meta {
+  font-weight: 700;
+  font-size: 0.78125cqw;
+  line-height: 1;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: rgba(var(--chap-ink-rgb), 0.5);
+}
+
+/* Encart objectifs client, sous le registre de supports — c'est ce bloc
+   qui absorbe l'espace restant en bas de la scène (margin-top:auto),
+   plutôt que .constat__kpis (voir plus haut) : évite un vide au milieu
+   de la slide et donne aux objectifs une vraie présence, pas une note de
+   bas de page. Liste en grille 2 colonnes plutôt qu'une ligne fondue
+   avec des "·" — plus grand, plus lisible. */
+.constat__objectifs {
+  flex: none;
+  margin-top: auto;
+  padding-top: 1.5625cqw;
+  border-top: 0.078125cqw solid rgba(var(--chap-ink-rgb), 0.18);
+  display: flex;
+  flex-direction: column;
+  gap: 0.9375cqw;
+}
+
+/* Toujours dans le flux dès l'état 1 (même logique que
+   .constat__enveloppes--invisible) : sa présence pilote
+   margin-top:auto, la faire disparaître du DOM décentrerait le bloc
+   enveloppes tant qu'elle n'est pas révélée. */
+.constat__objectifs--invisible {
+  opacity: 0;
+}
+
+.constat__objectifs-label {
+  font-weight: 700;
+  font-size: 0.859375cqw;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(var(--chap-ink-rgb), 0.5);
+}
+
+.constat__objectifs-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 2.34375cqw;
+  row-gap: 0.78125cqw;
+}
+
+/* Petite puce pleine plutôt que le disque natif des <li> (taille/couleur
+   non maîtrisables de la même façon) : un point, pas une décoration,
+   coloré comme le texte qu'il introduit. */
+.constat__objectif {
+  margin: 0;
+  padding-left: 1.09375cqw;
+  position: relative;
+  font-weight: 450;
+  font-size: 1.25cqw;
+  line-height: 1.4;
+  color: rgba(var(--chap-ink-rgb), 0.8);
+}
+
+.constat__objectif::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.5em;
+  width: 0.3125cqw;
+  height: 0.3125cqw;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.6;
+}
+
+/* ---------- Gabarit générique "Titre de section" ----------
+   Réutilisable pour PER, SCPI, immobilier : seuls le nom du chapitre et
+   la ligne "Recommandation N sur 3" changent. Pas de rail d'étapes (la
+   séquence n'est pas encore annoncée). */
+
+.section-title {
+  height: 100%;
+  box-sizing: border-box;
+  padding: 2.8125cqw 4.84375cqw 4.21875cqw;
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-sans-chapitre);
+}
+
+.section-title__body {
+  margin: auto 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.section-title__rule {
+  width: 5.46875cqw;
+  height: 0.15625cqw;
+  background: var(--or);
+  display: block;
+}
+
+.section-title__title {
+  margin-top: 2.03125cqw;
+  font-size: max(2.6rem, 7.1875cqw);
+  letter-spacing: -0.035em;
+}
+
+.section-title__sub {
+  margin-top: 1.71875cqw;
+  font-weight: 700;
+  font-size: 0.8203125cqw;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: rgba(var(--chap-ink-rgb), 0.45);
+}
+
+/* ---------- Gabarit "Annonce à règles" (slide 2) ----------
+   Fixe pour tout chapitre à règles (rendement/fiscalité/transmission,
+   etc.) : seuls les libellés et phrases teaser changent. Nombre de
+   règles variable via la grille (repeat(n,1fr), comme le rail d'étapes). */
+
+.chap-regles {
+  height: 100%;
+  box-sizing: border-box;
+  padding: 2.8125cqw 4.84375cqw 4.21875cqw;
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-sans-chapitre);
+}
+
+.chap-regles__intro {
+  padding-top: 2.65625cqw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.chap-regles__kicker {
+  font-weight: 700;
+  font-size: 0.8203125cqw;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: rgba(var(--chap-ink-rgb), 0.5);
+}
+
+.chap-regles__rule {
+  margin-top: 1.5625cqw;
+  width: 5.46875cqw;
+  height: 0.15625cqw;
+  background: var(--or);
+  display: block;
+}
+
+.chap-regles__title {
+  margin-top: 1.71875cqw;
+  font-size: max(2.4rem, 4.84375cqw);
+}
+
+.chap-regles__lead {
+  margin: 1.40625cqw 0 0;
+  max-width: 56.25cqw;
+  font-weight: 450;
+  font-size: 1.25cqw;
+  line-height: 1.55;
+  text-align: center;
+  color: rgba(var(--chap-ink-rgb), 0.72);
+}
+
+.chap-regles__lead--invisible {
+  opacity: 0;
+}
+
+/* Le sous-titre attend que le cadenas ait fini son animation d'ouverture
+   avant de commencer à apparaître (voir chapitre-regles.js) : même durée
+   que .chap-regles__picto--unlocking .chap-icon__shackle, posée en délai
+   plutôt qu'en état supplémentaire. */
+.chap-regles__lead[data-reveal] {
+  transition-delay: calc(var(--chap-duration-move) * 2);
+}
+
+/* Halo temporaire sur le mot-clé du titre (état 2, en même temps que le
+   pictogramme) : un pulse, pas un accent permanent — teinte neutre
+   proche de l'encre, pas l'accent or, pour ne pas entrer en conflit avec
+   la règle "un seul accent or par slide". Durée dérivée de
+   --chap-duration-move (x3) plutôt qu'une valeur inventée pour ce seul
+   cas (charte CLAUDE.md : une seule source de vérité pour les durées). */
+.chap-regles__halo--pulse {
+  animation: chap-halo-pulse calc(var(--chap-duration-move) * 3) var(--chap-ease-move);
+}
+
+@keyframes chap-halo-pulse {
+  0%,
+  100% {
+    text-shadow: 0 0 0 rgba(var(--chap-ink-rgb), 0);
+  }
+  40% {
+    text-shadow: 0 0 0.78125cqw rgba(var(--chap-ink-rgb), 0.32);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chap-regles__halo--pulse {
+    animation: none;
+  }
+}
+
+/* Occupe l'espace entre l'intro et la grille de règles (flex:1 —
+   remplace l'ancien margin-top:auto de la grille, qui poussait celle-ci
+   en bas sans rien centrer dans l'espace libéré). Révélé à l'état 2 :
+   toujours dans le flux dès l'état 1 (juste invisible), pour que sa
+   position ne bouge pas à l'apparition (même logique que
+   .constat__enveloppes--invisible). */
+.chap-regles__picto {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chap-regles__picto--invisible {
+  opacity: 0;
+}
+
+/* Le cadenas s'ouvre visuellement à l'apparition (pas juste dessiné déjà
+   ouvert) : l'anse pivote depuis une position fermée (approximativement
+   symétrique, extrémité libre proche du corps) jusqu'à sa position
+   dessinée (ouverte, extrémité détachée) — pivot sur le point où l'anse
+   rejoint le corps. Durée dérivée de --chap-duration-move (x2), comme le
+   pulse du halo : une seule source de vérité pour les durées. */
+.chap-regles__picto--unlocking .chap-icon__shackle {
+  transform-box: view-box;
+  transform-origin: 7px 11px;
+  animation: chap-lock-open calc(var(--chap-duration-move) * 2) var(--chap-ease-move);
+}
+
+@keyframes chap-lock-open {
+  from {
+    transform: rotate(27deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chap-regles__picto--unlocking .chap-icon__shackle {
+    animation: none;
+  }
+}
+
+/* Hauteur toujours réservée, que les règles soient déjà révélées ou non
+   (min-height calé sur une colonne pleine, voir .chap-regle) : sinon le
+   pictogramme au-dessus — centré dans l'espace restant (flex:1) —
+   change de hauteur/position entre les états où la grille est vide et
+   ceux où elle est pleine. */
+.chap-regles__grid {
+  flex: none;
+  width: 100%;
+  min-height: 10.703125cqw;
+  display: grid;
+  column-gap: 3.4375cqw;
+}
+
+.chap-regle {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Barre qui se remplit de gauche à droite à l'apparition d'une règle
+   (voir chapitre-regles.js regleHtml) — remplace l'ancien border-top
+   statique : au repos (règle déjà révélée, ou état atteint sans
+   animation), scaleX(1) = même rendu visuel qu'un simple filet plein. */
+.chap-regle__fill {
+  display: block;
+  width: 100%;
+  height: 0.15625cqw;
+  margin-bottom: 1.09375cqw;
+  background: var(--or);
+  transform-origin: left;
+  transform: scaleX(1);
+}
+
+.chap-regle__head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.703125cqw;
+  margin-top: -0.3125cqw; /* remonte légèrement le numéro/libellé */
+  margin-bottom: 0.9375cqw;
+}
+
+.chap-regle__num {
+  font-family: var(--font-serif-chapitre);
+  font-weight: 400;
+  font-size: 2.34375cqw;
+  color: rgba(var(--chap-ink-rgb), 0.55);
+}
+
+.chap-regle__label {
+  font-weight: 700;
+  font-size: 1.25cqw;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.chap-regle__text {
+  margin: 0;
+  font-weight: 450;
+  font-size: 1.171875cqw;
+  line-height: 1.5;
+  color: rgba(var(--chap-ink-rgb), 0.72);
+}
+
+/* ---------- Gabarit "Épargne dormante" (slide 3, optionnelle) ----------
+   Chronologie à n colonnes, barre proportionnelle en encre dégressive —
+   voir js/slides/epargne-dormante.js pour le calcul des hauteurs et de
+   l'opacité depuis les montants. */
+
+.epargne-dormante {
+  height: 100%;
+  box-sizing: border-box;
+  padding: 2.8125cqw 4.84375cqw 4.21875cqw;
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-sans-chapitre);
+}
+
+.epargne-dormante__intro {
+  padding-top: 2.34375cqw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.epargne-dormante__title {
+  font-size: max(1.7rem, 3.125cqw);
+}
+
+.epargne-dormante__lead {
+  margin: 1.09375cqw 0 0;
+  max-width: 54.6875cqw;
+  font-weight: 450;
+  font-size: 1.171875cqw;
+  line-height: 1.5;
+  text-align: center;
+  color: rgba(var(--chap-ink-rgb), 0.65);
+}
+
+/* Titre court introduisant le diagramme (pas le sous-titre général de la
+   slide, voir .epargne-dormante__lead) : sans-serif, poids marqué mais
+   plus petit que .epargne-dormante__title — juste assez de présence pour
+   annoncer la chronologie sans concurrencer le titre principal. Porte
+   margin-top:auto (déplacé depuis .epargne-dormante__grid ci-dessous) :
+   c'est lui qui absorbe l'espace disponible, la grille ne garde qu'un
+   petit écart fixe puisqu'elle le suit directement. */
+.epargne-dormante__diagram-intro {
+  margin: auto auto 0;
+  max-width: 50cqw;
+  font-weight: 600;
+  font-size: 1.40625cqw;
+  line-height: 1.4;
+  text-align: center;
+  color: rgba(var(--chap-ink-rgb), 0.85);
+}
+
+.epargne-dormante__grid {
+  margin-top: 1.71875cqw;
+  width: 100%;
+  display: grid;
+  column-gap: 2.65625cqw;
+  align-items: end;
+}
+
+.epargne-dormante__col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.epargne-dormante__value {
+  font-family: var(--font-serif-chapitre);
+  font-weight: 400;
+  font-size: max(1.4rem, 2.65625cqw);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.epargne-dormante__bar {
+  margin-top: 1.09375cqw;
+  width: 100%;
+  display: block;
+  background: rgb(var(--chap-ink-rgb));
+}
+
+.epargne-dormante__label {
+  width: 100%;
+  padding-top: 0.9375cqw;
+  border-top: 0.078125cqw solid rgba(var(--chap-ink-rgb), 0.3);
+  font-weight: 700;
+  font-size: 0.9375cqw;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  text-align: center;
+  white-space: nowrap;
+  color: rgba(var(--chap-ink-rgb), 0.6);
+}
+
+/* Note de bas de slide sur l'hypothèse d'inflation — discrète (pas un
+   élément de contenu principal) mais assez grande pour rester lisible
+   sans effort, désormais deux phrases. */
+.epargne-dormante__note {
+  margin: 1.40625cqw 0 0;
+  max-width: 65cqw;
+  font-size: 0.9375cqw;
+  line-height: 1.5;
+  color: rgba(var(--chap-ink-rgb), 0.55);
+}
+
+/* ---------- Gabarit "Deux poches" (slide 4, composition du contrat) ---------- */
+
+.deux-poches {
+  height: 100%;
+  box-sizing: border-box;
+  padding: 2.8125cqw 4.84375cqw 4.21875cqw;
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-sans-chapitre);
+}
+
+.deux-poches__intro {
+  padding-top: 2.34375cqw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.deux-poches__title {
+  font-size: max(1.7rem, 3.125cqw);
+}
+
+.deux-poches__grid {
+  margin: auto 0;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1px 1fr;
+  column-gap: 4.375cqw;
+  align-items: start;
+}
+
+.deux-poches__divider {
+  background: rgba(var(--chap-ink-rgb), 0.16);
+  align-self: stretch;
+}
+
+.deux-poches__divider--hidden {
+  background: transparent;
+}
+
+.deux-poches__col {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5625cqw;
+}
+
+.deux-poches__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1.25cqw;
+  padding-bottom: 1.09375cqw;
+  border-bottom: 0.078125cqw solid rgba(var(--chap-ink-rgb), 0.2);
+}
+
+.deux-poches__name {
+  font-family: var(--font-serif-chapitre);
+  font-weight: 400;
+  font-size: 2.34375cqw;
+  white-space: nowrap;
+}
+
+.deux-poches__tag {
+  font-weight: 700;
+  font-size: 0.9375cqw;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.deux-poches__lead {
+  margin: 0;
+  font-weight: 450;
+  font-size: 1.1328125cqw;
+  line-height: 1.5;
+  color: rgba(var(--chap-ink-rgb), 0.7);
+}
+
+.deux-poches__item {
+  display: flex;
+  align-items: center;
+  gap: 1.40625cqw;
+}
+
+.chap-icon {
+  flex: none;
+  display: block;
+}
+
+.deux-poches__item-text {
+  font-weight: 450;
+  font-size: 1.171875cqw;
+  line-height: 1.4;
+}
+
+.deux-poches__practice {
+  margin-top: 0;
+  display: flex;
+  align-items: center;
+  gap: 1.5625cqw;
+}
+
+/* Toujours rendue (état 1 comme état 2) pour réserver sa hauteur : sinon
+   sa disparition/apparition déplace verticalement la grille au-dessus,
+   centrée par margin:auto (même défaut que sur "Fiscalité des rachats",
+   voir .fiscalite-rachats__rules). La phrase n'a de sens qu'une fois les
+   deux poches visibles, donc masquée (pas supprimée) à l'état 1. */
+.deux-poches__practice--invisible {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.deux-poches__col--invisible {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.deux-poches__practice-label {
+  flex: none;
+  font-weight: 700;
+  font-size: 0.9375cqw;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: rgba(var(--chap-ink-rgb), 0.5);
+}
+
+.deux-poches__practice-sep {
+  flex: none;
+  width: 0.078125cqw;
+  height: 1.5625cqw;
+  background: rgba(var(--chap-ink-rgb), 0.2);
+}
+
+.deux-poches__practice-text {
+  margin: 0;
+  font-weight: 450;
+  font-size: 1.40625cqw;
+  line-height: 1.5;
+  color: rgba(var(--chap-ink-rgb), 0.72);
+}
+
+/* ---------- Gabarit "Impact fiscal" (slide 5, cuves à 2 états) ---------- */
+
+.impact-fiscal {
+  height: 100%;
+  box-sizing: border-box;
+  padding: 2.8125cqw 4.84375cqw 4.21875cqw;
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-sans-chapitre);
+}
+
+.impact-fiscal__intro {
+  padding-top: 2.34375cqw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.impact-fiscal__title {
+  font-size: max(1.7rem, 3.125cqw);
+}
+
+/* Même traitement que .epargne-dormante__diagram-intro (slide "Ne pas
+   investir, c'est perdre à coup sûr") — un seul style de phrase
+   d'hypothèse dans le deck, pas une variante par gabarit. Caché jusqu'à
+   l'état 7 (voir showHyp en JS), qui ne fait apparaître qu'elle. */
+.impact-fiscal__lead {
+  margin-top: 1.71875cqw;
+  max-width: 50cqw;
+  font-weight: 600;
+  font-size: 1.40625cqw;
+  line-height: 1.4;
+  text-align: center;
+  color: rgba(var(--chap-ink-rgb), 0.85);
+}
+
+.impact-fiscal__lead--invisible {
+  opacity: 0;
+}
+
+/* Deux cuves seulement (le panneau d'écart, état 11, n'est plus une 3e
+   colonne — voir .impact-fiscal__ecart plus bas : un overlay positionné
+   à gauche de la cuve bancaire, hors du flux de cette grille) — pour
+   que les deux cuves restent centrées sur la slide, qu'il soit affiché
+   ou non (remonté : elles se décalaient à gauche pour lui faire de la
+   place). */
+.impact-fiscal__grid {
+  margin: auto 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: end;
+  gap: 3.28125cqw;
+}
+
+/* Entrée du graphique chiffré (état 7, voir gridEntering en JS) : plus
+   lente que le fondu générique (x1.5) pour que le passage schéma ->
+   chiffres se lise comme une transition, pas un saut. */
+.impact-fiscal__grid[data-reveal] {
+  transition-duration: calc(var(--chap-duration-move) * 1.5);
+}
+
+/* Mécanisme illustratif (états 1-4, voir introRender en JS) : deux
+   cuves seulement, aucune 3e colonne réservée pour l'écart — centrées
+   sur la slide, pas décalées à gauche comme .impact-fiscal__grid (qui,
+   lui, réserve toujours la place du panneau d'écart, même vide). */
+.impact-fiscal__intro-grid {
+  margin: auto 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  gap: 3.28125cqw;
+}
+
+.cuve-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.9375cqw;
+}
+
+.cuve-col__value {
+  font-family: var(--font-serif-chapitre);
+  font-weight: 400;
+  font-size: max(1.4rem, 2.65625cqw);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Total (au-dessus) et repère "Versé" (états 9-10, voir cuveHtml en JS)
+   : chacun n'apparaît qu'une fois SON remplissage terminé — délai calé
+   sur la durée de ce remplissage (.cuve__fill--grow[data-reveal]
+   ci-dessous, x2), pas en même temps que lui. */
+.cuve-col__value--delayed[data-reveal],
+.cuve__verse--delayed[data-reveal] {
+  transition-delay: calc(var(--chap-duration-move) * 2);
+}
+
+/* Réserve sa place dès le stage 0 (état 9, voir valueShown en JS) :
+   seule l'opacité change à l'apparition, jamais la présence dans le
+   flux — sinon le pied de colonne se déplace quand le total apparaît. */
+.cuve-col__value--invisible {
+  opacity: 0;
+}
+
+.cuve {
+  position: relative;
+  width: 15.625cqw;
+  height: 21.09375cqw;
+  border: 0.078125cqw solid rgba(var(--chap-ink-rgb), 0.3);
+  box-sizing: border-box;
+}
+
+/* Mécanisme illustratif (états 1-4, voir introCuveHtml) : pas de
+   contour de cuve — juste les rectangles colorés (capital, intérêts),
+   du vide au-dessus. Le graphique chiffré (états 5-6, cuveHtml), lui,
+   garde le contour plein (.cuve sans ce modificateur). */
+.cuve--no-border {
+  border: none;
+}
+
+.cuve__fill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+/* Remplissage (état 7, voir growFromZero en JS) : plus lent que le
+   mouvement standard (x2) pour qu'on ait le temps de voir monter le
+   niveau, pas un simple sursaut — seulement ce cas précis (pas la
+   redescente de la cuve bancaire à l'état 8, qui garde sa propre
+   vitesse déjà réglée). */
+.cuve__fill--grow[data-reveal] {
+  transition-duration: calc(var(--chap-duration-move) * 2);
+}
+
+.cuve__released {
+  position: absolute;
+  left: 0;
+  right: 0;
+  background: rgba(var(--bleu-rgb), 0.13);
+  border-top: 0.078125cqw dashed rgba(var(--chap-ink-rgb), 0.4);
+}
+
+.cuve__verse-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 0.078125cqw dashed rgba(var(--papier-rgb), 0.55);
+}
+
+.cuve__verse-label {
+  position: absolute;
+  left: 0.703125cqw;
+  font-weight: 700;
+  font-size: 0.8203125cqw;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: rgba(var(--papier-rgb), 0.8);
+}
+
+.cuve-col__foot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.46875cqw;
+}
+
+.cuve-col__label {
+  font-weight: 700;
+  font-size: 0.8203125cqw;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.cuve-col__desc {
+  margin: 0;
+  max-width: 16.40625cqw;
+  font-weight: 450;
+  font-size: 1.015625cqw;
+  line-height: 1.4;
+  text-align: center;
+  color: rgba(var(--chap-ink-rgb), 0.65);
+}
+
+/* ---------- Mécanisme illustratif (états 1-6) ---------- */
+
+/* Couche d'intérêts, posée sur le capital (.cuve__fill, en dessous,
+   couleur pleine) : encre semi-transparente + liseré pointillé au départ
+   (posée en style inline par introCuveHtml, jamais cette règle — sa
+   couleur change en cours de route). Sa hauteur ne rétrécit jamais une
+   fois montée (état 2) ; sa couleur, elle, passe du gris au vert au clic
+   suivant la couverture rouge (bancaire) ou le bouclier (assurance vie)
+   — voir data-reveal-bg, js/reveal.js. */
+.cuve__interest-fill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  box-sizing: border-box;
+  border-top: 0.078125cqw dashed rgba(var(--chap-ink-rgb), 0.45);
+}
+
+.cuve__interest-fill[data-reveal] {
+  transition-duration: calc(var(--chap-duration-move) * 2);
+  transition-property: height, background-color;
+}
+
+/* Zone effacée (bancaire, état 3+) : plutôt qu'un vide, la place laissée
+   par la portion partie en impôt se colorie en rouge — se déploie
+   elle-même de haut en bas (scaleY depuis le haut, voir js/reveal.js) à
+   son apparition, lentement (x4 le mouvement standard) pour bien la
+   voir recouvrir la zone. */
+.cuve__erased {
+  position: absolute;
+  left: 0;
+  right: 0;
+  transform-origin: top;
+  background: var(--rouge);
+}
+
+.cuve__erased[data-reveal] {
+  transition-duration: calc(var(--chap-duration-move) * 4);
+}
+
+/* Bouclier (assurance vie, état 4) : posé au milieu de la zone grise
+   (intérêts) pour MONTRER l'absence de fuite, plutôt que de laisser
+   deviner qu'il ne se passe rien — centré sur les deux axes (bottom au
+   centre de la bande, posé en JS + translate ici). Centrage statique sur
+   le conteneur, l'apparition (scale) est sur l'enfant — les deux ne
+   peuvent pas partager la même déclaration transform sans se marcher
+   dessus. */
+.cuve__shield {
+  position: absolute;
+  left: 50%;
+  transform: translate(-50%, 50%);
+}
+
+.cuve__shield-inner {
+  display: block;
+  transition: opacity var(--chap-duration-move) var(--chap-ease-move),
+    transform var(--chap-duration-move) var(--chap-ease-move);
+}
+
+.cuve__shield-inner.is-entering {
+  opacity: 0;
+  transform: scale(0.5);
+}
+
+/* Tremblement "elle ne bouge pas" (état 4, assurance vie) — même esprit
+   que le shake macOS/iOS (mot de passe refusé) : quelques allers-retours
+   horizontaux rapides, amplitude décroissante, puis retour à zéro. Une
+   seule fois à l'apparition du bouclier (voir cuveCls en JS), pas une
+   boucle. */
+@keyframes cuve-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-0.390625cqw);
+  }
+  40% {
+    transform: translateX(0.3125cqw);
+  }
+  60% {
+    transform: translateX(-0.234375cqw);
+  }
+  80% {
+    transform: translateX(0.15625cqw);
+  }
+}
+
+.cuve--shake {
+  animation: cuve-shake 500ms ease-in-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cuve--shake {
+    animation: none;
+  }
+}
+
+.cuve-col__badge {
+  font-weight: 700;
+  font-size: 1.25cqw;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  color: rgba(var(--chap-ink-rgb), 0.7);
+}
+
+/* Réserve sa hauteur dès l'état 1 (voir introCuveHtml) : seule l'opacité
+   change à l'apparition, jamais sa présence dans le flux. */
+.cuve-col__badge--invisible {
+  opacity: 0;
+}
+
+.cuve-col__badge--or {
+  color: var(--or);
+}
+
+.cuve-col__badge--rouge {
+  color: var(--rouge);
+}
+
+/* Overlay, pas une colonne de grille (voir .impact-fiscal__grid) —
+   positionné à gauche de .cuve (position:relative, voir plus haut),
+   jamais dans son flux : les deux cuves restent centrées sur la slide
+   que ce panneau soit affiché ou non. Texte aligné à droite pour "
+   pointer" vers la cuve bancaire, juste à côté. */
+.impact-fiscal__ecart {
+  position: absolute;
+  right: 100%;
+  bottom: 0.9375cqw;
+  margin-right: 3.28125cqw;
+  width: 15.625cqw;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.78125cqw;
+  text-align: right;
+}
+
+.impact-fiscal__ecart-label {
+  font-weight: 700;
+  font-size: 0.8203125cqw;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: rgba(var(--chap-ink-rgb), 0.55);
+}
+
+.impact-fiscal__ecart-value {
+  font-family: var(--font-serif-chapitre);
+  font-weight: 400;
+  font-size: max(2rem, 4.375cqw);
+  line-height: 0.9;
+  letter-spacing: -0.05em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.impact-fiscal__ecart-note {
+  margin: 0;
+  font-weight: 450;
+  font-size: 1.0546875cqw;
+  line-height: 1.45;
+  color: rgba(var(--chap-ink-rgb), 0.65);
+}
+
+/* ---------- Gabarit "Fiscalité des rachats" (slide 6, anneau à 6 états) ---------- */
+
+.fiscalite-rachats {
+  height: 100%;
+  box-sizing: border-box;
+  padding: 2.8125cqw 4.84375cqw 4.21875cqw;
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-sans-chapitre);
+}
+
+.fiscalite-rachats__intro {
+  padding-top: 2.34375cqw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.fiscalite-rachats__title {
+  font-size: max(1.7rem, 3.125cqw);
+}
+
+.fiscalite-rachats__stage {
+  margin: auto 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3.59375cqw;
+}
+
+.fiscalite-rachats__svg {
+  flex: none;
+  width: 21.875cqw;
+  height: 21.875cqw;
+  display: block;
+}
+
+/* Capital, intérêts et coin détachable partagent tous le repère du
+   viewBox (200x200, centre 100,100) — voir fiscalite-rachats.js : le
+   capital et le premier anneau grandissent depuis le centre, les anneaux
+   suivants se déploient en rotation (stroke-dashoffset), le coin se
+   détache par translation. Sans rebond partout (cubic-bezier(0.4,0,0.2,
+   1) n'a pas de dépassement) mais à des vitesses distinctes par effet
+   (voir chaque règle ci-dessous) — pas un seul réglage global. */
+.fiscalite-rachats__capital,
+.fiscalite-rachats__interets,
+.fiscalite-rachats__coin {
+  transform-box: view-box;
+  transform-origin: 100px 100px;
+}
+
+/* Capital (état 2) et coin qui se détache (états 6-7) : x2 le mouvement
+   standard. */
+.fiscalite-rachats__capital[data-reveal],
+.fiscalite-rachats__coin[data-reveal] {
+  transition-duration: calc(var(--chap-duration-move) * 2);
+}
+
+/* Premier anneau (neutre, état 3) : grandit depuis le centre comme le
+   capital, mais ralenti (x4) à la demande. */
+.fiscalite-rachats__interets[data-reveal] {
+  transition-duration: calc(var(--chap-duration-move) * 4);
+}
+
+/* Anneaux bleu/vert (états 4-5) qui se déploient dans le sens horaire
+   pour recouvrir le précédent (bleu sur neutre : on ajoute l'impôt ;
+   vert sur bleu : on l'efface) — un cercle SVG se trace depuis 3h dans
+   le sens horaire, ce qui donne l'effet "horaire" recherché sans
+   dessiner d'arc à la main. Vitesse divisée par deux (x4) par rapport au
+   réglage initial (x2). */
+.fiscalite-rachats__interets circle[data-reveal] {
+  transition: stroke-dashoffset calc(var(--chap-duration-move) * 4) var(--chap-ease-move);
+}
+
+/* Coin des intérêts (état 7) : même principe sur un arc épais plutôt
+   qu'un cercle complet (voir interetsCoinArcHtml) — le vert se déploie
+   dans le sens horaire par-dessus le bleu, à la place de l'ancien
+   détachement du coin (il ne bouge plus à cet état) : vitesse alignée
+   sur l'effet qu'il remplace (x2), pas sur celle, plus lente, des
+   anneaux. */
+.fiscalite-rachats__interets path[data-reveal] {
+  transition: stroke-dashoffset calc(var(--chap-duration-move) * 2) var(--chap-ease-move);
+}
+
+.fiscalite-rachats__legend {
+  display: flex;
+  flex-direction: column;
+  gap: 1.328125cqw;
+  width: 30.46875cqw;
+}
+
+.fiscalite-rachats__entry {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.9375cqw;
+}
+
+.fiscalite-rachats__dot {
+  flex: none;
+  width: 1.015625cqw;
+  height: 1.015625cqw;
+  margin-top: 0.3125cqw;
+}
+
+.fiscalite-rachats__entry-text {
+  font-weight: 450;
+  font-size: 1.25cqw;
+  line-height: 1.4;
+}
+
+/* Hauteur réservée fixe, que les blocs avant8/apres8 soient présents ou
+   non (états 1 à 4 n'en ont pas) : sinon le disque au-dessus (centré via
+   margin:auto sur .fiscalite-rachats__stage) dérive verticalement d'un
+   état à l'autre selon que ce bloc est vide ou rempli. */
+.fiscalite-rachats__rules {
+  flex: none;
+  margin-top: auto;
+  min-height: 15cqw;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1px 1.5fr;
+  column-gap: 3.4375cqw;
+  /* Aligné en haut, pas en bas : "avant 8 ans" et "après 8 ans" doivent
+     démarrer à la même ligne, quelle que soit la hauteur de contenu de
+     chaque colonne (le bloc de droite est plus grand). */
+  align-items: start;
+}
+
+.fiscalite-rachats__divider {
+  background: rgba(var(--chap-ink-rgb), 0.16);
+  align-self: stretch;
+}
+
+.rachat-avant8 {
+  display: flex;
+  flex-direction: column;
+  gap: 1.09375cqw;
+  padding-top: 1.09375cqw;
+  border-top: 0.078125cqw solid rgba(var(--chap-ink-rgb), 0.25);
+}
+
+/* Même taille/couleur que .transmission__section-title ("VERSEMENTS
+   AVANT 70 ANS", slide "Transmission") — un seul traitement de libellé
+   de section dans tout le deck, pas une variante par gabarit. */
+.rachat-avant8__label {
+  font-weight: 700;
+  font-size: 0.9375cqw;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(var(--chap-ink-rgb), 1);
+}
+
+.rachat-avant8__rows {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Filet seulement ENTRE deux lignes, jamais avant la première : sinon
+   il se colle à celui de .rachat-avant8 juste au-dessus (deux filets
+   presque superposés, lu comme un doublon plutôt qu'un repère). */
+.rachat-avant8__row {
+  padding: 0.78125cqw 0;
+  font-weight: 450;
+  font-size: 1.09375cqw;
+  line-height: 1.45;
+  color: rgba(var(--chap-ink-rgb), 0.7);
+}
+
+.rachat-avant8__row + .rachat-avant8__row {
+  border-top: 0.078125cqw solid rgba(var(--chap-ink-rgb), 0.14);
+}
+
+/* Même filet d'en-tête que .rachat-avant8 (pas plus épais/foncé) : ce
+   sont deux blocs parallèles ("avant" / "après"), pas une hiérarchie
+   entre eux — un seul traitement de filet dans tout le gabarit. */
+.rachat-apres8 {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25cqw;
+  padding-top: 1.09375cqw;
+  border-top: 0.078125cqw solid rgba(var(--chap-ink-rgb), 0.25);
+}
+
+.rachat-apres8__label {
+  font-weight: 700;
+  font-size: 0.9375cqw;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(var(--chap-ink-rgb), 1);
+}
+
+.rachat-apres8__amounts {
+  display: flex;
+  align-items: center;
+  gap: 3.125cqw;
+}
+
+/* Icône à côté du montant, pas au-dessus : une ligne (pictogramme +
+   colonne valeur/qui), pas un empilement. */
+.rachat-apres8__amount {
+  display: flex;
+  align-items: center;
+  gap: 0.9375cqw;
+}
+
+.rachat-apres8__amount-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.46875cqw;
+}
+
+.rachat-apres8__amount .chap-icon {
+  flex: none;
+  width: 2.65625cqw;
+  height: 2.65625cqw;
+}
+
+.rachat-apres8__value {
+  font-family: var(--font-serif-chapitre);
+  font-weight: 400;
+  font-size: max(2rem, 4.375cqw);
+  line-height: 0.9;
+  letter-spacing: -0.05em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--or);
+}
+
+.rachat-apres8__who {
+  font-weight: 700;
+  font-size: 0.78125cqw;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(var(--chap-ink-rgb), 0.55);
+}
+
+.rachat-apres8__note {
+  margin: 0;
+  font-weight: 450;
+  font-size: 1.09375cqw;
+  line-height: 1.5;
+  color: rgba(var(--chap-ink-rgb), 0.72);
+}
+
+/* ---------- Gabarit "Transmission" (2 colonnes : principe / donation) ---------- */
+
+.transmission {
+  height: 100%;
+  box-sizing: border-box;
+  padding: 2.8125cqw 4.84375cqw 4.21875cqw;
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-sans-chapitre);
+}
+
+.transmission__intro {
+  padding-top: 2.34375cqw;
+  margin-bottom: 2.5cqw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.703125cqw;
+}
+
+.transmission__title {
+  font-size: max(1.7rem, 3.125cqw);
+}
+
+.transmission__sub {
+  margin: 0;
+  font-weight: 450;
+  font-size: 1.09375cqw;
+  color: rgba(var(--chap-ink-rgb), 0.6);
+}
+
+/* Occupe l'espace restant entre l'intro et le pied de page (conditions
+   "après 70 ans") et y centre la grille verticalement — plutôt que des
+   margin:auto sur la grille elle-même, qui la centreraient sur TOUTE la
+   hauteur restante de .transmission, empiétant sur l'espace du pied de
+   page réservé plus bas. */
+.transmission__body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.transmission__grid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1px 1fr;
+  column-gap: 3.90625cqw;
+  align-items: center;
+}
+
+.transmission__divider {
+  align-self: stretch;
+  background: rgba(var(--chap-ink-rgb), 0.16);
+}
+
+/* Colonne gauche : le principe (état 2, au clic). Toujours rendue avec
+   son vrai contenu (voir --invisible, même principe que .deux-poches__
+   col) pour que la grille garde sa hauteur pleine dès l'arrivée — rien
+   ne bouge quand ce bloc apparaît. */
+.transmission__col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 1.09375cqw;
+}
+
+.transmission__col--invisible {
+  opacity: 0;
+}
+
+.transmission__col .chap-icon {
+  flex: none;
+}
+
+.transmission__clause-label {
+  font-weight: 700;
+  font-size: 0.8203125cqw;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(var(--chap-ink-rgb), 0.55);
+}
+
+.transmission__clause-text {
+  margin: 0;
+  max-width: 26.5625cqw;
+  font-family: var(--font-serif-chapitre);
+  font-weight: 400;
+  font-size: max(1.3rem, 1.875cqw);
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+}
+
+.transmission__col--droite {
+  align-items: stretch;
+}
+
+/* Les deux blocs empilés de la colonne droite (avant 70 ans / après 70
+   ans, états 3 et 4) — même principe --invisible que la colonne gauche,
+   pour que la grille garde toujours sa hauteur pleine. */
+.transmission__block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.703125cqw;
+}
+
+.transmission__block--invisible {
+  opacity: 0;
+}
+
+/* Fondu simple pour le conteneur (pas le zoom générique de .is-entering,
+   qui entrerait en conflit avec les animations internes du premier bloc
+   — le rail qui se déroule, chaque ligne d'enfant qui descend en
+   cascade, voir plus bas) : transform neutralisé, seule l'opacité
+   transitionne. Même traitement sur les deux blocs, par cohérence. */
+.transmission__block.is-entering {
+  transform: none;
+}
+
+.transmission__donation {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.71875cqw;
+}
+
+.transmission__source {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.625cqw;
+  width: 100%;
+}
+
+.transmission__source .chap-icon {
+  flex: none;
+}
+
+.transmission__source-label {
+  font-weight: 700;
+  font-size: 0.78125cqw;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(var(--chap-ink-rgb), 0.5);
+}
+
+/* Arbre capital -> bénéficiaires en un seul SVG (voir treeHtml en JS) :
+   la barre horizontale et les trois verticales sont des segments d'un
+   même repère de coordonnées, donc jointes exactement là où elles se
+   touchent — plus robuste qu'aligner des éléments HTML séparés en
+   pourcentages (bug remonté : la barre et les traits ne se touchaient
+   pas). Chaque segment se dessine par stroke-dashoffset (même technique
+   que les anneaux de "Fiscalité des rachats"), la barre d'abord puis
+   chaque verticale en cascade (délai croissant par index, voir
+   --branch-index posé en style inline). */
+.transmission__tree {
+  width: 100%;
+  height: 3.359375cqw;
+  overflow: visible;
+}
+
+.transmission__tree-rail,
+.transmission__tree-branch {
+  fill: none;
+  stroke: var(--or);
+  stroke-width: 1.5;
+}
+
+.transmission__tree-rail[data-reveal],
+.transmission__tree-branch[data-reveal] {
+  transition: stroke-dashoffset calc(var(--chap-duration-move) * 1.5) var(--chap-ease-move);
+}
+
+.transmission__tree-branch[data-reveal] {
+  /* Démarre une fois la barre horizontale tracée (même durée qu'elle,
+     1.5x), puis un délai croissant par branche pour la cascade. */
+  transition-delay: calc(var(--chap-duration-move) * 1.5 + var(--chap-duration-fade) * var(--branch-index, 0));
+}
+
+/* Grid plutôt que flex:1 — des colonnes réellement égales quel que soit
+   le contenu (le texte "..." et les montants n'ont pas la même largeur
+   naturelle ; flex:1 seul, sans flex-basis forcé, laissait ce contenu
+   perturber la répartition et désaligner les branches par rapport aux
+   x fixes de l'arbre SVG — bug remonté). Nombre de colonnes posé en
+   style inline par render() (bénéficiaires + la branche "..."). */
+.transmission__branches {
+  display: grid;
+  width: 100%;
+}
+
+.transmission__branch {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.625cqw;
+}
+
+.transmission__branch .chap-icon {
+  flex: none;
+}
+
+/* 4e branche ("...", voir etcBranchHtml en JS) : un espaceur muet de la
+   même hauteur que l'icône des branches chiffrées, pour que le "..."
+   s'aligne avec les montants à côté plutôt que de remonter en haut de
+   la colonne (il n'a pas d'icône au-dessus, contrairement aux autres). */
+.transmission__branch-etc-spacer {
+  display: block;
+  height: 34px;
+}
+
+.transmission__branch-etc {
+  /* Sa boîte de texte commence au même endroit que .transmission__
+     branch-montant (même position, même parent) mais est plus haute
+     (plus grande taille de police) : sans correction, les points
+     "..." rendent visuellement plus bas que le bas des montants à
+     côté — remonté d'autant. */
+  margin-top: -0.234375cqw;
+  font-family: var(--font-serif-chapitre);
+  font-size: 2.1875cqw;
+  line-height: 1;
+  letter-spacing: 0.1em;
+  color: rgba(var(--chap-ink-rgb), 0.5);
+}
+
+.transmission__branch-montant {
+  /* Chaque colonne (flex:1, sans gap — nécessaire pour rester alignée
+     avec les x fixes de l'arbre SVG, voir treeHtml) ne fait qu'un
+     tiers de la largeur de .transmission__branches : à une taille plus
+     grande, le texte remplit toute la colonne et les 3 montants se
+     touchent, sans respiration entre eux (bug remonté). */
+  font-family: var(--font-serif-chapitre);
+  font-weight: 400;
+  font-size: 1.25cqw;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.transmission__donation-note {
+  margin: 0;
+  text-align: center;
+  white-space: nowrap;
+  font-weight: 450;
+  font-size: clamp(0.7rem, 0.75cqw, 1.015625cqw);
+  line-height: 1.45;
+  color: rgba(var(--chap-ink-rgb), 0.6);
+}
+
+/* Titre de section dans la colonne droite — "Versements avant 70 ans"
+   au-dessus du dessin (icône + arbre) qu'il annonce, "Versements après
+   70 ans" au-dessus de ses conditions : même registre que .transmission
+   __source-label (CAPITAL TRANSMIS), réutilisé comme repère commun aux
+   deux blocs empilés plutôt qu'un style par bloc. Centré par rapport à
+   la colonne droite (héritage de text-align:center sur .transmission__
+   col), pas par rapport à la slide entière — bug remonté sur l'ancien
+   pied de page pleine largeur. */
+.transmission__section-title {
+  display: block;
+  font-weight: 700;
+  font-size: 0.9375cqw;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(var(--chap-ink-rgb), 1);
+}
+
+.transmission__section-title--apres70 {
+  margin-top: 1.71875cqw;
+  padding-top: 1.328125cqw;
+  border-top: 0.078125cqw solid rgba(var(--chap-ink-rgb), 0.16);
+}
+
+.transmission__footer-text {
+  margin: 0.625cqw 0 0;
+  font-weight: 450;
+  font-size: 1.015625cqw;
+  line-height: 1.5;
+  color: rgba(var(--chap-ink-rgb), 0.68);
+}
+
+/* ---------- Gabarit "Synthèse de chapitre" (slide 8) ---------- */
+
+.synthese-chapitre {
+  height: 100%;
+  box-sizing: border-box;
+  padding: 2.8125cqw 4.84375cqw 4.21875cqw;
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-sans-chapitre);
+}
+
+.synthese-chapitre__intro {
+  padding-top: 2.65625cqw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.synthese-chapitre__kicker {
+  margin: 0;
+  font-weight: 700;
+  font-size: 0.8203125cqw;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: rgba(var(--chap-ink-rgb), 0.5);
+}
+
+.synthese-chapitre__rule {
+  margin-top: 1.5625cqw;
+  width: 5.46875cqw;
+  height: 0.15625cqw;
+  background: var(--or);
+  display: block;
+}
+
+.synthese-chapitre__title {
+  margin-top: 1.5625cqw;
+  font-size: max(1.7rem, 3.125cqw);
+}
+
+.synthese-chapitre__list {
+  /* Centré comme bloc (largeur au contenu, pas 100%) par rapport au
+     titre — margin auto des deux côtés le centre horizontalement dans
+     .synthese-chapitre (align-self plutôt que le stretch par défaut du
+     parent) et verticalement dans l'espace sous le titre (margin auto
+     haut/bas plutôt que haut seul, qui le plaquait en bas). Le texte
+     reste aligné à gauche à l'intérieur du bloc (voir .synthese-
+     chapitre__item), seul le bloc lui-même est centré. */
+  align-self: center;
+  margin: auto 0;
+  width: auto;
+  padding-left: 4.84375cqw;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+.synthese-chapitre__item {
+  padding: 1.5625cqw 0;
+  display: flex;
+  align-items: center;
+  gap: 1.09375cqw;
+}
+
+.synthese-chapitre__item .chap-icon {
+  flex: none;
+  width: 1.875cqw;
+  height: 1.875cqw;
+}
+
+.synthese-chapitre__item-text {
+  font-family: var(--font-serif-chapitre);
+  font-weight: 400;
+  font-size: 1.875cqw;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+
+/* ---------- Gabarit "Comment ça marche" (chapitre SCPI) ---------- */
+
+.scpi-mecanisme {
+  height: 100%;
+  box-sizing: border-box;
+  padding: 2.8125cqw 4.84375cqw 4.21875cqw;
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-sans-chapitre);
+}
+
+.scpi-mecanisme__intro {
+  padding-top: 2.34375cqw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.scpi-mecanisme__title {
+  font-size: max(1.7rem, 3.125cqw);
+}
+
+.scpi-mecanisme__stage {
+  margin: auto 0;
+  position: relative;
+  width: 100%;
+  height: 30.625cqw;
+}
+
+.scpi-mecanisme__lines {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.scpi-mecanisme__box {
+  position: absolute;
+  box-sizing: border-box;
+  border: 0.078125cqw solid rgba(var(--chap-ink-rgb), 0.22);
+  padding: 1.40625cqw 1.5625cqw 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.703125cqw;
+}
+
+.scpi-mecanisme__box--amf {
+  justify-content: center;
+  padding-top: 0;
+}
+
+.scpi-mecanisme__box--vehicule {
+  border-top: 0.15625cqw solid var(--or);
+}
+
+.scpi-mecanisme__box-kicker {
+  font-weight: 700;
+  font-size: 0.7421875cqw;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(var(--chap-ink-rgb), 0.45);
+}
+
+.scpi-mecanisme__box-titre {
+  font-family: var(--font-serif-chapitre);
+  font-weight: 400;
+  font-size: 1.71875cqw;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.scpi-mecanisme__box-texte {
+  margin: 0;
+  font-weight: 450;
+  font-size: 1.015625cqw;
+  line-height: 1.45;
+  color: rgba(var(--chap-ink-rgb), 0.7);
+}
+
+.scpi-mecanisme__amf-note {
+  position: absolute;
+  font-weight: 700;
+  font-size: 0.7421875cqw;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: rgba(var(--chap-ink-rgb), 0.45);
+}
+
+.scpi-mecanisme__actifs {
+  margin-top: auto;
+  padding: 0.859375cqw 0;
+  border-top: 0.078125cqw solid rgba(var(--chap-ink-rgb), 0.16);
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 1.25cqw;
+  row-gap: 0.46875cqw;
+}
+
+.scpi-mecanisme__actif {
+  font-weight: 700;
+  font-size: 0.7421875cqw;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: rgba(var(--chap-ink-rgb), 0.55);
+}
+
+.scpi-mecanisme__flow {
+  position: absolute;
+  font-weight: 700;
+  font-size: 0.7421875cqw;
+  line-height: 1.35;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  text-align: center;
+  color: rgba(var(--chap-ink-rgb), 0.6);
+}
+
+.scpi-mecanisme__flow--or {
+  color: var(--or);
+}
+
+/* ---------- Gabarit "Les atouts" (chapitre SCPI) ---------- */
+
+.scpi-atouts {
+  height: 100%;
+  box-sizing: border-box;
+  padding: 2.8125cqw 4.84375cqw 4.21875cqw;
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-sans-chapitre);
+}
+
+.scpi-atouts__intro {
+  padding-top: 2.34375cqw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.scpi-atouts__title {
+  font-size: max(1.7rem, 3.125cqw);
+}
+
+.scpi-atouts__eyebrow {
+  margin-top: 1.09375cqw;
+  font-weight: 700;
+  font-size: 0.8203125cqw;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: rgba(var(--chap-ink-rgb), 0.45);
+}
+
+.scpi-atouts__stage {
+  margin: auto 0;
+  width: 100%;
+}
+
+.scpi-atouts__track {
+  position: relative;
+  width: 100%;
+  height: 7.5cqw;
+}
+
+.scpi-atouts__track-line {
+  position: absolute;
+  left: 11.328125cqw;
+  right: 11.328125cqw;
+  top: 3.671875cqw;
+  height: 0.078125cqw;
+  background: rgba(var(--chap-ink-rgb), 0.2);
+}
+
+.scpi-atouts__track-row {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.scpi-atouts__num-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.scpi-atouts__num-circle {
+  width: 7.5cqw;
+  height: 7.5cqw;
+  border-radius: 50%;
+  box-sizing: border-box;
+  border: 0.078125cqw solid rgba(185, 151, 97, 0.5);
+  background: var(--papier);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.scpi-atouts__num-circle--active {
+  border-color: var(--or);
+  background: var(--or);
+}
+
+.scpi-atouts__num {
+  font-family: var(--font-serif-chapitre);
+  font-weight: 400;
+  font-size: 2.03125cqw;
+  line-height: 1;
+  color: rgba(var(--chap-ink-rgb), 0.45);
+}
+
+.scpi-atouts__num-circle--active .scpi-atouts__num {
+  color: var(--papier);
+}
+
+.scpi-atouts__labels {
+  margin-top: 1.40625cqw;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  column-gap: 1.71875cqw;
+}
+
+.scpi-atouts__label {
+  font-weight: 700;
+  font-size: 0.859375cqw;
+  line-height: 1.4;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  text-align: center;
+  color: rgba(var(--chap-ink-rgb), 0.38);
+}
+
+.scpi-atouts__label--active {
+  color: rgba(var(--chap-ink-rgb), 0.85);
+}
+
+.scpi-atouts__rule {
+  margin-top: 1.875cqw;
+  position: relative;
+  height: 0.078125cqw;
+  background: rgba(185, 151, 97, 0.6);
+}
+
+.scpi-atouts__caret {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 0.703125cqw solid transparent;
+  border-right: 0.703125cqw solid transparent;
+  border-top: 0.78125cqw solid var(--or);
+}
+
+.scpi-atouts__bullets {
+  padding-left: 13.28125cqw;
+  display: flex;
+  flex-direction: column;
+}
+
+.scpi-atouts__bullet {
+  display: flex;
+  align-items: baseline;
+  gap: 1.40625cqw;
+}
+
+.scpi-atouts__bullet-dash {
+  flex: none;
+  width: 1.71875cqw;
+  height: 0.078125cqw;
+  background: var(--or);
+  transform: translateY(-0.46875cqw);
+}
+
+.scpi-atouts__bullet-text {
+  font-weight: 450;
+  font-size: 1.40625cqw;
+  line-height: 1.4;
+  text-wrap: pretty;
+}
+
+/* ---------- Gabarit "Investir en financement" (chapitre SCPI) ----------
+   Révélation progressive à 3 états (opts.stateIndex direct, comme
+   "Impact fiscal") : Phase 1 Constitution / Phase 2 Perception / Phase 3
+   Transmission — une seule slide, jamais 3 slides séparées. Les blocs
+   déjà affichés (mensualité + barre, complément de revenu) restent dans
+   le DOM et s'estompent (opacité posée en style inline par le JS) plutôt
+   que de disparaître : l'axe temporel (Aujourd'hui -> fin de financement
+   -> transmission) reste lisible d'un bout à l'autre. */
+
+.scpi-financement {
+  height: 100%;
+  box-sizing: border-box;
+  padding: 2.8125cqw 4.84375cqw 4.21875cqw;
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-sans-chapitre);
+}
+
+.scpi-financement__intro {
+  padding-top: 2.34375cqw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.scpi-financement__title {
+  font-size: max(1.7rem, 3.125cqw);
+}
+
+.scpi-financement__eyebrow {
+  margin-top: 1.09375cqw;
+  font-weight: 700;
+  font-size: 0.8203125cqw;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: rgba(var(--chap-ink-rgb), 0.45);
+}
+
+.scpi-financement__desc {
+  margin: 0.9375cqw 0 0;
+  font-weight: 450;
+  font-size: 1.171875cqw;
+  line-height: 1.5;
+  text-align: center;
+  white-space: nowrap;
+  color: rgba(var(--chap-ink-rgb), 0.65);
+}
+
+.scpi-financement__stage {
+  margin: auto 0;
+  position: relative;
+  width: 100%;
+  height: 23.4375cqw;
+}
+
+.scpi-financement__kicker {
+  display: block;
+  font-weight: 700;
+  font-size: 0.7421875cqw;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(var(--chap-ink-rgb), 0.5);
+}
+
+.scpi-financement__value {
+  display: block;
+  margin-top: 0.46875cqw;
+  font-family: var(--font-serif-chapitre);
+  font-weight: 400;
+  font-size: 2.34375cqw;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.scpi-financement__block-a {
+  position: absolute;
+  transition: opacity var(--chap-duration-fade) linear;
+}
+
+.scpi-financement__bar {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  transition: opacity var(--chap-duration-fade) linear;
+}
+
+.scpi-financement__bar-effort {
+  box-sizing: border-box;
+  background: var(--encre);
+  display: flex;
+  align-items: center;
+  padding-left: 1.25cqw;
+}
+
+.scpi-financement__bar-revenu {
+  flex: 1;
+  box-sizing: border-box;
+  background: var(--or);
+  display: flex;
+  align-items: center;
+  padding: 0.9375cqw 1.25cqw;
+}
+
+.scpi-financement__bar-revenu--flush {
+  padding: 0 1.25cqw;
+}
+
+.scpi-financement__bar-spacer {
+  flex: none;
+}
+
+.scpi-financement__bar-label {
+  font-weight: 700;
+  font-size: 0.7421875cqw;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--papier);
+}
+
+.scpi-financement__bar-label--ink {
+  color: rgba(var(--chap-ink-rgb), 0.75);
+}
+
+.scpi-financement__block-c {
+  position: absolute;
+  transition: opacity var(--chap-duration-fade) linear;
+}
+
+.scpi-financement__block-d {
+  transition: opacity var(--chap-duration-fade) linear;
+}
+
+.scpi-financement__axis {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 18.4375cqw;
+  height: 0.078125cqw;
+  background: rgba(var(--chap-ink-rgb), 0.3);
+}
+
+.scpi-financement__tick {
+  position: absolute;
+  top: 18.4375cqw;
+  width: 0.078125cqw;
+  height: 0.625cqw;
+  background: rgba(var(--chap-ink-rgb), 0.3);
+}
+
+.scpi-financement__axis-label {
+  position: absolute;
+  top: 19.6875cqw;
+  font-weight: 700;
+  font-size: 0.7421875cqw;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: rgba(var(--chap-ink-rgb), 0.5);
+}
+
+.scpi-financement__axis-label--center {
+  transform: translateX(-50%);
+}
+
+.scpi-financement__axis-label--transmission {
+  transform: translateX(-50%);
+  color: rgba(var(--chap-ink-rgb), 0.65);
+}
+
+.scpi-financement__transmission {
+  position: absolute;
+  inset: 0;
+}
+
+.scpi-financement__divider {
+  position: absolute;
+  left: 75cqw;
+  top: 2.34375cqw;
+  width: 0.078125cqw;
+  height: 16.09375cqw;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(var(--chap-ink-rgb), 0.4) 0 0.234375cqw,
+    transparent 0.234375cqw 0.625cqw
+  );
+}
+
+.scpi-financement__block-e {
+  position: absolute;
+  left: 76.25cqw;
+  top: 6.71875cqw;
+  width: 14.0625cqw;
+  height: 11.71875cqw;
+  box-sizing: border-box;
+  border: 0.078125cqw solid rgba(var(--chap-ink-rgb), 0.22);
+  border-top: 0.15625cqw solid var(--encre);
+  padding: 1.25cqw 1.40625cqw;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625cqw;
+}
+
+.scpi-financement__block-e-note {
+  margin: auto 0 0;
+  font-weight: 450;
+  font-size: 0.9765625cqw;
+  line-height: 1.4;
+  text-wrap: pretty;
+  color: rgba(var(--chap-ink-rgb), 0.65);
+}
+
+.scpi-financement__footnote {
+  flex: none;
+  margin: 0;
+  padding-top: 0.9375cqw;
+  border-top: 0.078125cqw solid rgba(var(--chap-ink-rgb), 0.16);
+  font-weight: 450;
+  font-size: 0.859375cqw;
+  line-height: 1.5;
+  color: rgba(var(--chap-ink-rgb), 0.45);
+}

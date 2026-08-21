@@ -1,0 +1,489 @@
+{
+  "meta": { "title": "Accompagnement patrimonial", "client": "", "date": "" },
+  "slides": [
+    {
+      "id": "cover",
+      "type": "cover",
+      "kicker": "Prénom Nom — 2ᵉ rendez-vous",
+      "title": "Accompagnement patrimonial"
+    },
+    {
+      "id": "constat-demo",
+      "type": "constat",
+      "client": "Prénom Nom",
+      "date": "2026-09-17",
+      "chapitreActif": 1,
+      "chapitres": [
+        { "numero": "01", "libelle": "Constat" },
+        { "numero": "02", "libelle": "Ingénieries" },
+        { "numero": "03", "libelle": "Préconisations" }
+      ],
+      "titre": "Synthèse patrimoniale",
+      "kpis": [
+        {
+          "label": "Épargne de précaution souhaitée",
+          "valeur": "21 600 €",
+          "note": "objectif recommandé",
+          "accent": "or"
+        },
+        {
+          "label": "Épargne de précaution réelle",
+          "valeur": "14 700 €",
+          "note": "68 % de l'objectif atteint",
+          "accent": "bleu"
+        },
+        {
+          "label": "Effort d'épargne mensuel",
+          "valeur": "1 450 €",
+          "note": "22 % des revenus nets",
+          "accent": "or"
+        }
+      ],
+      "supports": [
+        { "nom": "Livret A", "montant": 12400, "horizon": "disponible" },
+        { "nom": "Compte à terme", "montant": 14900, "horizon": "2 ans" },
+        { "nom": "Assurance-vie", "montant": 86500, "horizon": "8 ans +" },
+        { "nom": "SCPI", "montant": 45000, "horizon": "10 ans +" },
+        { "nom": "PEA", "montant": 34200, "horizon": "20 ans +" }
+      ],
+      "objectifs": [
+        "Diversifier votre patrimoine",
+        "Optimiser la rentabilité de votre patrimoine",
+        "Compléter vos revenus régulièrement",
+        "Préparer votre retraite"
+      ],
+      "states": [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]
+    },
+    {
+      "id": "av-titre",
+      "type": "section-title",
+      "client": "Prénom Nom",
+      "date": "2026-09-17",
+      "chapitreActif": 2,
+      "chapitres": [
+        { "numero": "01", "libelle": "Constat" },
+        { "numero": "02", "libelle": "Ingénieries" },
+        { "numero": "03", "libelle": "Préconisations" }
+      ],
+      "titre": "Assurance vie",
+      "sousTitre": "Présentation de l'ingénierie"
+    },
+    {
+      "id": "av-pourquoi",
+      "type": "chap-regles",
+      "client": "Prénom Nom",
+      "date": "2026-09-17",
+      "chapitreActif": 2,
+      "chapitres": [
+        { "numero": "01", "libelle": "Constat" },
+        { "numero": "02", "libelle": "Ingénieries" },
+        { "numero": "03", "libelle": "Préconisations" }
+      ],
+      "kicker": "Pourquoi l'assurance vie ?",
+      "titre": "Un super livret",
+      "titreHalo": "livret",
+      "picto": "disponibilite",
+      "lead": "Votre épargne reste disponible à tout moment, elle n'est jamais bloquée.",
+      "regles": [
+        {
+          "numero": "1",
+          "label": "Rendement",
+          "texte": "Viser plus de performance qu'un livret bancaire, par une gestion personnalisée et un large choix d'actifs."
+        },
+        {
+          "numero": "2",
+          "label": "Fiscalité",
+          "texte": "Aucune fiscalité tant que l'épargne reste investie. À la sortie, des abattements avantageux et une réduction d'impôt sur le revenu."
+        },
+        {
+          "numero": "3",
+          "label": "Transmission",
+          "texte": "L'outil le plus avantageux pour sécuriser ses proches."
+        }
+      ],
+      "states": [{}, {}, {}, {}, {}]
+    },
+    {
+      "id": "av-dormante",
+      "type": "epargne-dormante",
+      "client": "Prénom Nom",
+      "date": "2026-09-17",
+      "chapitreActif": 2,
+      "chapitres": [
+        { "numero": "01", "libelle": "Constat" },
+        { "numero": "02", "libelle": "Ingénieries" },
+        { "numero": "03", "libelle": "Préconisations" }
+      ],
+      "railEtapes": ["Rendement", "Fiscalité", "Transmission"],
+      "railActive": 1,
+      "titre": "Ne pas investir, c'est perdre à coup sûr",
+      "lead": "Une perte invisible à court terme, mais réelle et chiffrable sur la durée.",
+      "diagrammeIntro": "Ce que valent 10 000 € laissés sur un compte courant, en pouvoir d'achat d'aujourd'hui, avec une inflation de 2 % par an :",
+      "horizons": [
+        { "label": "Aujourd'hui", "montant": 10000 },
+        { "label": "Dans 10 ans", "montant": 8200 },
+        { "label": "Dans 20 ans", "montant": 6730 },
+        { "label": "Dans 30 ans", "montant": 5520 }
+      ],
+      "hypothese": "Hypothèse : inflation de 2 % par an (objectif d'inflation de la Banque Centrale Européenne). Montants exprimés en pouvoir d'achat d'aujourd'hui.",
+      "states": [{}, {}, {}, {}]
+    },
+    {
+      "id": "av-composition",
+      "type": "deux-poches",
+      "client": "Prénom Nom",
+      "date": "2026-09-17",
+      "chapitreActif": 2,
+      "chapitres": [
+        { "numero": "01", "libelle": "Constat" },
+        { "numero": "02", "libelle": "Ingénieries" },
+        { "numero": "03", "libelle": "Préconisations" }
+      ],
+      "railEtapes": ["Rendement", "Fiscalité", "Transmission"],
+      "railActive": 1,
+      "titre": "Un univers d'investissement très riche",
+      "colonnes": [
+        {
+          "nom": "Fonds en euros",
+          "tag": "Sécurité",
+          "couleur": "ink",
+          "lead": "On y cherche la sécurité, en acceptant un rendement limité.",
+          "items": [
+            { "icon": "bouclier", "texte": "Capital garanti" },
+            {
+              "icon": "cliquet",
+              "texte": "Effet cliquet : les gains acquis ne se reperdent pas"
+            },
+            { "icon": "plafond", "texte": "Un rendement qui plafonne" }
+          ]
+        },
+        {
+          "nom": "Unités de compte",
+          "tag": "Performance",
+          "couleur": "bleu",
+          "lead": "Pour aller chercher plus de rendement, en maîtrisant son risque grâce à une diversification unique.",
+          "items": [
+            {
+              "icon": "risque",
+              "texte": "Investir dans les entreprises et l'économie"
+            },
+            {
+              "icon": "formes",
+              "texte": "Actions, obligations, immobilier, private equity, fonds alternatifs ..."
+            },
+            {
+              "icon": "globe",
+              "texte": "Diversification géographique et sectorielle"
+            }
+          ]
+        }
+      ],
+      "pratique": {
+        "label": "En pratique",
+        "texte": "Une gestion sur-mesure personnalisable et ajustable au fil du temps."
+      },
+      "states": [{}, {}, {}, {}]
+    },
+    {
+      "id": "av-impact-40",
+      "type": "impact-fiscal",
+      "client": "Prénom Nom",
+      "date": "2026-09-17",
+      "chapitreActif": 2,
+      "chapitres": [
+        { "numero": "01", "libelle": "Constat" },
+        { "numero": "02", "libelle": "Ingénieries" },
+        { "numero": "03", "libelle": "Préconisations" }
+      ],
+      "railEtapes": ["Rendement", "Fiscalité", "Transmission"],
+      "railActive": 2,
+      "titre": "Valoriser son épargne, à l'abri de la fiscalité",
+      "hypothese": "Hypothèse : 100 € investis chaque mois, 5 % de rendement annuel, sur 40 ans.",
+      "horizonLabel": "40 ans",
+      "verse": 48000,
+      "assuranceVie": 148200,
+      "bancaire": 103200,
+      "ecart": 45000,
+      "states": [
+        { "label": "Mécanisme : capital" },
+        { "label": "Mécanisme : intérêts" },
+        { "label": "Mécanisme : fuite bancaire" },
+        { "label": "Mécanisme : reste non imposé (bancaire)" },
+        { "label": "Mécanisme : protection assurance vie" },
+        { "label": "Mécanisme : reste non imposé (assurance vie)" },
+        { "label": "Mécanisme (pause)" },
+        { "label": "Hypothèse" },
+        { "label": "Hypothèse (pause)" },
+        { "label": "Capital versé" },
+        { "label": "Avant impôt" },
+        { "label": "Après impôt" }
+      ]
+    },
+    {
+      "id": "av-rachats",
+      "type": "fiscalite-rachats",
+      "client": "Prénom Nom",
+      "date": "2026-09-17",
+      "chapitreActif": 2,
+      "chapitres": [
+        { "numero": "01", "libelle": "Constat" },
+        { "numero": "02", "libelle": "Ingénieries" },
+        { "numero": "03", "libelle": "Préconisations" }
+      ],
+      "railEtapes": ["Rendement", "Fiscalité", "Transmission"],
+      "railActive": 2,
+      "titre": "Percevoir des revenus optimisés",
+      "states": [
+        {
+          "svg": "capital-seul",
+          "legend": [{"dot": "encre", "texte": "Capital versé", "muted": false}]
+        },
+        {
+          "svg": "couronne-neutre",
+          "legend": [
+            {
+              "dot": "neutre",
+              "texte": "Intérêts générés par le contrat",
+              "muted": false
+            },
+            { "dot": "encre", "texte": "Capital versé", "muted": true }
+          ]
+        },
+        {
+          "svg": "couronne-bleu",
+          "legend": [
+            {
+              "dot": "bleu",
+              "texte": "Sur un livret bancaire, la totalité des intérêts est imposée, année après année",
+              "muted": false
+            },
+            { "dot": "encre", "texte": "Capital versé", "muted": true }
+          ]
+        },
+        {
+          "svg": "couronne-or",
+          "legend": [
+            {
+              "dot": "vert",
+              "texte": "En assurance vie, aucun intérêt n'est imposé tant que l'épargne reste investie",
+              "muted": false
+            },
+            { "dot": "encre", "texte": "Capital versé", "muted": true }
+          ]
+        },
+        {
+          "svg": "coin-bleu",
+          "legend": [
+            {
+              "dot": "bleu",
+              "texte": "La fraction d'intérêts contenue dans le rachat entre seule dans l'assiette imposable",
+              "muted": false
+            },
+            {
+              "dot": "encre",
+              "texte": "La part de capital retirée n'est jamais imposée",
+              "muted": false
+            },
+            {
+              "dot": "vert",
+              "texte": "Le reste des intérêts continue de courir, hors fiscalité",
+              "muted": true
+            }
+          ],
+          "avant8": {
+            "label": "Avant 8 ans",
+            "lignes": [
+              "Fiscalité standard : PFU de 12,8 % + prélèvements sociaux de 17,2 %",
+              "PFL de 7,5 % au-delà de 150 000 € de primes versées"
+            ]
+          }
+        },
+        {
+          "svg": "coin-or",
+          "legend": [
+            {
+              "dot": "or",
+              "texte": "Après 8 ans, l'abattement annuel permet de supprimer l'imposition sur les intérêts retirés",
+              "muted": false
+            },
+            {
+              "dot": "encre",
+              "texte": "La part de capital retirée n'est jamais imposée",
+              "muted": true
+            },
+            {
+              "dot": "vert",
+              "texte": "Le reste des intérêts continue de courir, hors fiscalité",
+              "muted": true
+            }
+          ],
+          "avant8": {
+            "label": "Avant 8 ans",
+            "lignes": [
+              "Fiscalité standard : PFU de 12,8 % + prélèvements sociaux de 17,2 %",
+              "PFL de 7,5 % au-delà de 150 000 € de primes versées"
+            ]
+          },
+          "apres8": {
+            "label": "Après 8 ans",
+            "montants": [
+              { "valeur": 4600, "who": "Personne seule", "icon": "personne" },
+              { "valeur": 9200, "who": "Couple", "icon": "couple" }
+            ],
+            "note": "Abattement annuel sur les intérêts retirés. Seuls les intérêts contenus dans le rachat entrent dans l'assiette imposable, jamais le capital."
+          }
+        },
+        {}
+      ]
+    },
+    {
+      "id": "av-transmission",
+      "type": "transmission",
+      "client": "Prénom Nom",
+      "date": "2026-09-17",
+      "chapitreActif": 2,
+      "chapitres": [
+        { "numero": "01", "libelle": "Constat" },
+        { "numero": "02", "libelle": "Ingénieries" },
+        { "numero": "03", "libelle": "Préconisations" }
+      ],
+      "railEtapes": ["Rendement", "Fiscalité", "Transmission"],
+      "railActive": 3,
+      "titre": "L'assurance vie pour protéger ses proches",
+      "sousTitre": "Un outil de transmission patrimoniale sur-mesure, optimisée fiscalement",
+      "clause": {
+        "label": "Clause bénéficiaire",
+        "texte": "Un ou plusieurs bénéficiaires, libre choix des montants"
+      },
+      "donation": {
+        "label": "Versements avant 70 ans",
+        "montant": 152500,
+        "note": "d'abattement par bénéficiaire, exonéré de droits de succession",
+        "beneficiaires": ["Enfant 1", "Enfant 2", "Enfant 3"]
+      },
+      "apres70": {
+        "label": "Versements après 70 ans",
+        "texte": "Exonération totale des plus-values, et abattement global de 30 500 € sur le capital versé."
+      },
+      "states": [{}, {}, {}, {}]
+    },
+    {
+      "id": "av-synthese",
+      "type": "synthese-chapitre",
+      "client": "Prénom Nom",
+      "date": "2026-09-17",
+      "chapitreActif": 2,
+      "chapitres": [
+        { "numero": "01", "libelle": "Constat" },
+        { "numero": "02", "libelle": "Ingénieries" },
+        { "numero": "03", "libelle": "Préconisations" }
+      ],
+      "kicker": "En synthèse",
+      "titre": "L'assurance vie",
+      "lignes": [
+        "Ton épargne disponible, à l'abri de la fiscalité",
+        "Une solution flexible, dont la gestion s'adapte à tes objectifs",
+        "Un complément de revenu très optimisé fiscalement",
+        "Un outil de transmission pour protéger tes proches"
+      ]
+    },
+    {
+      "id": "scpi-mecanisme",
+      "type": "scpi-mecanisme",
+      "client": "Prénom Nom",
+      "date": "2026-09-17",
+      "chapitreActif": 2,
+      "chapitres": [
+        { "numero": "01", "libelle": "Constat" },
+        { "numero": "02", "libelle": "Ingénieries" },
+        { "numero": "03", "libelle": "Préconisations" }
+      ],
+      "railEtapes": ["Mécanisme", "Acquisition", "Au quotidien"],
+      "railActive": 1,
+      "titre": "Comment ça marche",
+      "actifs": ["Bureaux", "Commerces", "Santé", "Hôtellerie"]
+    },
+    {
+      "id": "scpi-atouts-rendement",
+      "type": "scpi-atouts",
+      "client": "Prénom Nom",
+      "date": "2026-09-17",
+      "chapitreActif": 2,
+      "chapitres": [
+        { "numero": "01", "libelle": "Constat" },
+        { "numero": "02", "libelle": "Ingénieries" },
+        { "numero": "03", "libelle": "Préconisations" }
+      ],
+      "railEtapes": ["Mécanisme", "Acquisition", "Au quotidien"],
+      "railActive": 1,
+      "atoutActif": 1
+    },
+    {
+      "id": "scpi-atouts-risque",
+      "type": "scpi-atouts",
+      "client": "Prénom Nom",
+      "date": "2026-09-17",
+      "chapitreActif": 2,
+      "chapitres": [
+        { "numero": "01", "libelle": "Constat" },
+        { "numero": "02", "libelle": "Ingénieries" },
+        { "numero": "03", "libelle": "Préconisations" }
+      ],
+      "railEtapes": ["Mécanisme", "Acquisition", "Au quotidien"],
+      "railActive": 1,
+      "atoutActif": 2
+    },
+    {
+      "id": "scpi-atouts-sur-mesure",
+      "type": "scpi-atouts",
+      "client": "Prénom Nom",
+      "date": "2026-09-17",
+      "chapitreActif": 2,
+      "chapitres": [
+        { "numero": "01", "libelle": "Constat" },
+        { "numero": "02", "libelle": "Ingénieries" },
+        { "numero": "03", "libelle": "Préconisations" }
+      ],
+      "railEtapes": ["Mécanisme", "Acquisition", "Au quotidien"],
+      "railActive": 1,
+      "atoutActif": 3
+    },
+    {
+      "id": "scpi-atouts-gestion",
+      "type": "scpi-atouts",
+      "client": "Prénom Nom",
+      "date": "2026-09-17",
+      "chapitreActif": 2,
+      "chapitres": [
+        { "numero": "01", "libelle": "Constat" },
+        { "numero": "02", "libelle": "Ingénieries" },
+        { "numero": "03", "libelle": "Préconisations" }
+      ],
+      "railEtapes": ["Mécanisme", "Acquisition", "Au quotidien"],
+      "railActive": 1,
+      "atoutActif": 4
+    },
+    {
+      "id": "scpi-financement",
+      "type": "scpi-financement",
+      "client": "Prénom Nom",
+      "date": "2026-09-17",
+      "chapitreActif": 2,
+      "chapitres": [
+        { "numero": "01", "libelle": "Constat" },
+        { "numero": "02", "libelle": "Ingénieries" },
+        { "numero": "03", "libelle": "Préconisations" }
+      ],
+      "railEtapes": ["Mécanisme", "Acquisition", "Au quotidien"],
+      "railActive": 2,
+      "titre": "Investir en financement",
+      "capitalCible": 85000,
+      "dureeAnnees": 25,
+      "financementMensuel": 496,
+      "revenuMensuel": 361,
+      "tauxDistribution": "5,1 %",
+      "tauxFinancement": "5,85 %",
+      "states": [{}, {}, {}]
+    }
+  ]
+}
