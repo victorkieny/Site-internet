@@ -71,24 +71,26 @@ const LEVIER_LEFT = TEXT_RIGHT_ASSUMED + BAR_TEXT_GAP;
 
 const ETAPES = [
   {
-    desc: (v) => `Investir en SCPI à crédit représente un effort mensuel de ${v.finM}.`,
+    desc: null,
+  },
+  {
+    desc: null,
   },
   {
     desc: (v) =>
-      `Les revenus SCPI (${v.revM}) viennent compenser une grande partie de la mensualité : il ne reste que ${v.effM} à la charge de l'investisseur.`,
-  },
-  {
-    desc: (v) => `Cet effort net de ${v.effM} est maintenu pendant ${v.duree} ans.`,
-  },
-  {
-    desc: (v) => `${v.effM} pendant ${v.duree} ans représente un effort réel de ${v.effortTotal}, pour un patrimoine immobilier de ${v.capital}.`,
-  },
-  {
-    desc: (v) => `Soit un gain de ${v.levier} par rapport à l'effort fourni, ${v.levierPctSigned}.`,
+      `Grâce à l'effet de levier, ${v.effM} pendant ${v.duree} ans représente un effort réel de ${v.effortTotal}, pour un patrimoine immobilier constitué de ${v.capital}.`,
   },
   {
     desc: (v) =>
-      `Une fois le financement soldé, ces ${v.revM} de loyers se poursuivent à vie — calculés sur les ${v.capital} de patrimoine détenu, non plus sur l'effort de ${v.effortTotal}.`,
+      `Grâce à l'effet de levier, ${v.effM} pendant ${v.duree} ans représente un effort réel de ${v.effortTotal}, pour un patrimoine immobilier constitué de ${v.capital}.`,
+  },
+  {
+    desc: (v) =>
+      `Grâce à l'effet de levier, ${v.effM} pendant ${v.duree} ans représente un effort réel de ${v.effortTotal}, pour un patrimoine immobilier constitué de ${v.capital}.`,
+  },
+  {
+    desc: (v) =>
+      `Grâce à l'effet de levier, ${v.effM} pendant ${v.duree} ans représente un effort réel de ${v.effortTotal}, pour un patrimoine immobilier constitué de ${v.capital}.`,
   },
 ];
 
@@ -274,7 +276,7 @@ export function render(slide, opts = {}) {
 
       <div class="scpi-financement__intro">
         <h1 class="chap-title scpi-financement__title">${escapeHtml(slide.titre)}</h1>
-        <p class="scpi-financement__desc">${escapeHtml(etape.desc(v))}</p>
+        ${etape.desc ? `<p class="scpi-financement__desc">${escapeHtml(etape.desc(v))}</p>` : ""}
       </div>
 
       <div class="scpi-financement__stage">
