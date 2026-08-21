@@ -2610,10 +2610,14 @@
   color: rgba(var(--chap-ink-rgb), 0.6);
 }
 
+/* S'arrête juste après le bloc central (largeur posée en style inline,
+   voir AXIS_END_CQW dans scpi-financement.js) plutôt que de courir sous
+   tout le diagramme de levier — celui-ci n'a alors plus besoin de
+   rester au-dessus d'une ligne visible et peut descendre aussi bas que
+   son niveau. */
 .scpi-financement__axis {
   position: absolute;
   left: 0;
-  right: 0;
   top: 18.4375cqw;
   height: 0.078125cqw;
   background: rgba(var(--chap-ink-rgb), 0.3);

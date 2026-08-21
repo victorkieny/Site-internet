@@ -69,6 +69,13 @@ const TEXT_RIGHT_ASSUMED = STAGE_W / 2 + TEXT_W_ASSUMED / 2;
 const BAR_TEXT_GAP = TEXT_LEFT_ASSUMED - THIRD_W;
 const LEVIER_LEFT = TEXT_RIGHT_ASSUMED + BAR_TEXT_GAP;
 
+// L'axe s'arrête juste après le bloc central plutôt que de courir sous
+// tout le diagramme de levier (voir .scpi-financement__axis, largeur
+// posée en style inline) — celui-ci n'a alors plus besoin de rester
+// au-dessus d'une ligne visible, et peut descendre jusqu'à son niveau
+// (AXIS_TOP_CQW) au lieu de s'arrêter bien avant par précaution.
+const AXIS_END_CQW = TEXT_RIGHT_ASSUMED + 2;
+
 const ETAPES = [
   {
     desc: null,
@@ -133,8 +140,13 @@ function values(slide) {
 // détenu" est toujours la plus grande, sa base (jusqu'à la hauteur de
 // "Effort réel") reste au ton neutre, seul l'écart au sommet passe en
 // or : c'est cet écart, pas la colonne entière, qui EST l'effet de
-// levier.
-const LEVIER_BAR_MAX_CQW = 13.75; // hauteur de la colonne "Patrimoine détenu"
+// levier. Descend jusqu'au niveau de l'axe (AXIS_TOP_CQW) — l'axe
+// s'arrête désormais avant le diagramme (voir AXIS_END_CQW), le
+// diagramme n'a plus besoin de rester au-dessus d'une ligne visible ;
+// marge réservée pour les légendes ("Sans/Avec financement") sous les
+// colonnes.
+const LEVIER_TOP_CQW = 0.3125; // top de .scpi-financement__levier, voir chapitre.css
+const LEVIER_BAR_MAX_CQW = AXIS_TOP_CQW - LEVIER_TOP_CQW - 0.625; // hauteur de la colonne "Patrimoine détenu"
 
 function barSegmentsHtml(count, label) {
   const segments = Array.from(
@@ -172,6 +184,15 @@ export function render(slide, opts = {}) {
   const barStyle = axisShrinking ? `width:${STAGE_W}cqw` : `width:${barWidth}cqw`;
   const tickAttrs = axisShrinking ? ` data-reveal data-reveal-left="${THIRD_W}cqw"` : "";
   const tickStyle = axisShrinking ? `left:${STAGE_W}cqw` : `left:${tickLeft}cqw`;
+
+  // La ligne d'axe s'arrête juste après le bloc central une fois la
+  // colonne rétractée (même transition que barWidth/tickLeft
+  // ci-dessus) — avant l'état 3, le repère "25 ans" est encore au bout
+  // du plein axe (STAGE_W), la raccourcir plus tôt le laisserait flotter
+  // sans ligne sous lui.
+  const axisWidth = stateIndex >= 2 ? AXIS_END_CQW : STAGE_W;
+  const axisAttrs = axisShrinking ? ` data-reveal data-reveal-width="${AXIS_END_CQW}cqw"` : "";
+  const axisStyle = axisShrinking ? `width:${STAGE_W}cqw` : `width:${axisWidth}cqw`;
 
   const effortAttrs = revenuGrowing ? ` data-reveal data-reveal-height="${v.hEff}cqw"` : "";
   const effortStyle = revenuGrowing ? `height:${BAR_HEIGHT_CQW}cqw` : `height:${effortHeight}cqw`;
@@ -306,7 +327,7 @@ export function render(slide, opts = {}) {
         ${resultatHtml}
         ${levierHtml}
 
-        <div class="scpi-financement__axis"></div>
+        <div class="scpi-financement__axis"${axisAttrs} style="${axisStyle}"></div>
         <div class="scpi-financement__tick" style="left:0"></div>
         <div class="scpi-financement__tick"${tickAttrs} style="${tickStyle}"></div>
         <span class="scpi-financement__axis-label" style="left:0">Aujourd'hui</span>
