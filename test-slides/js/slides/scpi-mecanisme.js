@@ -2,13 +2,14 @@ import { escapeHtml } from "../editable.js";
 import { renderChapRail, iconSvg } from "./_chapitre.js";
 
 // Gabarit "Comment ça marche" (chapitre SCPI, import Claude Design
-// "Gabarits chapitre SCPI") — révélation progressive cumulative à 4
+// "Gabarits chapitre SCPI") — révélation progressive cumulative à 5
 // états (opts.stateIndex direct, même mécanisme que "Les atouts") :
-// état 1 = l'investisseur seul ; état 2 = + la SCPI (et les deux flux
-// souscription/distribution qui les relient) ; état 3 = + la société de
-// gestion (et le flux gestion) ; état 4 = + l'AMF (et ses deux liaisons
-// pointillées). Chaque partie n'apparaît qu'avec les flux qui la
-// relient à ce qui est déjà affiché — jamais une flèche vers une case
+// état 1 = l'investisseur ET la SCPI ensemble (le couple associé/
+// véhicule, socle du schéma) ; état 2 = + la flèche "souscription de
+// parts" ; état 3 = + la flèche "distribution de revenus" ; état 4 = +
+// la société de gestion (et sa flèche "gestion clé en main") ; état 5 =
+// + l'AMF (et ses deux liaisons pointillées). Chaque flux n'apparaît
+// qu'entre deux cases déjà affichées — jamais une flèche vers une case
 // encore invisible. Géométrie reprise telle quelle du handoff (px à
 // 1280 de large, convertis en cqw — voir chapitre.css en tête de
 // fichier), pas réinventée.
@@ -39,21 +40,23 @@ function lineGroupHtml(entering, markup) {
 }
 
 export function render(slide, opts = {}) {
-  const stateIndex = Math.min(Math.max(opts.stateIndex ?? 0, 0), 3);
+  const stateIndex = Math.min(Math.max(opts.stateIndex ?? 0, 0), 4);
   const animate = !!opts.animate;
 
   const actifsHtml = (slide.actifs || [])
     .map((a) => `<span class="scpi-mecanisme__actif">${escapeHtml(a)}</span>`)
     .join("");
 
-  const showScpi = stateIndex >= 1;
-  const showGestion = stateIndex >= 2;
-  const showAmf = stateIndex >= 3;
+  const showSouscription = stateIndex >= 1;
+  const showDistribution = stateIndex >= 2;
+  const showGestion = stateIndex >= 3;
+  const showAmf = stateIndex >= 4;
 
-  const investisseurEntering = animate && stateIndex === 0;
-  const scpiEntering = animate && stateIndex === 1;
-  const gestionEntering = animate && stateIndex === 2;
-  const amfEntering = animate && stateIndex === 3;
+  const socleEntering = animate && stateIndex === 0;
+  const souscriptionEntering = animate && stateIndex === 1;
+  const distributionEntering = animate && stateIndex === 2;
+  const gestionEntering = animate && stateIndex === 3;
+  const amfEntering = animate && stateIndex === 4;
 
   const investisseurBox = boxHtml({
     left: 0,
@@ -64,24 +67,22 @@ export function render(slide, opts = {}) {
     kicker: "Associé",
     titre: "L'investisseur",
     texte: "Souscrit des parts et perçoit les revenus distribués.",
-    entering: investisseurEntering,
+    entering: socleEntering,
   });
 
-  const scpiBox = showScpi
-    ? boxHtml({
-        left: 32.265625,
-        top: 13.125,
-        width: 25.78125,
-        height: 12.1875,
-        cls: "scpi-mecanisme__box--vehicule",
-        icon: "immeuble",
-        kicker: "Le véhicule",
-        titre: "La SCPI",
-        texte: "Un parc d'actifs immobiliers professionnels, mutualisé entre les associés.",
-        extra: `<div class="scpi-mecanisme__actifs">${actifsHtml}</div>`,
-        entering: scpiEntering,
-      })
-    : "";
+  const scpiBox = boxHtml({
+    left: 32.265625,
+    top: 13.125,
+    width: 25.78125,
+    height: 12.1875,
+    cls: "scpi-mecanisme__box--vehicule",
+    icon: "immeuble",
+    kicker: "Le véhicule",
+    titre: "La SCPI",
+    texte: "Un parc d'actifs immobiliers professionnels, mutualisé entre les associés.",
+    extra: `<div class="scpi-mecanisme__actifs">${actifsHtml}</div>`,
+    entering: socleEntering,
+  });
 
   const gestionBox = showGestion
     ? boxHtml({
@@ -115,15 +116,25 @@ export function render(slide, opts = {}) {
     ? `<span class="scpi-mecanisme__amf-note${amfEntering ? " is-entering" : ""}"${amfEntering ? " data-reveal" : ""} style="left:46.25cqw;top:6.5625cqw">Agrément et contrôle</span>`
     : "";
 
-  const souscriptionFlow = showScpi ? flowLabelHtml(21.25, 13.59375, 11.015625, "Souscription de parts", false, scpiEntering) : "";
-  const distributionFlow = showScpi ? flowLabelHtml(21.25, 19.84375, 11.015625, "Distribution de revenus", true, scpiEntering) : "";
+  const souscriptionFlow = showSouscription
+    ? flowLabelHtml(21.25, 13.59375, 11.015625, "Souscription de parts", false, souscriptionEntering)
+    : "";
+  const distributionFlow = showDistribution
+    ? flowLabelHtml(21.25, 19.84375, 11.015625, "Distribution de revenus", true, distributionEntering)
+    : "";
   const gestionFlow = showGestion ? flowLabelHtml(58.046875, 16.71875, 11.015625, "Gestion clé en main", false, gestionEntering) : "";
 
-  const scpiArrows = showScpi
+  const souscriptionArrow = showSouscription
     ? lineGroupHtml(
-        scpiEntering,
-        `<line x1="288" y1="206" x2="397" y2="206" stroke="rgba(var(--chap-ink-rgb),.45)" stroke-width="1.2" marker-end="url(#scpi-ar-d)"/>
-         <line x1="397" y1="286" x2="288" y2="286" stroke="var(--or)" stroke-width="1.2" marker-end="url(#scpi-ar-g)"/>`
+        souscriptionEntering,
+        `<line x1="288" y1="206" x2="397" y2="206" stroke="rgba(var(--chap-ink-rgb),.45)" stroke-width="1.2" marker-end="url(#scpi-ar-d)"/>`
+      )
+    : "";
+
+  const distributionArrow = showDistribution
+    ? lineGroupHtml(
+        distributionEntering,
+        `<line x1="397" y1="286" x2="288" y2="286" stroke="var(--or)" stroke-width="1.2" marker-end="url(#scpi-ar-g)"/>`
       )
     : "";
 
@@ -157,7 +168,8 @@ export function render(slide, opts = {}) {
             <marker id="scpi-ar-g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="var(--or)"/></marker>
           </defs>
           ${amfLines}
-          ${scpiArrows}
+          ${souscriptionArrow}
+          ${distributionArrow}
           ${gestionArrow}
         </svg>
 

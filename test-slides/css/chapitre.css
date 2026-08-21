@@ -2111,9 +2111,17 @@
   color: rgba(var(--chap-ink-rgb), 0.45);
 }
 
+/* Hauteur réservée à l'atout le plus haut (4 puces, "sur-mesure") :
+   .scpi-atouts__stage est centré verticalement dans la slide
+   (margin:auto 0) — sans ce plancher, sa hauteur varie avec le nombre
+   de puces de l'atout actif, et le centrage déplace le repère (numéros
+   + filet) d'un atout à l'autre. Avec le plancher, la scène garde
+   toujours la même hauteur : le repère reste à la même position, seul
+   l'espace sous les puces les plus courtes reste vide. */
 .scpi-atouts__stage {
   margin: auto 0;
   width: 100%;
+  min-height: 26.5625cqw;
 }
 
 .scpi-atouts__track {
@@ -2345,7 +2353,7 @@
 
 .scpi-financement__bar-label {
   font-weight: 700;
-  font-size: 0.7421875cqw;
+  font-size: 0.9375cqw;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   white-space: nowrap;
@@ -2405,14 +2413,17 @@
 
 /* Bilan (état 4+) : texte à gauche (montants), diagramme d'effet de
    levier à droite dès l'état 5 (voir scpi-financement.js) — même
-   rangée, "à côté de" 40 500 € et 85 000 €, pas en dessous de l'axe. */
+   rangée, "à côté de" 40 500 € et 85 000 €, pas en dessous de l'axe.
+   space-between plutôt qu'un gap fixe : le diagramme rejoint le bout de
+   l'axe (même repère que "25 ans"/l'extrémité de la colonne à l'état 1)
+   au lieu de rester collé au bloc de texte avec un grand vide à droite. */
 .scpi-financement__resultat {
   position: absolute;
   top: 4.375cqw;
   box-sizing: border-box;
   display: flex;
   align-items: flex-start;
-  gap: 3.125cqw;
+  justify-content: space-between;
 }
 
 .scpi-financement__resultat-text {
