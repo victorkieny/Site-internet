@@ -225,16 +225,24 @@ export function render(slide, opts = {}) {
           <div class="scpi-financement__levier-col">
             <div class="scpi-financement__levier-bar-wrap">
               <div class="scpi-financement__levier-bar scpi-financement__levier-bar--patrimoine"${levierEntering ? ` data-reveal data-reveal-height="${patrimoineBarH}cqw"` : ""} style="height:${levierEntering ? 0 : patrimoineBarH}cqw">
-                <div class="scpi-financement__levier-bar-gap"${levierEntering ? ` data-reveal data-reveal-height="${gapBarH}cqw"` : ""} style="height:${levierEntering ? 0 : gapBarH}cqw"></div>
+                <div class="scpi-financement__levier-bar-gap"${levierEntering ? ` data-reveal data-reveal-height="${gapBarH}cqw"` : ""} style="height:${levierEntering ? 0 : gapBarH}cqw">
+                  <div class="scpi-financement__levier-annotation">
+                    <span class="scpi-financement__levier-arrow">
+                      <span class="scpi-financement__levier-arrow-head scpi-financement__levier-arrow-head--up"></span>
+                      <span class="scpi-financement__levier-arrow-line"></span>
+                      <span class="scpi-financement__levier-arrow-head scpi-financement__levier-arrow-head--down"></span>
+                    </span>
+                    <div class="scpi-financement__levier-text">
+                      <span class="scpi-financement__levier-kicker">Effet de levier</span>
+                      <span class="scpi-financement__levier-value">${v.levier}</span>
+                      <span class="scpi-financement__levier-pct">${v.levierPctRounded}</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
             <span class="scpi-financement__levier-caption">Avec financement</span>
           </div>
-        </div>
-        <div class="scpi-financement__levier-text">
-          <span class="scpi-financement__levier-kicker">Effet de levier</span>
-          <span class="scpi-financement__levier-value">${v.levier}</span>
-          <span class="scpi-financement__levier-pct">${v.levierPctRounded}</span>
         </div>
       </div>
     `

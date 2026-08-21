@@ -2528,12 +2528,58 @@
   color: rgba(var(--chap-ink-rgb), 0.6);
 }
 
+/* Double flèche + repère, le long de l'écart or (scpi-financement__
+   levier-bar-gap) qu'ils annotent — même position/hauteur que lui
+   (position:absolute hérité, height:100%), pas un bloc de texte posé à
+   part en bas à droite du diagramme. */
+.scpi-financement__levier-annotation {
+  position: absolute;
+  top: 0;
+  left: 100%;
+  height: 100%;
+  margin-left: 0.625cqw;
+  display: flex;
+  align-items: center;
+  gap: 0.625cqw;
+}
+
+.scpi-financement__levier-arrow {
+  flex: none;
+  width: 0.625cqw;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.scpi-financement__levier-arrow-line {
+  flex: 1 1 auto;
+  width: 0.078125cqw;
+  min-height: 0.46875cqw;
+  background: var(--or);
+}
+
+.scpi-financement__levier-arrow-head {
+  flex: none;
+  width: 0;
+  height: 0;
+  border-left: 0.3125cqw solid transparent;
+  border-right: 0.3125cqw solid transparent;
+}
+
+.scpi-financement__levier-arrow-head--up {
+  border-bottom: 0.46875cqw solid var(--or);
+}
+
+.scpi-financement__levier-arrow-head--down {
+  border-top: 0.46875cqw solid var(--or);
+}
+
 .scpi-financement__levier-text {
   flex: none;
   display: flex;
   flex-direction: column;
-  gap: 0.3125cqw;
-  padding-bottom: 0.703125cqw;
+  gap: 0.15625cqw;
 }
 
 .scpi-financement__levier-kicker {
