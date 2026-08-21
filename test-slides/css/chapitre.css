@@ -2435,44 +2435,70 @@
 }
 
 /* Indépendant de .scpi-financement__resultat (voir scpi-financement.js) :
-   ancré à droite (transform:translateX(-100%) depuis left:STAGE_W,
-   même bout d'axe que "25 ans") plutôt que second enfant d'un même
+   ancré au bloc central (left:LEVIER_LEFT — autant d'écart bloc ->
+   diagramme que colonne -> bloc) plutôt que second enfant d'un même
    conteneur flex — le bloc central ne doit pas se déplacer pour lui
-   laisser sa place. */
+   laisser sa place. Rangée : axe, deux colonnes, effet de levier. */
 .scpi-financement__levier {
   position: absolute;
   top: 0.3125cqw;
   box-sizing: border-box;
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.625cqw;
-  transform: translateX(-100%);
+  align-items: flex-end;
+  gap: 1.09375cqw;
 }
 
-/* [data-reveal].is-entering (générique, voir plus haut) pose son propre
-   transform:scale() pour le fondu d'entrée — sans cette redéfinition
-   plus spécifique, il écraserait le translateX(-100%) ci-dessus le
-   temps de l'animation et le bloc sauterait de position. */
-.scpi-financement__levier[data-reveal].is-entering {
-  transform: translateX(-100%) scale(0.94);
+/* Axe des ordonnées (montants en €) : hauteur alignée sur celle des
+   colonnes (LEVIER_BAR_MAX_CQW côté JS) pour que bottom:Xcqw sur
+   chaque repère (scpi-financement.js) tombe exactement à la hauteur du
+   sommet de colonne qu'il légende. */
+.scpi-financement__levier-axis {
+  position: relative;
+  flex: none;
+  width: 5.625cqw;
+  height: 13.75cqw;
+  border-right: 0.078125cqw solid rgba(var(--chap-ink-rgb), 0.3);
 }
 
-/* Deux colonnes à l'échelle l'une de l'autre : "Effort réel" (encre,
-   base commune) et "Patrimoine détenu", dont seul l'écart au sommet
-   (scpi-financement__levier-bar-gap, or) EST l'effet de levier — pas
-   deux barres de couleurs différentes sans lien visuel entre elles. */
+.scpi-financement__levier-axis-label {
+  position: absolute;
+  right: 0.625cqw;
+  transform: translateY(50%);
+  font-weight: 700;
+  font-size: 0.65625cqw;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: rgba(var(--chap-ink-rgb), 0.5);
+}
+
+/* Deux colonnes à l'échelle l'une de l'autre : "Sans financement"
+   (encre, base commune) et "Avec financement", dont seul l'écart au
+   sommet (scpi-financement__levier-bar-gap, or) EST l'effet de levier —
+   pas deux barres de couleurs différentes sans lien visuel entre elles. */
 .scpi-financement__levier-diagram {
   flex: none;
   display: flex;
+  align-items: flex-start;
+  gap: 1.875cqw;
+}
+
+.scpi-financement__levier-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.46875cqw;
+}
+
+.scpi-financement__levier-bar-wrap {
+  display: flex;
   align-items: flex-end;
-  gap: 3.125cqw;
   height: 13.75cqw;
 }
 
 .scpi-financement__levier-bar {
   flex: none;
-  width: 6.25cqw;
+  width: 4.6875cqw;
   box-sizing: border-box;
 }
 
@@ -2491,6 +2517,23 @@
   right: 0;
   top: 0;
   background: var(--or);
+}
+
+.scpi-financement__levier-caption {
+  font-weight: 450;
+  font-size: 0.703125cqw;
+  line-height: 1.3;
+  text-align: center;
+  white-space: nowrap;
+  color: rgba(var(--chap-ink-rgb), 0.6);
+}
+
+.scpi-financement__levier-text {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3125cqw;
+  padding-bottom: 0.703125cqw;
 }
 
 .scpi-financement__levier-kicker {
@@ -2516,6 +2559,8 @@
   font-family: var(--font-sans-chapitre);
   font-size: 0.9375cqw;
   font-weight: 450;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
   color: rgba(var(--chap-ink-rgb), 0.6);
 }
 

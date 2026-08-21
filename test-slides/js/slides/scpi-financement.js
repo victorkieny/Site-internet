@@ -54,9 +54,20 @@ const SEGMENT_STEP_MS = 16;
 // de la scène (4.84375cqw de chaque côté) — 100 - 2×4.84375.
 const STAGE_W = 90.3125;
 const THIRD_W = STAGE_W / 3;
-const RESULT_GAP = 3.125;
-const RESULT_LEFT = THIRD_W + RESULT_GAP;
-const RESULT_W = STAGE_W - RESULT_LEFT;
+
+// Le bloc central (résultat-text) est centré sur STAGE_W mais de
+// largeur intrinsèque (dépend du texte réel, pas fixée en CSS) — sa
+// largeur exacte n'est donc pas connue à l'écriture de ce fichier.
+// TEXT_W_ASSUMED est une estimation (mesurée sur le contenu réel de ce
+// client) qui sert UNIQUEMENT à calculer un espacement symétrique de
+// part et d'autre du bloc (colonne -> bloc, bloc -> diagramme) ; ce
+// n'est pas une contrainte posée sur le texte lui-même, qui reste libre
+// de s'ajuster à son propre contenu.
+const TEXT_W_ASSUMED = 16.5;
+const TEXT_LEFT_ASSUMED = STAGE_W / 2 - TEXT_W_ASSUMED / 2;
+const TEXT_RIGHT_ASSUMED = STAGE_W / 2 + TEXT_W_ASSUMED / 2;
+const BAR_TEXT_GAP = TEXT_LEFT_ASSUMED - THIRD_W;
+const LEVIER_LEFT = TEXT_RIGHT_ASSUMED + BAR_TEXT_GAP;
 
 const ETAPES = [
   {
@@ -103,6 +114,11 @@ function values(slide) {
     effortTotal: euro.format(effortTotal),
     levier: `+${euro.format(levier)}`,
     levierPctSigned: `+${formatPct(levierPct)}`,
+    // Arrondi à l'entier : la statistique "à droite des bâtons" est une
+    // accroche visuelle (+110 %), pas une donnée de précision — le
+    // détail au dixième près reste dans le texte descriptif
+    // (levierPctSigned, ETAPES[4]).
+    levierPctRounded: `+${Math.round(levierPct)} %`,
     td: slide.tauxDistribution,
     tf: slide.tauxFinancement,
     hEff,
@@ -178,13 +194,14 @@ export function render(slide, opts = {}) {
     `
     : "";
 
-  // État 5 (index 4) : effet de levier — diagramme sous les deux
-  // montants ci-dessus (pas en dessous de l'axe) : deux colonnes à
-  // l'échelle l'une de l'autre, l'écart au sommet de "Patrimoine
-  // détenu" (en or) EST le levier, montants toujours dérivés (jamais
-  // saisis en dur — charte CLAUDE.md). Hauteur calée pour laisser la
-  // place au texte EN DESSOUS des colonnes avant l'axe (voir
-  // LEVIER_BAR_MAX_CQW).
+  // État 5 (index 4) : effet de levier — diagramme ancré au bloc
+  // central (pas au bout de l'axe) : autant d'écart colonne -> bloc que
+  // bloc -> diagramme (voir LEVIER_LEFT/BAR_TEXT_GAP). Axe des
+  // ordonnées à gauche des deux colonnes ("Sans financement" /
+  // "Avec financement"), effet de levier (+montant, +%) à droite.
+  // Colonnes à l'échelle l'une de l'autre : l'écart au sommet de
+  // "Avec financement" (en or) EST le levier — montants toujours
+  // dérivés (jamais saisis en dur — charte CLAUDE.md).
   const showLevier = stateIndex >= 4;
   const levierEntering = animate && stateIndex === 4;
   const patrimoineBarH = LEVIER_BAR_MAX_CQW;
@@ -192,15 +209,33 @@ export function render(slide, opts = {}) {
   const gapBarH = patrimoineBarH - effortBarH;
   const levierHtml = showLevier
     ? `
-      <div class="scpi-financement__levier${levierEntering ? " is-entering" : ""}"${levierEntering ? " data-reveal" : ""} style="left:${STAGE_W}cqw">
+      <div class="scpi-financement__levier${levierEntering ? " is-entering" : ""}"${levierEntering ? " data-reveal" : ""} style="left:${LEVIER_LEFT}cqw">
+        <div class="scpi-financement__levier-axis">
+          <span class="scpi-financement__levier-axis-label" style="bottom:${patrimoineBarH}cqw">${v.capital}</span>
+          <span class="scpi-financement__levier-axis-label" style="bottom:${effortBarH}cqw">${v.effortTotal}</span>
+          <span class="scpi-financement__levier-axis-label" style="bottom:0">0 €</span>
+        </div>
         <div class="scpi-financement__levier-diagram">
-          <div class="scpi-financement__levier-bar scpi-financement__levier-bar--effort"${levierEntering ? ` data-reveal data-reveal-height="${effortBarH}cqw"` : ""} style="height:${levierEntering ? 0 : effortBarH}cqw"></div>
-          <div class="scpi-financement__levier-bar scpi-financement__levier-bar--patrimoine"${levierEntering ? ` data-reveal data-reveal-height="${patrimoineBarH}cqw"` : ""} style="height:${levierEntering ? 0 : patrimoineBarH}cqw">
-            <div class="scpi-financement__levier-bar-gap"${levierEntering ? ` data-reveal data-reveal-height="${gapBarH}cqw"` : ""} style="height:${levierEntering ? 0 : gapBarH}cqw"></div>
+          <div class="scpi-financement__levier-col">
+            <div class="scpi-financement__levier-bar-wrap">
+              <div class="scpi-financement__levier-bar scpi-financement__levier-bar--effort"${levierEntering ? ` data-reveal data-reveal-height="${effortBarH}cqw"` : ""} style="height:${levierEntering ? 0 : effortBarH}cqw"></div>
+            </div>
+            <span class="scpi-financement__levier-caption">Sans financement</span>
+          </div>
+          <div class="scpi-financement__levier-col">
+            <div class="scpi-financement__levier-bar-wrap">
+              <div class="scpi-financement__levier-bar scpi-financement__levier-bar--patrimoine"${levierEntering ? ` data-reveal data-reveal-height="${patrimoineBarH}cqw"` : ""} style="height:${levierEntering ? 0 : patrimoineBarH}cqw">
+                <div class="scpi-financement__levier-bar-gap"${levierEntering ? ` data-reveal data-reveal-height="${gapBarH}cqw"` : ""} style="height:${levierEntering ? 0 : gapBarH}cqw"></div>
+              </div>
+            </div>
+            <span class="scpi-financement__levier-caption">Avec financement</span>
           </div>
         </div>
-        <span class="scpi-financement__levier-kicker">Effet de levier</span>
-        <span class="scpi-financement__levier-value">${v.levier} <span class="scpi-financement__levier-pct">(${v.levierPctSigned})</span></span>
+        <div class="scpi-financement__levier-text">
+          <span class="scpi-financement__levier-kicker">Effet de levier</span>
+          <span class="scpi-financement__levier-value">${v.levier}</span>
+          <span class="scpi-financement__levier-pct">${v.levierPctRounded}</span>
+        </div>
       </div>
     `
     : "";
