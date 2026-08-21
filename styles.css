@@ -1267,8 +1267,9 @@ h3 {
     /* Marge propre à cette page, en plus du padding partagé de .home-page
        (14-20px) : le texte justifié (.about-entry-body p) colle sinon
        visiblement plus au bord que sur les autres pages, qui n'ont pas de
-       longs paragraphes à cette largeur. */
-    padding-inline: 10px;
+       longs paragraphes à cette largeur. Augmenté une 2e fois (10px → 24px),
+       jugé encore insuffisant. */
+    padding-inline: 24px;
   }
 
   .about-portrait-rail {
