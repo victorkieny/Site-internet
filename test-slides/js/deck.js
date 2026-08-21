@@ -9,6 +9,7 @@ import * as fiscaliteRachats from "./slides/fiscalite-rachats.js";
 import * as transmission from "./slides/transmission.js";
 import * as syntheseChapitre from "./slides/synthese-chapitre.js";
 import * as scpiMecanisme from "./slides/scpi-mecanisme.js";
+import * as scpiCadence from "./slides/scpi-cadence.js";
 import * as scpiAtouts from "./slides/scpi-atouts.js";
 import * as scpiFinancement from "./slides/scpi-financement.js";
 import { playReveal } from "./reveal.js";
@@ -30,6 +31,7 @@ export const renderers = {
   transmission: { render: transmission.render },
   "synthese-chapitre": { render: syntheseChapitre.render },
   "scpi-mecanisme": { render: scpiMecanisme.render },
+  "scpi-cadence": { render: scpiCadence.render },
   "scpi-atouts": { render: scpiAtouts.render },
   "scpi-financement": { render: scpiFinancement.render },
 };

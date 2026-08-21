@@ -39,6 +39,7 @@
 .slide__stage.slide--transmission,
 .slide__stage.slide--synthese-chapitre,
 .slide__stage.slide--scpi-mecanisme,
+.slide__stage.slide--scpi-cadence,
 .slide__stage.slide--scpi-atouts,
 .slide__stage.slide--scpi-financement {
   background: var(--papier);
@@ -55,6 +56,7 @@
 .slide--transmission .slide__content,
 .slide--synthese-chapitre .slide__content,
 .slide--scpi-mecanisme .slide__content,
+.slide--scpi-cadence .slide__content,
 .slide--scpi-atouts .slide__content,
 .slide--scpi-financement .slide__content {
   padding: 0;
@@ -2452,4 +2454,85 @@
   font-size: 0.859375cqw;
   line-height: 1.5;
   color: rgba(var(--chap-ink-rgb), 0.45);
+}
+
+/* ---------- Gabarit "Délais, versements et liquidité" (chapitre SCPI) ---------- */
+
+.scpi-cadence {
+  height: 100%;
+  box-sizing: border-box;
+  padding: 2.8125cqw 4.84375cqw 4.21875cqw;
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-sans-chapitre);
+}
+
+.scpi-cadence__intro {
+  padding-top: 2.34375cqw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.scpi-cadence__title {
+  font-size: max(1.7rem, 3.125cqw);
+}
+
+.scpi-cadence__stage {
+  margin: auto 0;
+  display: flex;
+  gap: 2.34375cqw;
+}
+
+.scpi-cadence__box {
+  flex: 1 1 0;
+  min-width: 0;
+  box-sizing: border-box;
+  border: 0.078125cqw solid rgba(var(--chap-ink-rgb), 0.22);
+  padding: 1.875cqw 1.875cqw 1.5625cqw;
+  display: flex;
+  flex-direction: column;
+  gap: 1.09375cqw;
+}
+
+/* Case pas encore révélée : réserve exactement la même place (largeur
+   flex:1, gap) qu'une case pleine, sans trait ni contenu — la rangée ne
+   change jamais de largeur au fil des états (voir CASES, scpi-cadence.js). */
+.scpi-cadence__box--empty {
+  border-color: transparent;
+}
+
+.scpi-cadence__kicker {
+  font-weight: 700;
+  font-size: 0.7421875cqw;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(var(--chap-ink-rgb), 0.45);
+}
+
+.scpi-cadence__box-head {
+  display: flex;
+  align-items: center;
+  gap: 0.625cqw;
+}
+
+.scpi-cadence__box-head .chap-icon {
+  flex: none;
+  width: 1.875cqw;
+  height: 1.875cqw;
+}
+
+.scpi-cadence__titre {
+  font-family: var(--font-serif-chapitre);
+  font-weight: 400;
+  font-size: 1.40625cqw;
+  line-height: 1.15;
+}
+
+.scpi-cadence__texte {
+  margin: 0;
+  font-weight: 450;
+  font-size: 1.015625cqw;
+  line-height: 1.5;
+  color: rgba(var(--chap-ink-rgb), 0.7);
 }

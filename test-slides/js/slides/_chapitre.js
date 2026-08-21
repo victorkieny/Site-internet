@@ -125,6 +125,19 @@ export const ICONS = {
   // par opposition à "immeuble" (le parc lui-même, détenu par les
   // associés) sur le même schéma.
   cle: '<circle cx="7" cy="12" r="3.6"/><path d="M10.4 12H20M15.5 12V15.5M19 12V15"/>',
+  // Sablier — le délai de jouissance ("Délais, versements et
+  // liquidité") : le temps qui s'écoule entre la souscription et les
+  // premiers revenus, pas une horloge (qui dirait plutôt une heure
+  // précise qu'une durée d'attente).
+  sablier: '<path d="M6.5 3H17.5M6.5 21H17.5M7.5 3C7.5 7.5 12 9.5 12 12C12 14.5 7.5 16.5 7.5 21M16.5 3C16.5 7.5 12 9.5 12 12C12 14.5 16.5 16.5 16.5 21"/>',
+  // Flèche circulaire — le versement trimestriel des loyers : un
+  // paiement qui se répète à intervalle régulier, pas un montant unique
+  // (voir "capital", la pile de pièces, réservée à un versement ponctuel).
+  cycle: '<path d="M4.5 12a7.5 7.5 0 0 1 12.7-5.4M19.5 12a7.5 7.5 0 0 1-12.7 5.4"/><path d="M17.5 3.5V7H14M6.5 20.5V17H10"/>',
+  // Deux flèches opposées — la liquidité des parts (revente via le
+  // marché secondaire) : un échange, pas un flux à sens unique comme
+  // les flèches du schéma "Comment ça marche".
+  echange: '<path d="M4 8H17M17 8L13.5 4.5M17 8L13.5 11.5"/><path d="M20 16H7M7 16L10.5 12.5M7 16L10.5 19.5"/>',
 };
 
 export function iconSvg(name, color, size = 38) {

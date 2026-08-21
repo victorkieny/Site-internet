@@ -403,6 +403,20 @@
       "states": [{}, {}, {}, {}]
     },
     {
+      "id": "scpi-cadence",
+      "type": "scpi-cadence",
+      "client": "Prénom Nom",
+      "date": "2026-09-17",
+      "chapitreActif": 2,
+      "chapitres": [
+        { "numero": "01", "libelle": "Constat" },
+        { "numero": "02", "libelle": "Ingénieries" },
+        { "numero": "03", "libelle": "Préconisations" }
+      ],
+      "titre": "Délais, versements et liquidité",
+      "states": [{}, {}, {}]
+    },
+    {
       "id": "scpi-atouts",
       "type": "scpi-atouts",
       "client": "Prénom Nom",
