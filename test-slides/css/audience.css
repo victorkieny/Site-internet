@@ -8,6 +8,7 @@
    été visible et aurait fait "cadre"). */
 
 #stage {
+  --mobile-gutter: 0px;
   padding: 0;
   background: #000;
 }

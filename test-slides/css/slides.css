@@ -15,6 +15,7 @@
 }
 
 .slide {
+  --mobile-gutter: 12px;
   height: 100vh;
   height: 100dvh;
   width: 100%;
@@ -38,6 +39,37 @@
   border-radius: var(--radius);
   box-shadow: var(--shadow-card);
   overflow: hidden;
+}
+
+/* ---------- Repli petite scène (mobile) ----------
+   Sous ce seuil, les planchers de lisibilité (font-size:max(Npx, Mcqw)
+   dans chapitre.css — voir son en-tête) ne rétrécissent plus avec les
+   cqw et le contenu déborde de la scène. Même remède que .stage-preview
+   (miniatures, voir presenter.css) : .slide__stage est rendu à sa
+   largeur de référence (1280px, où planchers et cqw se comportent
+   normalement) puis réduit globalement par transform:scale — le
+   contenu reste proportionnel à la scène affichée, jamais de
+   dépassement, sans jamais recalculer la mise en page. */
+@media (max-width: 780px), (max-height: 440px) {
+  .slide {
+    display: block;
+    position: relative;
+    padding: 0;
+  }
+
+  .slide__stage {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 1280px;
+    max-width: none;
+    max-height: none;
+    transform-origin: center center;
+    transform: translate(-50%, -50%) scale(min(
+      calc((100dvw - 2 * var(--mobile-gutter)) / 1280px),
+      calc((100dvh - 2 * var(--mobile-gutter)) / 720px)
+    ));
+  }
 }
 
 .slide__content {

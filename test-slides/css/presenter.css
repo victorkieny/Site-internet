@@ -325,6 +325,7 @@ body.is-resizing-y * {
 
 .presenter-preview {
   container-type: size;
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -338,6 +339,25 @@ body.is-resizing-y * {
   width: min(100cqw, 100cqh * 16 / 9);
   height: auto;
   margin: auto;
+}
+
+/* Repli petite scène (mobile / panneau très réduit) — même remède que
+   .slide__stage dans slides.css : sous ce seuil les planchers de
+   lisibilité empêchent le texte de rétrécir avec le panneau et il
+   déborde. Requête de container (pas de viewport) car ce panneau est
+   redimensionnable par le splitter, indépendamment de la fenêtre. */
+@container (max-width: 780px), (max-height: 440px) {
+  .presenter-preview .slide__stage {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 1280px;
+    max-width: none;
+    max-height: none;
+    margin: 0;
+    transform-origin: center center;
+    transform: translate(-50%, -50%) scale(min(100cqw / 1280px, 100cqh / 720px));
+  }
 }
 
 /* Aperçu réduit générique (miniatures uniquement) — voir js/deck.js :
