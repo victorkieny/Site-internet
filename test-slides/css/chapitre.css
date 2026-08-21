@@ -2452,11 +2452,14 @@
    colonnes (LEVIER_BAR_MAX_CQW côté JS) pour que bottom:Xcqw sur
    chaque repère (scpi-financement.js) tombe exactement à la hauteur du
    sommet de colonne qu'il légende. */
+/* height posée en style inline (LEVIER_BAR_MAX_CQW, voir
+   scpi-financement.js) — jamais dupliquée en dur ici, sous peine de se
+   désynchroniser de la vraie hauteur des colonnes si l'une des deux
+   valeurs change sans l'autre (bug déjà rencontré). */
 .scpi-financement__levier-axis {
   position: relative;
   flex: none;
   width: 5.625cqw;
-  height: 13.75cqw;
   border-right: 0.078125cqw solid rgba(var(--chap-ink-rgb), 0.3);
 }
 
@@ -2487,13 +2490,14 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.46875cqw;
+  gap: 0.234375cqw;
 }
 
+/* height posée en style inline (LEVIER_BAR_MAX_CQW) — voir la remarque
+   sur .scpi-financement__levier-axis ci-dessus. */
 .scpi-financement__levier-bar-wrap {
   display: flex;
   align-items: flex-end;
-  height: 13.75cqw;
 }
 
 .scpi-financement__levier-bar {
@@ -2521,8 +2525,8 @@
 
 .scpi-financement__levier-caption {
   font-weight: 450;
-  font-size: 0.703125cqw;
-  line-height: 1.3;
+  font-size: 0.65625cqw;
+  line-height: 1.2;
   text-align: center;
   white-space: nowrap;
   color: rgba(var(--chap-ink-rgb), 0.6);
@@ -2654,17 +2658,17 @@
    conclusion de la slide. */
 .scpi-financement__viager {
   position: absolute;
-  top: 19.6875cqw;
-  transform: translateX(-100%);
+  top: 20.859375cqw;
+  transform: translateX(-50%);
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
-  gap: 0.234375cqw;
+  align-items: center;
+  gap: 0.15625cqw;
 }
 
 .scpi-financement__viager-kicker {
   font-weight: 700;
-  font-size: 0.8203125cqw;
+  font-size: 0.703125cqw;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   white-space: nowrap;
@@ -2674,7 +2678,7 @@
 .scpi-financement__viager-value {
   font-family: var(--font-serif-chapitre);
   font-weight: 400;
-  font-size: 1.71875cqw;
+  font-size: 1.09375cqw;
   line-height: 1;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;

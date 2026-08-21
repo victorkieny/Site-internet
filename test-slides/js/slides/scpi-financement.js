@@ -146,7 +146,7 @@ function values(slide) {
 // marge réservée pour les légendes ("Sans/Avec financement") sous les
 // colonnes.
 const LEVIER_TOP_CQW = 0.3125; // top de .scpi-financement__levier, voir chapitre.css
-const LEVIER_BAR_MAX_CQW = AXIS_TOP_CQW - LEVIER_TOP_CQW - 0.625; // hauteur de la colonne "Patrimoine détenu"
+const LEVIER_BAR_MAX_CQW = AXIS_TOP_CQW - LEVIER_TOP_CQW; // hauteur de la colonne "Patrimoine détenu" — même bas que la colonne de gauche
 
 function barSegmentsHtml(count, label) {
   const segments = Array.from(
@@ -233,20 +233,20 @@ export function render(slide, opts = {}) {
   const levierHtml = showLevier
     ? `
       <div class="scpi-financement__levier${levierEntering ? " is-entering" : ""}"${levierEntering ? " data-reveal" : ""} style="left:${LEVIER_LEFT}cqw">
-        <div class="scpi-financement__levier-axis">
+        <div class="scpi-financement__levier-axis" style="height:${LEVIER_BAR_MAX_CQW}cqw">
           <span class="scpi-financement__levier-axis-label" style="bottom:${patrimoineBarH}cqw">${v.capital}</span>
           <span class="scpi-financement__levier-axis-label" style="bottom:${effortBarH}cqw">${v.effortTotal}</span>
           <span class="scpi-financement__levier-axis-label" style="bottom:0">0 €</span>
         </div>
         <div class="scpi-financement__levier-diagram">
           <div class="scpi-financement__levier-col">
-            <div class="scpi-financement__levier-bar-wrap">
+            <div class="scpi-financement__levier-bar-wrap" style="height:${LEVIER_BAR_MAX_CQW}cqw">
               <div class="scpi-financement__levier-bar scpi-financement__levier-bar--effort"${levierEntering ? ` data-reveal data-reveal-height="${effortBarH}cqw"` : ""} style="height:${levierEntering ? 0 : effortBarH}cqw"></div>
             </div>
             <span class="scpi-financement__levier-caption">Sans financement</span>
           </div>
           <div class="scpi-financement__levier-col">
-            <div class="scpi-financement__levier-bar-wrap">
+            <div class="scpi-financement__levier-bar-wrap" style="height:${LEVIER_BAR_MAX_CQW}cqw">
               <div class="scpi-financement__levier-bar scpi-financement__levier-bar--patrimoine"${levierEntering ? ` data-reveal data-reveal-height="${patrimoineBarH}cqw"` : ""} style="height:${levierEntering ? 0 : patrimoineBarH}cqw">
                 <div class="scpi-financement__levier-bar-gap"${levierEntering ? ` data-reveal data-reveal-height="${gapBarH}cqw"` : ""} style="height:${levierEntering ? 0 : gapBarH}cqw">
                   <div class="scpi-financement__levier-annotation">
@@ -278,11 +278,14 @@ export function render(slide, opts = {}) {
   // vocabulaire que le bilan/l'effet de levier) plutôt qu'une légende
   // discrète : c'est la conclusion de la slide, elle doit se voir. Le
   // patrimoine (85 000 €) n'est pas répété ici, déjà lisible sur l'axe.
+  // Centré sous la ligne (AXIS_END_CQW/2), en dessous du repère "25 ans"
+  // plutôt qu'à côté (même largeur/hauteur de ligne, les deux se
+  // chevaucheraient sinon).
   const showViager = stateIndex >= 5;
   const viagerEntering = animate && stateIndex === 5;
   const viagerHtml = showViager
     ? `
-      <div class="scpi-financement__viager${viagerEntering ? " is-entering" : ""}"${viagerEntering ? " data-reveal" : ""} style="left:${STAGE_W}cqw">
+      <div class="scpi-financement__viager${viagerEntering ? " is-entering" : ""}"${viagerEntering ? " data-reveal" : ""} style="left:${AXIS_END_CQW / 2}cqw">
         <span class="scpi-financement__viager-kicker">Puis, à vie</span>
         <span class="scpi-financement__viager-value">${v.revM}</span>
       </div>
