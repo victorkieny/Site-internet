@@ -93,7 +93,6 @@ export function render(slide, opts = {}) {
 
       <div class="scpi-atouts__intro">
         <h1 class="chap-title scpi-atouts__title">Les atouts</h1>
-        <span class="scpi-atouts__eyebrow${animate ? " is-entering" : ""}"${animate ? " data-reveal" : ""}>Atout ${activeIndex + 1} sur ${ATOUTS.length} · ${escapeHtml(atout.label)}</span>
       </div>
 
       <div class="scpi-atouts__stage">

@@ -2101,16 +2101,6 @@
   font-size: max(1.7rem, 3.125cqw);
 }
 
-.scpi-atouts__eyebrow {
-  margin-top: 1.09375cqw;
-  font-weight: 700;
-  font-size: 0.8203125cqw;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  white-space: nowrap;
-  color: rgba(var(--chap-ink-rgb), 0.45);
-}
-
 /* Hauteur réservée à l'atout le plus haut (4 puces, "sur-mesure") :
    .scpi-atouts__stage est centré verticalement dans la slide
    (margin:auto 0) — sans ce plancher, sa hauteur varie avec le nombre
