@@ -2302,23 +2302,31 @@
   font-size: max(1.7rem, 3.125cqw);
 }
 
+/* Toujours rendu, même aux états 1-2 qui n'ont pas de phrase (voir
+   etape.desc en JS) : seule la visibilité change (--invisible), jamais
+   sa présence — sinon la hauteur du bloc titre+sous-titre varie d'un
+   état à l'autre, ce qui redéplace toute la scène (centrée par
+   margin:auto 0, voir .scpi-financement__stage). Même taille que la
+   phrase d'intro du diagramme "Épargne dormante"
+   (.epargne-dormante__diagram-intro) — même registre de phrase-clé, pas
+   une variante propre à ce gabarit. Marge du haut calculée pour que la
+   phrase tombe à égale distance du titre et du haut du diagramme de
+   levier (états 5-6) — vérifiée à la mesure, pas une valeur de
+   l'échelle d'espacement générique (le centrage par marge auto de la
+   scène rend la relation non linéaire).
+*/
 .scpi-financement__desc {
-  margin: 0.9375cqw 0 0;
-  font-weight: 450;
-  font-size: 1.171875cqw;
+  margin: 3.125cqw 0 0;
+  font-weight: 600;
+  font-size: 1.40625cqw;
   line-height: 1.5;
   text-align: center;
   white-space: nowrap;
-  color: rgba(var(--chap-ink-rgb), 0.65);
+  color: rgba(var(--chap-ink-rgb), 0.85);
 }
 
-/* États 5-6 (bilan de levier) : même taille que la phrase d'intro du
-   diagramme "Épargne dormante" (.epargne-dormante__diagram-intro) —
-   même registre de phrase-clé, pas une variante propre à ce gabarit. */
-.scpi-financement__desc--large {
-  font-weight: 600;
-  font-size: 1.40625cqw;
-  color: rgba(var(--chap-ink-rgb), 0.85);
+.scpi-financement__desc--invisible {
+  visibility: hidden;
 }
 
 .scpi-financement__stage {
@@ -2710,7 +2718,6 @@
 .scpi-financement__viager {
   position: absolute;
   top: 20.859375cqw;
-  max-width: 21.09375cqw;
   transform: translateX(-50%);
   display: flex;
   flex-direction: column;
@@ -2743,6 +2750,7 @@
   font-size: 0.78125cqw;
   line-height: 1.4;
   text-align: center;
+  white-space: nowrap;
   color: rgba(var(--chap-ink-rgb), 0.6);
 }
 
