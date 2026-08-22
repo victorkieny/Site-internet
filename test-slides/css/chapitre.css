@@ -2276,6 +2276,15 @@
   color: rgba(var(--chap-ink-rgb), 0.65);
 }
 
+/* États 5-6 (bilan de levier) : même taille que la phrase d'intro du
+   diagramme "Épargne dormante" (.epargne-dormante__diagram-intro) —
+   même registre de phrase-clé, pas une variante propre à ce gabarit. */
+.scpi-financement__desc--large {
+  font-weight: 600;
+  font-size: 1.40625cqw;
+  color: rgba(var(--chap-ink-rgb), 0.85);
+}
+
 .scpi-financement__stage {
   margin: auto 0;
   position: relative;

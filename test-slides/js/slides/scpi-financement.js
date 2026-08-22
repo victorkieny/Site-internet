@@ -310,7 +310,7 @@ export function render(slide, opts = {}) {
 
       <div class="scpi-financement__intro">
         <h1 class="chap-title scpi-financement__title">${escapeHtml(slide.titre)}</h1>
-        ${etape.desc ? `<p class="scpi-financement__desc">${escapeHtml(etape.desc(v))}</p>` : ""}
+        ${etape.desc ? `<p class="scpi-financement__desc${stateIndex >= 4 ? " scpi-financement__desc--large" : ""}">${escapeHtml(etape.desc(v))}</p>` : ""}
       </div>
 
       <div class="scpi-financement__stage">
