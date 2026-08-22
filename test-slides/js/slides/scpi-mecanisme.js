@@ -14,6 +14,16 @@ import { renderChapRail, iconSvg } from "./_chapitre.js";
 // 1280 de large, convertis en cqw — voir chapitre.css en tête de
 // fichier), pas réinventée.
 
+// Mot (normalisé, sans accent/casse) -> clé d'icône dans ICONS
+// (_chapitre.js). Couvre exactement les 4 classes d'actifs du deck de
+// base — un mot non couvert affiche juste son libellé sans icône.
+const ACTIF_ICONS = {
+  bureaux: "bureaux",
+  commerces: "commerces",
+  sante: "sante",
+  hotellerie: "hotellerie",
+};
+
 function boxHtml({ left, top, width, height, cls, icon, kicker, titre, texte, extra, entering }) {
   const boxCls = "scpi-mecanisme__box" + (cls ? " " + cls : "") + (entering ? " is-entering" : "");
   return `
@@ -43,8 +53,24 @@ export function render(slide, opts = {}) {
   const stateIndex = Math.min(Math.max(opts.stateIndex ?? 0, 0), 4);
   const animate = !!opts.animate;
 
+  // Un pictogramme par classe d'actifs plutôt qu'une puce de texte —
+  // clé dérivée du mot lui-même (accents/casse neutralisés), pas une
+  // liste positionnelle : si demain "actifs" change dans deck.json, un
+  // mot non couvert perd juste son icône plutôt que de désynchroniser
+  // tout le rang.
   const actifsHtml = (slide.actifs || [])
-    .map((a) => `<span class="scpi-mecanisme__actif">${escapeHtml(a)}</span>`)
+    .map((a) => {
+      const key = a
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase();
+      return `
+        <div class="scpi-mecanisme__actif">
+          ${iconSvg(ACTIF_ICONS[key] || "", "rgba(var(--chap-ink-rgb),.65)", 22)}
+          <span class="scpi-mecanisme__actif-label">${escapeHtml(a)}</span>
+        </div>
+      `;
+    })
     .join("");
 
   const showSouscription = stateIndex >= 1;
@@ -63,10 +89,10 @@ export function render(slide, opts = {}) {
     top: 13.125,
     width: 21.25,
     height: 12.1875,
+    cls: "scpi-mecanisme__box--center",
     icon: "personne",
     kicker: "Associé",
     titre: "L'investisseur",
-    texte: "Souscrit des parts et perçoit les revenus distribués.",
     entering: socleEntering,
   });
 
@@ -79,7 +105,6 @@ export function render(slide, opts = {}) {
     icon: "immeuble",
     kicker: "Le véhicule",
     titre: "La SCPI",
-    texte: "Un parc d'actifs immobiliers professionnels, mutualisé entre les associés.",
     extra: `<div class="scpi-mecanisme__actifs">${actifsHtml}</div>`,
     entering: socleEntering,
   });
@@ -90,10 +115,10 @@ export function render(slide, opts = {}) {
         top: 13.125,
         width: 21.25,
         height: 12.1875,
+        cls: "scpi-mecanisme__box--center",
         icon: "cle",
         kicker: "L'exploitant",
         titre: "La société de gestion",
-        texte: "Achat, location, travaux, reporting : le parc est géré clé en main.",
         entering: gestionEntering,
       })
     : "";

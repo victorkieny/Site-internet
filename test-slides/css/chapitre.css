@@ -2007,7 +2007,8 @@
   gap: 0.703125cqw;
 }
 
-.scpi-mecanisme__box--amf {
+.scpi-mecanisme__box--amf,
+.scpi-mecanisme__box--center {
   justify-content: center;
   padding-top: 0;
 }
@@ -2062,22 +2063,40 @@
   color: rgba(var(--chap-ink-rgb), 0.45);
 }
 
+/* Un pictogramme par classe d'actifs (bureaux/commerces/santé/
+   hôtellerie, voir ACTIF_ICONS en JS) plutôt qu'une puce de texte —
+   4 colonnes égales pour rester lisibles même sur le mot le plus long
+   ("Hôtellerie"), jamais un flex-wrap qui recase au hasard. */
 .scpi-mecanisme__actifs {
   margin-top: auto;
-  padding: 0.859375cqw 0;
+  padding: 0.859375cqw 0 0;
   border-top: 0.078125cqw solid rgba(var(--chap-ink-rgb), 0.16);
   display: flex;
-  flex-wrap: wrap;
-  column-gap: 1.25cqw;
-  row-gap: 0.46875cqw;
+  gap: 0.78125cqw;
 }
 
 .scpi-mecanisme__actif {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.390625cqw;
+}
+
+.scpi-mecanisme__actif .chap-icon {
+  flex: none;
+  width: 1.5625cqw;
+  height: 1.5625cqw;
+}
+
+.scpi-mecanisme__actif-label {
   font-weight: 700;
-  font-size: 0.7421875cqw;
-  letter-spacing: 0.14em;
+  font-size: 0.6640625cqw;
+  letter-spacing: 0.1em;
+  line-height: 1.2;
   text-transform: uppercase;
-  white-space: nowrap;
+  text-align: center;
   color: rgba(var(--chap-ink-rgb), 0.55);
 }
 
