@@ -2525,7 +2525,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.234375cqw;
+  gap: 0.9375cqw;
 }
 
 /* height posée en style inline (LEVIER_BAR_MAX_CQW) — voir la remarque
