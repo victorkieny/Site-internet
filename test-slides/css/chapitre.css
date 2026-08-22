@@ -2675,16 +2675,17 @@
 .scpi-financement__viager {
   position: absolute;
   top: 20.859375cqw;
+  max-width: 21.09375cqw;
   transform: translateX(-50%);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.15625cqw;
+  gap: 0.3125cqw;
 }
 
 .scpi-financement__viager-kicker {
   font-weight: 700;
-  font-size: 0.703125cqw;
+  font-size: 0.859375cqw;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   white-space: nowrap;
@@ -2694,11 +2695,20 @@
 .scpi-financement__viager-value {
   font-family: var(--font-serif-chapitre);
   font-weight: 400;
-  font-size: 1.09375cqw;
+  font-size: 1.875cqw;
   line-height: 1;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
   color: var(--or);
+}
+
+.scpi-financement__viager-note {
+  margin: 0;
+  font-weight: 450;
+  font-size: 0.78125cqw;
+  line-height: 1.4;
+  text-align: center;
+  color: rgba(var(--chap-ink-rgb), 0.6);
 }
 
 .scpi-financement__footnote {
