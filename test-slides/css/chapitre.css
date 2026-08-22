@@ -1269,22 +1269,39 @@
   }
 }
 
+/* À côté du rectangle qu'il commente, pas sous la colonne — enfant de
+   .cuve (position:relative), centré verticalement sur son point médian
+   (bottom posé en JS + translateY(50%) ici, même technique que
+   .cuve__shield) plutôt que dans le flux du pied de colonne. */
 .cuve-col__badge {
+  position: absolute;
   font-weight: 700;
-  font-size: 1.25cqw;
+  font-size: 1.71875cqw;
   letter-spacing: 0.04em;
   white-space: nowrap;
-  color: rgba(var(--chap-ink-rgb), 0.7);
+  transform: translateY(50%);
 }
 
-/* Réserve sa hauteur dès l'état 1 (voir introCuveHtml) : seule l'opacité
-   change à l'apparition, jamais sa présence dans le flux. */
+.cuve-col__badge--left {
+  right: 100%;
+  margin-right: 1.5625cqw;
+  text-align: right;
+}
+
+.cuve-col__badge--right {
+  left: 100%;
+  margin-left: 1.5625cqw;
+  text-align: left;
+}
+
+/* Réserve sa place dès l'état 1 (voir introCuveHtml) : seule l'opacité
+   change à l'apparition, jamais sa présence dans le DOM. */
 .cuve-col__badge--invisible {
   opacity: 0;
 }
 
-.cuve-col__badge--or {
-  color: var(--or);
+.cuve-col__badge--vert {
+  color: var(--vert);
 }
 
 .cuve-col__badge--rouge {

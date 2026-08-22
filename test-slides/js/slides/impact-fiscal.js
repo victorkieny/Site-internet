@@ -106,16 +106,23 @@ function introCuveHtml({ fillColor, label, escaping, introState, animate }) {
     : "";
 
   // Toujours rendu dès l'état 1 (juste invisible, voir --invisible),
-  // pas seulement à partir de son état d'apparition : sinon le pied de
-  // colonne grandit d'un cran quand le badge apparaît, ce qui redéplace
-  // toute la grille (centrée par margin:auto) — bug remonté ("les cuves
-  // remontent"). Anticipé une fois pour toutes ici plutôt que rattrapé
-  // après coup.
+  // pas seulement à partir de son état d'apparition : l'opacité change
+  // seule, jamais la présence dans le DOM (même raison qu'avant leur
+  // passage en absolute — éviter tout saut à l'apparition). Positionnés
+  // à côté du rectangle qu'ils commentent (enfants de .cuve, elle-même
+  // position:relative — même ancre que .cuve__shield/.cuve__erased),
+  // pas sous la colonne : rouge à gauche de la zone effacée (bancaire,
+  // right:100%), vert à droite de la bande d'intérêts (assurance vie,
+  // left:100%) — la marge extérieure de la grille (~28cqw de chaque
+  // côté) laisse largement la place, jamais assez étroite pour
+  // chevaucher l'autre cuve. Centrés verticalement sur leur rectangle
+  // (bottom au point médian + translateY(50%), même technique que
+  // .cuve__shield).
   const flatTaxBadge = escaping
-    ? `<span class="cuve-col__badge cuve-col__badge--rouge${escapeShown ? "" : " cuve-col__badge--invisible"}${escapeEntering ? " is-entering" : ""}"${escapeEntering ? " data-reveal" : ""}>→ Flat tax 30 %</span>`
+    ? `<span class="cuve-col__badge cuve-col__badge--rouge cuve-col__badge--left${escapeShown ? "" : " cuve-col__badge--invisible"}${escapeEntering ? " is-entering" : ""}"${escapeEntering ? " data-reveal" : ""} style="bottom:${INTRO_CAPITAL_H + INTRO_KEPT_H + INTRO_ESCAPE_H / 2}cqw">→ Flat tax 30 %</span>`
     : "";
   const protectBadge = !escaping
-    ? `<span class="cuve-col__badge cuve-col__badge--or${protectShown ? "" : " cuve-col__badge--invisible"}${protectEntering ? " is-entering" : ""}"${protectEntering ? " data-reveal" : ""}>Aucun prélèvement</span>`
+    ? `<span class="cuve-col__badge cuve-col__badge--vert cuve-col__badge--right${protectShown ? "" : " cuve-col__badge--invisible"}${protectEntering ? " is-entering" : ""}"${protectEntering ? " data-reveal" : ""} style="bottom:${INTRO_CAPITAL_H + INTRO_INTEREST_H / 2}cqw">Aucun prélèvement</span>`
     : "";
 
   // Tremblement (état 5, assurance vie) : dit "on essaie de la faire
@@ -132,10 +139,10 @@ function introCuveHtml({ fillColor, label, escaping, introState, animate }) {
         <span class="cuve__interest-fill"${interestAttrs}></span>
         ${erasedZone}
         ${shield}
+        ${flatTaxBadge}${protectBadge}
       </div>
       <div class="cuve-col__foot">
         <span class="cuve-col__label">${escapeHtml(label)}</span>
-        ${flatTaxBadge}${protectBadge}
       </div>
     </div>
   `;
