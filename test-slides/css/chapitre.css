@@ -25,7 +25,9 @@
    .slide--<type> sont posées sur le même élément par
    deck.js:renderStageHtml ("slide__stage slide--<type>"), pas sur deux
    nœuds parent/enfant — un sélecteur avec espace ne matcherait rien. */
-.slide__stage.slide--constat {
+.slide__stage.slide--constat,
+.slide__stage.slide--cloture-synthese,
+.slide__stage.slide--cloture-detail {
   background: var(--encre);
   --chap-ink-rgb: var(--papier-rgb);
 }
@@ -47,6 +49,8 @@
 }
 
 .slide--constat .slide__content,
+.slide--cloture-synthese .slide__content,
+.slide--cloture-detail .slide__content,
 .slide--section-title .slide__content,
 .slide--chap-regles .slide__content,
 .slide--epargne-dormante .slide__content,
@@ -2851,4 +2855,253 @@
   font-size: 1.015625cqw;
   line-height: 1.5;
   color: rgba(var(--chap-ink-rgb), 0.7);
+}
+
+/* ---------- Gabarit "Clôture" (dernière slide du RDV, fond encre à la
+   manière de "Constat") — deux variantes en parallèle le temps d'un
+   choix (cloture-synthese.js : registre en colonnes ; cloture-detail.js :
+   liste empilée avec puces), même habillage partagé sous .cloture__*
+   (rail, titre, filet or, budget, "à terme") ; .cloture-d__* est propre
+   au corps de la variante détaillée. */
+.cloture {
+  height: 100%;
+  box-sizing: border-box;
+  padding: 2.8125cqw 4.84375cqw 4.21875cqw;
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-sans-chapitre);
+}
+
+.cloture__intro {
+  flex: none;
+  padding-top: 2.03125cqw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.cloture__title {
+  margin: 0;
+  font-size: max(1.9rem, 4.0625cqw);
+  color: rgb(var(--chap-ink-rgb));
+}
+
+.cloture__rule {
+  margin-top: 1.5625cqw;
+  width: 5.46875cqw;
+  height: 0.15625cqw;
+  background: var(--or);
+  display: block;
+}
+
+.cloture__budget {
+  margin: 1.09375cqw 0 0;
+  max-width: 56.25cqw;
+  font-weight: 450;
+  font-size: 1.09375cqw;
+  line-height: 1.5;
+  text-align: center;
+  color: rgba(var(--chap-ink-rgb), 0.65);
+}
+
+/* Registre des préconisations (variante synthèse) — même grille que
+   .constat__kpis (1fr par colonne, 1px par filet intercalé, largeurs
+   posées en style inline par cloture-synthese.js selon le nombre de
+   préconisations) mais SANS barre de répartition : ce ne sont pas des
+   parts d'un même total, juste trois ingénieries retenues côte à côte.
+   margin-top:auto, comme .constat__enveloppes : centré à égale distance
+   entre l'intro et "à terme" (voir .cloture__aterme, même marge). */
+.cloture__registre {
+  flex: none;
+  margin-top: auto;
+  width: 100%;
+  display: grid;
+  align-items: start;
+}
+
+.cloture__item-rule {
+  background: rgba(var(--chap-ink-rgb), 0.18);
+  align-self: stretch;
+}
+
+.cloture__item-rule--hidden {
+  background: transparent;
+}
+
+/* Toujours rendu dès le premier état (voir cloture-synthese.js) : seule
+   l'opacité change à l'apparition, jamais la présence dans la grille. */
+.cloture__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.703125cqw;
+  text-align: center;
+  padding: 0 1.5625cqw;
+}
+
+.cloture__item--invisible {
+  opacity: 0;
+}
+
+.cloture__item-nom {
+  font-weight: 700;
+  font-size: 0.8203125cqw;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: rgba(var(--chap-ink-rgb), 0.55);
+}
+
+.cloture__item-montant {
+  font-family: var(--font-serif-chapitre);
+  font-weight: 400;
+  font-size: max(1.6rem, 3.125cqw);
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--or);
+}
+
+.cloture__item-note {
+  margin: 0;
+  max-width: 17.1875cqw;
+  font-weight: 450;
+  font-size: 0.9375cqw;
+  line-height: 1.4;
+  color: rgba(var(--chap-ink-rgb), 0.6);
+}
+
+/* Liste empilée des préconisations (variante détail) — un filet
+   horizontal entre chaque ligne plutôt que des colonnes : le texte (2
+   puces par préconisation) ne tiendrait pas sur un tiers de la largeur.
+   margin-top:auto : même rôle que .cloture__registre ci-dessus, centrée
+   à égale distance entre l'intro et "à terme". */
+.cloture-d__list {
+  flex: none;
+  margin-top: auto;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Toujours rendue dès le premier état (voir cloture-detail.js) : la
+   liste garde sa hauteur pleine dès l'arrivée sur la slide, seule
+   l'opacité de chaque ligne change — sinon "à terme" se déplacerait à
+   chaque ligne révélée (même principe que .cloture__item--invisible). */
+.cloture-d__row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625cqw;
+  padding: 1.09375cqw 0;
+  border-bottom: 0.078125cqw solid rgba(var(--chap-ink-rgb), 0.18);
+}
+
+.cloture-d__row:first-child {
+  padding-top: 0;
+}
+
+.cloture-d__row--last {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.cloture-d__row--invisible {
+  opacity: 0;
+}
+
+.cloture-d__row-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1.5625cqw;
+}
+
+.cloture-d__row-nom {
+  font-family: var(--font-serif-chapitre);
+  font-weight: 400;
+  font-size: 1.5625cqw;
+  line-height: 1;
+  white-space: nowrap;
+  color: rgb(var(--chap-ink-rgb));
+}
+
+.cloture-d__row-montant {
+  flex: none;
+  font-family: var(--font-serif-chapitre);
+  font-weight: 400;
+  font-size: 1.5625cqw;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--or);
+}
+
+.cloture-d__bullets {
+  margin-top: 0.546875cqw;
+  display: flex;
+  flex-direction: column;
+  gap: 0.390625cqw;
+}
+
+.cloture-d__bullet {
+  display: flex;
+  align-items: baseline;
+  gap: 0.9375cqw;
+}
+
+.cloture-d__bullet-dash {
+  flex: none;
+  width: 1.09375cqw;
+  height: 0.078125cqw;
+  background: var(--or);
+  transform: translateY(-0.390625cqw);
+}
+
+.cloture-d__bullet-text {
+  font-weight: 450;
+  font-size: 1.015625cqw;
+  line-height: 1.4;
+  color: rgba(var(--chap-ink-rgb), 0.75);
+}
+
+/* "À terme" — conclusion de toute la présentation, dernière chose lue :
+   même traitement que .constat__objectifs (filet au-dessus,
+   margin-top:auto) mais un label + une phrase plutôt qu'une liste, en
+   Bodoni comme les valeurs chiffrées du système bien que ce ne soit pas
+   un chiffre — c'est la ligne qui doit rester en mémoire. Toujours dans
+   le flux (voir --invisible) : sa présence pilote le margin-top:auto du
+   bloc au-dessus, le retirer du DOM le décentrerait. */
+.cloture__aterme {
+  flex: none;
+  margin-top: auto;
+  padding-top: 1.5625cqw;
+  border-top: 0.078125cqw solid rgba(var(--chap-ink-rgb), 0.18);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.546875cqw;
+  text-align: center;
+}
+
+.cloture__aterme--invisible {
+  opacity: 0;
+}
+
+.cloture__aterme-label {
+  font-weight: 700;
+  font-size: 0.859375cqw;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(var(--chap-ink-rgb), 0.5);
+}
+
+.cloture__aterme-text {
+  margin: 0;
+  max-width: 50cqw;
+  font-family: var(--font-serif-chapitre);
+  font-weight: 400;
+  font-size: 1.71875cqw;
+  line-height: 1.25;
+  color: rgb(var(--chap-ink-rgb));
 }

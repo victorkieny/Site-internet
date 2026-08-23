@@ -12,6 +12,8 @@ import * as scpiMecanisme from "./slides/scpi-mecanisme.js";
 import * as scpiCadence from "./slides/scpi-cadence.js";
 import * as scpiAtouts from "./slides/scpi-atouts.js";
 import * as scpiFinancement from "./slides/scpi-financement.js";
+import * as clotureSynthese from "./slides/cloture-synthese.js";
+import * as clotureDetail from "./slides/cloture-detail.js";
 import { playReveal } from "./reveal.js";
 
 // Registre partagé par index.html (aperçu solo), presenter.html et
@@ -34,6 +36,8 @@ export const renderers = {
   "scpi-cadence": { render: scpiCadence.render },
   "scpi-atouts": { render: scpiAtouts.render },
   "scpi-financement": { render: scpiFinancement.render },
+  "cloture-synthese": { render: clotureSynthese.render },
+  "cloture-detail": { render: clotureDetail.render },
 };
 
 export async function loadDeck() {
