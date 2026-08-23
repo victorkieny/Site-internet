@@ -26,6 +26,7 @@
    deck.js:renderStageHtml ("slide__stage slide--<type>"), pas sur deux
    nœuds parent/enfant — un sélecteur avec espace ne matcherait rien. */
 .slide__stage.slide--constat,
+.slide__stage.slide--cloture-reflexion,
 .slide__stage.slide--cloture-detail {
   background: var(--encre);
   --chap-ink-rgb: var(--papier-rgb);
@@ -48,6 +49,7 @@
 }
 
 .slide--constat .slide__content,
+.slide--cloture-reflexion .slide__content,
 .slide--cloture-detail .slide__content,
 .slide--section-title .slide__content,
 .slide--chap-regles .slide__content,
@@ -2963,6 +2965,18 @@
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
   color: var(--or);
+}
+
+/* Variante "réflexion" (cloture-reflexion.js) : une question n'est pas
+   une donnée chiffrée — Avenir (pas Bodoni, réservé aux chiffres),
+   encre atténuée (pas l'or, réservé à ce qui porte une valeur). */
+.cloture-d__row-question {
+  flex: none;
+  font-weight: 600;
+  font-size: 1.171875cqw;
+  line-height: 1.2;
+  white-space: nowrap;
+  color: rgba(var(--chap-ink-rgb), 0.7);
 }
 
 .cloture-d__bullets {

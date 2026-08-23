@@ -12,6 +12,7 @@ import * as scpiMecanisme from "./slides/scpi-mecanisme.js";
 import * as scpiCadence from "./slides/scpi-cadence.js";
 import * as scpiAtouts from "./slides/scpi-atouts.js";
 import * as scpiFinancement from "./slides/scpi-financement.js";
+import * as clotureReflexion from "./slides/cloture-reflexion.js";
 import * as clotureDetail from "./slides/cloture-detail.js";
 import { playReveal } from "./reveal.js";
 
@@ -35,6 +36,7 @@ export const renderers = {
   "scpi-cadence": { render: scpiCadence.render },
   "scpi-atouts": { render: scpiAtouts.render },
   "scpi-financement": { render: scpiFinancement.render },
+  "cloture-reflexion": { render: clotureReflexion.render },
   "cloture-detail": { render: clotureDetail.render },
 };
 

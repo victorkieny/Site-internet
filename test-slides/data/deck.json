@@ -450,6 +450,51 @@
       "states": [{}, {}, {}, {}, {}, {}]
     },
     {
+      "id": "cloture-reflexion",
+      "type": "cloture-reflexion",
+      "client": "Prénom Nom",
+      "date": "2026-09-17",
+      "chapitreActif": 3,
+      "chapitres": [
+        { "numero": "01", "libelle": "Constat" },
+        { "numero": "02", "libelle": "Ingénieries" },
+        { "numero": "03", "libelle": "Préconisations" }
+      ],
+      "titre": "Préconisations patrimoniales",
+      "budget": "Quel effort d'épargne mensuel êtes-vous prêt à consacrer, entre versements programmés et capacité d'endettement ?",
+      "preconisations": [
+        {
+          "nom": "Assurance-vie",
+          "question": "Quel effort mensuel ?",
+          "bullets": [
+            "Rentabiliser votre épargne, tout en la gardant disponible",
+            "Vous placer à l'abri de la fiscalité, et hors masse successorale"
+          ]
+        },
+        {
+          "nom": "SCPI en direct",
+          "question": "Quelle part investie ?",
+          "bullets": [
+            "Allocation de SCPI européennes récentes et diversifiées, pour constituer du patrimoine",
+            "Vos revenus SCPI complètent l'effort d'épargne, en tenant compte de votre fiscalité"
+          ]
+        },
+        {
+          "nom": "SCPI en financement",
+          "question": "Quel effet de levier ?",
+          "bullets": [
+            "Une partie de votre effort d'épargne dope votre patrimoine grâce au levier du crédit",
+            "Vos revenus SCPI compensent l'effort d'épargne du financement, et améliorent votre profil bancaire"
+          ]
+        }
+      ],
+      "aTerme": {
+        "label": "À terme",
+        "texte": "Optimisation de votre fiscalité, aux côtés d'une épargne de précaution préservée."
+      },
+      "states": [{}, {}, {}, {}, {}]
+    },
+    {
       "id": "cloture-detail",
       "type": "cloture-detail",
       "client": "Prénom Nom",
