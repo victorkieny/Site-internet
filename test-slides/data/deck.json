@@ -465,7 +465,7 @@
       "preconisations": [
         {
           "nom": "Assurance-vie",
-          "question": "Quel effort mensuel ?",
+          "questions": ["Quid du versement programmé ?", "Quid du versement initial ?"],
           "bullets": [
             "Rentabiliser votre épargne, tout en la gardant disponible",
             "Vous placer à l'abri de la fiscalité, et hors masse successorale"
@@ -473,7 +473,7 @@
         },
         {
           "nom": "SCPI en direct",
-          "question": "Quelle part investie ?",
+          "questions": ["Quid du versement programmé ?", "Quid du versement initial ?"],
           "bullets": [
             "Allocation de SCPI européennes récentes et diversifiées, pour constituer du patrimoine",
             "Vos revenus SCPI complètent l'effort d'épargne, en tenant compte de votre fiscalité"
@@ -481,7 +481,7 @@
         },
         {
           "nom": "SCPI en financement",
-          "question": "Quel effet de levier ?",
+          "questions": ["Quid de la participation mensuelle ?"],
           "bullets": [
             "Une partie de votre effort d'épargne dope votre patrimoine grâce au levier du crédit",
             "Vos revenus SCPI compensent l'effort d'épargne du financement, et améliorent votre profil bancaire"

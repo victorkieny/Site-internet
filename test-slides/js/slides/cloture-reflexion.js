@@ -42,11 +42,19 @@ export function render(slide, opts = {}) {
         `
         )
         .join("");
+      // Une ou deux questions selon la préconisation (versement initial
+      // ET programmé pour assurance-vie/SCPI en direct, une seule pour
+      // le financement — pas de versement initial là) : toujours un
+      // tableau, empilées à droite plutôt qu'un champ singulier qui
+      // forcerait à choisir laquelle garder.
+      const questions = (p.questions || [])
+        .map((q) => `<span class="cloture-d__row-question">${escapeHtml(q)}</span>`)
+        .join("");
       return `
         <div class="cloture-d__row${last ? " cloture-d__row--last" : ""}${visible ? "" : " cloture-d__row--invisible"}${entering ? " is-entering" : ""}"${entering ? " data-reveal" : ""}>
           <div class="cloture-d__row-head">
             <span class="cloture-d__row-nom">${escapeHtml(p.nom)}</span>
-            <span class="cloture-d__row-question">${escapeHtml(p.question)}</span>
+            <div class="cloture-d__row-questions">${questions}</div>
           </div>
           <div class="cloture-d__bullets">${bullets}</div>
         </div>

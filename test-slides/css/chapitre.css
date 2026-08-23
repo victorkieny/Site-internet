@@ -2970,8 +2970,19 @@
 /* Variante "réflexion" (cloture-reflexion.js) : une question n'est pas
    une donnée chiffrée — Avenir (pas Bodoni, réservé aux chiffres),
    encre atténuée (pas l'or, réservé à ce qui porte une valeur). */
-.cloture-d__row-question {
+/* Une ou deux questions empilées (versement programmé + versement
+   initial pour assurance-vie/SCPI en direct ; une seule pour le
+   financement, voir cloture-reflexion.js) — alignées à droite, comme
+   l'aurait été un montant seul. */
+.cloture-d__row-questions {
   flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.3125cqw;
+}
+
+.cloture-d__row-question {
   font-weight: 600;
   font-size: 1.171875cqw;
   line-height: 1.2;
