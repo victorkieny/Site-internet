@@ -450,42 +450,6 @@
       "states": [{}, {}, {}, {}, {}, {}]
     },
     {
-      "id": "cloture-synthese",
-      "type": "cloture-synthese",
-      "client": "Prénom Nom",
-      "date": "2026-09-17",
-      "chapitreActif": 3,
-      "chapitres": [
-        { "numero": "01", "libelle": "Constat" },
-        { "numero": "02", "libelle": "Ingénieries" },
-        { "numero": "03", "libelle": "Préconisations" }
-      ],
-      "titre": "Vos préconisations",
-      "budget": "Effort d'épargne mensuel : 1 000 €/mois, capacité d'endettement incluse · jusqu'à 3 000 € complémentaires possibles, hors épargne de précaution, PEA et CTO.",
-      "preconisations": [
-        {
-          "nom": "Assurance-vie",
-          "montant": "500 €/mois",
-          "note": "Épargne disponible, à l'abri de la fiscalité et hors succession."
-        },
-        {
-          "nom": "SCPI en direct",
-          "montant": "365 €/mois",
-          "note": "Diversification et constitution de patrimoine, hors cadre bancaire."
-        },
-        {
-          "nom": "SCPI en financement",
-          "montant": "135 €/mois",
-          "note": "Effet de levier : vos revenus SCPI financent une partie du crédit, pour 85 000 € de patrimoine constitué."
-        }
-      ],
-      "aTerme": {
-        "label": "À terme",
-        "texte": "Optimisation de votre fiscalité, aux côtés d'une épargne de précaution préservée."
-      },
-      "states": [{}, {}, {}, {}, {}]
-    },
-    {
       "id": "cloture-detail",
       "type": "cloture-detail",
       "client": "Prénom Nom",
@@ -496,7 +460,7 @@
         { "numero": "02", "libelle": "Ingénieries" },
         { "numero": "03", "libelle": "Préconisations" }
       ],
-      "titre": "Vos préconisations",
+      "titre": "Préconisations patrimoniales",
       "budget": "Effort d'épargne mensuel : 1 000 €/mois, capacité d'endettement incluse · jusqu'à 3 000 € complémentaires possibles, hors épargne de précaution, PEA et CTO.",
       "preconisations": [
         {

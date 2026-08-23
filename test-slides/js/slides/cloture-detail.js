@@ -1,18 +1,16 @@
 import { escapeHtml } from "../editable.js";
 import { renderChapRail } from "./_chapitre.js";
 
-// Gabarit "Clôture — détail" : même intention et même habillage que
-// "Clôture — synthèse" (cloture-synthese.js, voir son en-tête) — fond
-// encre à la manière de "Constat", même rail, même bloc titre+filet or.
-// Seule la densité change : ici chaque préconisation garde 2 puces
-// (rendement/fiscalité/ingénierie...), en registre EMPILÉ (une ligne par
-// préconisation, filet horizontal entre chacune) plutôt qu'en colonnes —
-// le texte plus long ne tiendrait pas sur 3 colonnes étroites. Les deux
-// gabarits existent en parallèle le temps d'un choix ; garder les deux
-// synchronisés visuellement (couleurs, tailles de titre/filet, "à terme")
-// plutôt que diverger, seule la forme du corps change. Révélation
-// progressive cumulative en (2 + N préconisations) états, même mécanique
-// que la variante synthèse.
+// Gabarit "Clôture" : dernière slide du RDV, fond encre à la manière de
+// "Constat" (même rail, même bloc titre+filet or) — un bookend visuel du
+// début et de la fin de la présentation. Registre des préconisations
+// retenues en liste EMPILÉE (une ligne par préconisation, chacune avec
+// 2 puces rendement/fiscalité/ingénierie, filet horizontal entre
+// chacune) plutôt qu'en colonnes — le texte ne tiendrait pas sur un
+// tiers de largeur. Révélation progressive cumulative en
+// (2 + N préconisations) états (opts.stateIndex direct, même mécanisme
+// que "Les atouts") : état 1 = titre + budget (arrivée) ; états 2..N+1 =
+// une préconisation à la fois ; dernier état = la conclusion "à terme".
 export function render(slide, opts = {}) {
   const preco = slide.preconisations || [];
   const stateIndex = Math.min(Math.max(opts.stateIndex ?? 0, 0), preco.length + 1);
