@@ -115,15 +115,10 @@ export const ICONS = {
   // dessus, deux tranches en dessous), pas un symbole monétaire.
   capital:
     '<ellipse cx="12" cy="5.6" rx="7.4" ry="2.4"/><path d="M4.6 5.6v5.6c0 1.3 3.3 2.4 7.4 2.4s7.4-1.1 7.4-2.4V5.6"/><path d="M4.6 11.2v6.2c0 1.3 3.3 2.4 7.4 2.4s7.4-1.1 7.4-2.4v-6.2"/>',
-  // Immeuble (façade + grille de fenêtres) — le parc d'actifs de la SCPI
-  // elle-même ("Comment ça marche"), à distinguer de "cle" (la société
-  // de gestion qui l'exploite) et "personne" (l'investisseur qui la
-  // détient) sur le même schéma.
-  immeuble: '<rect x="4.5" y="4" width="15" height="17"/><path d="M4.5 9.5H19.5M4.5 14H19.5M9 4V21M15 4V21"/>',
   // Clé — la société de gestion ("Comment ça marche") : c'est elle qui
   // détient les clés du parc au quotidien (achat, location, travaux),
-  // par opposition à "immeuble" (le parc lui-même, détenu par les
-  // associés) sur le même schéma.
+  // par opposition à l'investisseur ("personne", associé propriétaire)
+  // sur le même schéma.
   cle: '<circle cx="7" cy="12" r="3.6"/><path d="M10.4 12H20M15.5 12V15.5M19 12V15"/>',
   // Sablier — le délai de jouissance ("Délais, versements et
   // liquidité") : le temps qui s'écoule entre la souscription et les
@@ -139,16 +134,17 @@ export const ICONS = {
   // les flèches du schéma "Comment ça marche".
   echange: '<path d="M4 8H17M17 8L13.5 4.5M17 8L13.5 11.5"/><path d="M20 16H7M7 16L10.5 12.5M7 16L10.5 19.5"/>',
   // Les 4 classes d'actifs de la SCPI ("Comment ça marche") — chacune un
-  // bâtiment (silhouette rectangulaire posée au sol), pas une variante du
-  // même immeuble générique : un gabarit propre (tour/façade basse) +
-  // un seul glyphe distinctif par usage, pour se reconnaître d'un coup
-  // d'œil sans légende (bureaux : tour + fenêtres en grille ; commerces :
-  // façade basse + auvent + porte ; santé : bâtiment + croix ;
-  // hôtellerie : bâtiment + fanion, signalétique classique de l'hôtel).
-  bureaux: '<rect x="7.5" y="2.5" width="9" height="19"/><path d="M7.5 7.5H16.5M7.5 12.5H16.5M7.5 17.5H16.5M12 2.5V21"/>',
-  commerces: '<rect x="4" y="9" width="16" height="12"/><path d="M4 9 L6.5 4 H17.5 L20 9"/><path d="M10 21V15H14V21"/>',
-  sante: '<rect x="5" y="6" width="14" height="15"/><path d="M12 10V17M8.5 13.5H15.5"/>',
-  hotellerie: '<rect x="6" y="7.5" width="12" height="13.5"/><path d="M9 7.5V2.5"/><path d="M9 2.5 L15 4.75 L9 7 Z"/>',
+  // bâtiment reconnaissable à sa silhouette ET à un trait d'architecture
+  // propre à son usage (pas juste un glyphe ajouté sur le même immeuble
+  // générique) : bureaux = tour étroite à grille dense de fenêtres ;
+  // commerces = façade basse et large avec auvent + vitrine ; santé =
+  // bâtiment avec croix ; hôtellerie = bâtiment avec porche/auvent
+  // d'entrée (porte-cochère), pas un fanion trop discret à petite
+  // taille.
+  bureaux: '<rect x="6" y="2.5" width="12" height="19"/><path d="M6 7.5H18M6 12.5H18M6 17.5H18M10 2.5V21M14 2.5V21"/>',
+  commerces: '<rect x="3" y="9" width="18" height="12"/><path d="M2 9H22"/><path d="M6 21V13H12V21M15 21V13H18V21"/>',
+  sante: '<rect x="4.5" y="6" width="15" height="15"/><path d="M12 9.5V17.5M8 13.5H16"/>',
+  hotellerie: '<rect x="5" y="4.5" width="14" height="16.5"/><path d="M9.5 21V15.5H14.5V21"/><path d="M6 15.5 A6 4.2 0 0 1 18 15.5"/>',
 };
 
 export function iconSvg(name, color, size = 38) {

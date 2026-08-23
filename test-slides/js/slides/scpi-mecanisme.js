@@ -5,8 +5,9 @@ import { renderChapRail, iconSvg } from "./_chapitre.js";
 // "Gabarits chapitre SCPI") — révélation progressive cumulative à 5
 // états (opts.stateIndex direct, même mécanisme que "Les atouts") :
 // état 1 = l'investisseur ET la SCPI ensemble (le couple associé/
-// véhicule, socle du schéma) ; état 2 = + la flèche "souscription de
-// parts" ; état 3 = + la flèche "distribution de revenus" ; état 4 = +
+// véhicule, socle du schéma) ; état 2 = + la flèche "copropriétaire"
+// (souscription de parts) ; état 3 = + la flèche "distribution de
+// revenus" ; état 4 = +
 // la société de gestion (et sa flèche "gestion clé en main") ; état 5 =
 // + l'AMF (et ses deux liaisons pointillées). Chaque flux n'apparaît
 // qu'entre deux cases déjà affichées — jamais une flèche vers une case
@@ -101,7 +102,6 @@ export function render(slide, opts = {}) {
     width: 25.78125,
     height: 12.1875,
     cls: "scpi-mecanisme__box--vehicule",
-    icon: "immeuble",
     kicker: "Le véhicule",
     titre: "La SCPI",
     extra: `<div class="scpi-mecanisme__actifs">${actifsHtml}</div>`,
@@ -141,7 +141,7 @@ export function render(slide, opts = {}) {
     : "";
 
   const souscriptionFlow = showSouscription
-    ? flowLabelHtml(21.25, 13.59375, 11.015625, "Souscription de parts", false, souscriptionEntering)
+    ? flowLabelHtml(21.25, 13.59375, 11.015625, "Copropriétaire", false, souscriptionEntering)
     : "";
   const distributionFlow = showDistribution
     ? flowLabelHtml(21.25, 19.84375, 11.015625, "Distribution de revenus", true, distributionEntering)

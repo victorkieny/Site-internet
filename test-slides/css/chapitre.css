@@ -1575,7 +1575,7 @@
   letter-spacing: -0.05em;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
-  color: var(--or);
+  color: var(--vert);
 }
 
 .rachat-apres8__who {
@@ -2063,25 +2063,28 @@
    hôtellerie, voir ACTIF_ICONS en JS) plutôt qu'une puce de texte —
    4 colonnes égales pour rester lisibles même sur le mot le plus long
    ("Hôtellerie"), jamais un flex-wrap qui recase au hasard. */
+/* 2×2 plutôt qu'une seule rangée de 4 : occupe mieux la hauteur
+   disponible sous le titre (plus d'icône dans l'en-tête, voir
+   scpi-mecanisme.js) et permet des pictogrammes bien plus grands, plus
+   lisibles au premier coup d'œil que serrés sur une rangée. */
 .scpi-mecanisme__actifs {
   margin-top: auto;
-  padding: 0.859375cqw 0 0;
+  padding: 0.859375cqw 0.9375cqw 0;
   border-top: 0.078125cqw solid rgba(var(--chap-ink-rgb), 0.16);
-  display: flex;
-  gap: 0.78125cqw;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.46875cqw 0;
 }
 
 .scpi-mecanisme__actif {
-  flex: 1 1 0;
-  min-width: 0;
   display: flex;
   justify-content: center;
 }
 
 .scpi-mecanisme__actif .chap-icon {
   flex: none;
-  width: 1.953125cqw;
-  height: 1.953125cqw;
+  width: 3.125cqw;
+  height: 3.125cqw;
 }
 
 .scpi-mecanisme__flow {
