@@ -13,19 +13,16 @@ const CASES = [
     icon: "sablier",
     kicker: "À la souscription",
     titre: "6 mois de délai de jouissance",
-    texte: "Les parts commencent à percevoir des revenus environ 6 mois après leur souscription.",
   },
   {
     icon: "cycle",
     kicker: "En cours de détention",
     titre: "Versement trimestriel",
-    texte: "Les loyers perçus par la SCPI sont reversés aux associés chaque trimestre.",
   },
   {
     icon: "echange",
     kicker: "À la revente",
     titre: "Liquidité des parts",
-    texte: "La revente s'organise via le marché secondaire de la société de gestion, sans garantie de délai ni de capital.",
   },
 ];
 
@@ -39,7 +36,6 @@ function boxHtml(item, { visible, entering }) {
         ${iconSvg(item.icon, "rgba(var(--chap-ink-rgb),.65)")}
         <span class="scpi-cadence__titre">${escapeHtml(item.titre)}</span>
       </span>
-      <p class="scpi-cadence__texte">${escapeHtml(item.texte)}</p>
     </div>
   `;
 }

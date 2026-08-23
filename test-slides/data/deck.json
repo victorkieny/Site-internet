@@ -85,21 +85,9 @@
       "picto": "disponibilite",
       "lead": "Votre épargne reste disponible à tout moment, elle n'est jamais bloquée.",
       "regles": [
-        {
-          "numero": "1",
-          "label": "Rendement",
-          "texte": "Viser plus de performance qu'un livret bancaire, par une gestion personnalisée et un large choix d'actifs."
-        },
-        {
-          "numero": "2",
-          "label": "Fiscalité",
-          "texte": "Aucune fiscalité tant que l'épargne reste investie. À la sortie, des abattements avantageux et une réduction d'impôt sur le revenu."
-        },
-        {
-          "numero": "3",
-          "label": "Transmission",
-          "texte": "L'outil le plus avantageux pour sécuriser ses proches."
-        }
+        { "numero": "1", "label": "Rendement" },
+        { "numero": "2", "label": "Fiscalité" },
+        { "numero": "3", "label": "Transmission" }
       ],
       "states": [{}, {}, {}, {}, {}]
     },
@@ -254,7 +242,7 @@
           "legend": [
             {
               "dot": "bleu",
-              "texte": "Sur un livret bancaire, la totalité des intérêts est imposée, année après année",
+              "texte": "Intérêts imposés",
               "muted": false
             },
             { "dot": "encre", "texte": "Capital versé", "muted": true }
@@ -265,7 +253,7 @@
           "legend": [
             {
               "dot": "vert",
-              "texte": "En assurance vie, aucun intérêt n'est imposé tant que l'épargne reste investie",
+              "texte": "Intérêts non imposés",
               "muted": false
             },
             { "dot": "encre", "texte": "Capital versé", "muted": true }
@@ -276,7 +264,7 @@
           "legend": [
             {
               "dot": "bleu",
-              "texte": "La fraction d'intérêts contenue dans le rachat entre seule dans l'assiette imposable",
+              "texte": "Intérêts imposés",
               "muted": false
             },
             {
@@ -286,7 +274,7 @@
             },
             {
               "dot": "vert",
-              "texte": "Le reste des intérêts continue de courir, hors fiscalité",
+              "texte": "Intérêts non imposés",
               "muted": true
             }
           ],
@@ -302,18 +290,13 @@
           "svg": "coin-or",
           "legend": [
             {
-              "dot": "or",
-              "texte": "Après 8 ans, l'abattement annuel permet de supprimer l'imposition sur les intérêts retirés",
+              "dot": "vert",
+              "texte": "Intérêts non imposés",
               "muted": false
             },
             {
               "dot": "encre",
               "texte": "La part de capital retirée n'est jamais imposée",
-              "muted": true
-            },
-            {
-              "dot": "vert",
-              "texte": "Le reste des intérêts continue de courir, hors fiscalité",
               "muted": true
             }
           ],

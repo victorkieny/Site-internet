@@ -684,7 +684,7 @@
 .chap-regles__grid {
   flex: none;
   width: 100%;
-  min-height: 10.703125cqw;
+  min-height: 5.390625cqw;
   display: grid;
   column-gap: 3.4375cqw;
 }
@@ -728,14 +728,6 @@
   font-size: 1.25cqw;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-}
-
-.chap-regle__text {
-  margin: 0;
-  font-weight: 450;
-  font-size: 1.171875cqw;
-  line-height: 1.5;
-  color: rgba(var(--chap-ink-rgb), 0.72);
 }
 
 /* ---------- Gabarit "Épargne dormante" (slide 3, optionnelle) ----------
@@ -1014,11 +1006,11 @@
    l'état 7 (voir showHyp en JS), qui ne fait apparaître qu'elle. */
 .impact-fiscal__lead {
   margin-top: 1.71875cqw;
-  max-width: 50cqw;
   font-weight: 600;
   font-size: 1.40625cqw;
   line-height: 1.4;
   text-align: center;
+  white-space: nowrap;
   color: rgba(var(--chap-ink-rgb), 0.85);
 }
 
@@ -2083,25 +2075,13 @@
   flex: 1 1 0;
   min-width: 0;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.390625cqw;
+  justify-content: center;
 }
 
 .scpi-mecanisme__actif .chap-icon {
   flex: none;
-  width: 1.5625cqw;
-  height: 1.5625cqw;
-}
-
-.scpi-mecanisme__actif-label {
-  font-weight: 700;
-  font-size: 0.6640625cqw;
-  letter-spacing: 0.1em;
-  line-height: 1.2;
-  text-transform: uppercase;
-  text-align: center;
-  color: rgba(var(--chap-ink-rgb), 0.55);
+  width: 1.953125cqw;
+  height: 1.953125cqw;
 }
 
 .scpi-mecanisme__flow {
@@ -2791,17 +2771,16 @@
   font-size: max(1.7rem, 3.125cqw);
 }
 
-/* Hauteur réservée au cas le plus haut (texte le plus long, "Liquidité
-   des parts") : .scpi-cadence__stage est centré verticalement dans la
-   slide (margin:auto 0) — sans ce plancher, sa hauteur varie avec le
-   texte de la dernière case révélée, et le centrage déplace les 3
-   blocs d'un état à l'autre (même cause que .scpi-atouts__stage, voir
-   plus haut dans ce fichier). */
+/* Plancher explicite à la hauteur d'une case pleine (kicker + icône +
+   titre), plutôt que de compter sur le fait qu'une case révélée est
+   toujours présente pour dimensionner la rangée : .scpi-cadence__stage
+   est centré verticalement dans la slide (margin:auto 0), voir
+   .scpi-atouts__stage plus haut dans ce fichier pour la même logique. */
 .scpi-cadence__stage {
   margin: auto 0;
   display: flex;
   gap: 2.34375cqw;
-  min-height: 13.4375cqw;
+  min-height: 8cqw;
 }
 
 .scpi-cadence__box {
@@ -2847,14 +2826,6 @@
   font-weight: 400;
   font-size: 1.40625cqw;
   line-height: 1.15;
-}
-
-.scpi-cadence__texte {
-  margin: 0;
-  font-weight: 450;
-  font-size: 1.015625cqw;
-  line-height: 1.5;
-  color: rgba(var(--chap-ink-rgb), 0.7);
 }
 
 /* ---------- Gabarit "Clôture" (dernière slide du RDV, fond encre à la

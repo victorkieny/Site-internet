@@ -43,7 +43,6 @@ function regleHtml(regle, { visible, entering }) {
         <span class="chap-regle__num">${escapeHtml(regle.numero)}</span>
         <span class="chap-regle__label">${escapeHtml(regle.label)}</span>
       </div>
-      <p class="chap-regle__text">${escapeHtml(regle.texte)}</p>
     </div>
   `;
 }

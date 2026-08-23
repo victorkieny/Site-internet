@@ -66,8 +66,7 @@ export function render(slide, opts = {}) {
         .toLowerCase();
       return `
         <div class="scpi-mecanisme__actif">
-          ${iconSvg(ACTIF_ICONS[key] || "", "rgba(var(--chap-ink-rgb),.65)", 22)}
-          <span class="scpi-mecanisme__actif-label">${escapeHtml(a)}</span>
+          ${iconSvg(ACTIF_ICONS[key] || "", "rgba(var(--chap-ink-rgb),.65)", 28)}
         </div>
       `;
     })

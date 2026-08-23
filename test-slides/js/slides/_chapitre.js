@@ -138,16 +138,17 @@ export const ICONS = {
   // marché secondaire) : un échange, pas un flux à sens unique comme
   // les flèches du schéma "Comment ça marche".
   echange: '<path d="M4 8H17M17 8L13.5 4.5M17 8L13.5 11.5"/><path d="M20 16H7M7 16L10.5 12.5M7 16L10.5 19.5"/>',
-  // Les 4 classes d'actifs de la SCPI ("Comment ça marche") — un
-  // pictogramme par mot (bureaux/commerces/santé/hôtellerie), pas une
-  // variante du même immeuble : chacun doit se distinguer au premier
-  // coup d'œil des autres icônes du même schéma (immeuble, cle).
-  bureaux:
-    '<rect x="3.5" y="8.5" width="17" height="12" rx="1.8"/><path d="M9 8.5V6.6C9 5.4 9.9 4.5 11.1 4.5H12.9C14.1 4.5 15 5.4 15 6.6V8.5"/><path d="M3.5 13.5H20.5"/>',
-  commerces: '<path d="M6.5 8H17.5L16.6 20.5H7.4L6.5 8Z"/><path d="M9 8V6.3C9 4.5 10.3 3 12 3C13.7 3 15 4.5 15 6.3V8"/>',
-  sante: '<circle cx="12" cy="12" r="8.6"/><path d="M12 7.5V16.5M7.5 12H16.5"/>',
-  hotellerie:
-    '<path d="M3 20V8.5"/><path d="M3 19H21V14.3C21 12.6 19.6 11.2 17.9 11.2H10V19"/><circle cx="6.8" cy="9" r="2.2"/>',
+  // Les 4 classes d'actifs de la SCPI ("Comment ça marche") — chacune un
+  // bâtiment (silhouette rectangulaire posée au sol), pas une variante du
+  // même immeuble générique : un gabarit propre (tour/façade basse) +
+  // un seul glyphe distinctif par usage, pour se reconnaître d'un coup
+  // d'œil sans légende (bureaux : tour + fenêtres en grille ; commerces :
+  // façade basse + auvent + porte ; santé : bâtiment + croix ;
+  // hôtellerie : bâtiment + fanion, signalétique classique de l'hôtel).
+  bureaux: '<rect x="7.5" y="2.5" width="9" height="19"/><path d="M7.5 7.5H16.5M7.5 12.5H16.5M7.5 17.5H16.5M12 2.5V21"/>',
+  commerces: '<rect x="4" y="9" width="16" height="12"/><path d="M4 9 L6.5 4 H17.5 L20 9"/><path d="M10 21V15H14V21"/>',
+  sante: '<rect x="5" y="6" width="14" height="15"/><path d="M12 10V17M8.5 13.5H15.5"/>',
+  hotellerie: '<rect x="6" y="7.5" width="12" height="13.5"/><path d="M9 7.5V2.5"/><path d="M9 2.5 L15 4.75 L9 7 Z"/>',
 };
 
 export function iconSvg(name, color, size = 38) {

@@ -18,7 +18,6 @@ const DOT_COLOR = {
   neutre: "rgba(var(--encre-rgb),.26)",
   bleu: "var(--rouge)",
   vert: "var(--vert)",
-  or: "var(--or)",
 };
 
 // Rayon du disque de capital et rayon (au centre du trait) de l'anneau
@@ -208,18 +207,20 @@ export function render(slide, opts = {}) {
     capitalInner = CAPITAL_MAJORITY + `<g${coinGroupAttrs(detaching)}>${CAPITAL_COIN}</g>`;
     interetsInner = INTERETS_MAJORITY + `<g${coinGroupAttrs(detaching)}>${interetsCoinArcHtml("var(--rouge)", false)}</g>`;
   } else if (svgKey === "coin-or") {
-    // Passage bleu -> or : le coin ne bouge plus (déjà détaché à l'état
-    // précédent, voir coinGroupAttrs(false) — les deux groupes restent
-    // statiques à leur position). Seule sa couleur change, et seulement
-    // côté intérêts (le capital reste encre, inchangé) : l'or (pas le
-    // vert de la portion majoritaire — ici on distingue l'effet de
-    // l'abattement, un repère chiffré, du simple "non imposé" ambiant)
+    // Passage bleu -> vert : le coin ne bouge plus (déjà détaché à
+    // l'état précédent, voir coinGroupAttrs(false) — les deux groupes
+    // restent statiques à leur position). Seule sa couleur change, et
+    // seulement côté intérêts (le capital reste encre, inchangé) : le
+    // vert (même couleur que la portion majoritaire — l'abattement
+    // n'est plus distingué d'un simple "non imposé", même code partout)
     // se déploie en rotation par-dessus le bleu, même technique que les
-    // anneaux (voir couronneRingsHtml) appliquée à ce petit arc.
+    // anneaux (voir couronneRingsHtml) appliquée à ce petit arc. Clé
+    // "coin-or" gardée telle quelle (comme "bleu" plus haut porte le
+    // rouge) : c'est le nom de l'état, pas la couleur rendue.
     capitalInner = CAPITAL_MAJORITY + `<g${coinGroupAttrs(false)}>${CAPITAL_COIN}</g>`;
     interetsInner =
       INTERETS_MAJORITY +
-      `<g${coinGroupAttrs(false)}>${interetsCoinArcHtml("var(--rouge)", false)}${interetsCoinArcHtml("var(--or)", animate)}</g>`;
+      `<g${coinGroupAttrs(false)}>${interetsCoinArcHtml("var(--rouge)", false)}${interetsCoinArcHtml("var(--vert)", animate)}</g>`;
   }
 
   // Le bloc des règles fiscales est toujours rendu, même vide : sinon sa
