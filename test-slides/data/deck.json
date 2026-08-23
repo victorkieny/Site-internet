@@ -281,8 +281,7 @@
           "avant8": {
             "label": "Avant 8 ans",
             "lignes": [
-              "Fiscalité standard : PFU de 12,8 % + prélèvements sociaux de 17,2 %",
-              "PFL de 7,5 % au-delà de 150 000 € de primes versées"
+              "Imposition de 30 % sur les intérêts générés"
             ]
           }
         },
@@ -303,8 +302,7 @@
           "avant8": {
             "label": "Avant 8 ans",
             "lignes": [
-              "Fiscalité standard : PFU de 12,8 % + prélèvements sociaux de 17,2 %",
-              "PFL de 7,5 % au-delà de 150 000 € de primes versées"
+              "Imposition de 30 % sur les intérêts générés"
             ]
           },
           "apres8": {
