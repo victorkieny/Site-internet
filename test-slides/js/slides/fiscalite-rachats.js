@@ -126,6 +126,7 @@ function avant8Html(bloc) {
 
 function apres8Html(bloc) {
   if (!bloc) return "";
+  const [firstLigne, ...restLignes] = bloc.lignes || [];
   const montants = (bloc.montants || [])
     .map(
       (m) => `
@@ -139,15 +140,19 @@ function apres8Html(bloc) {
     `
     )
     .join("");
+  // Comme .rachat-avant8 : la 1re ligne suit le label sur la même ligne,
+  // les suivantes s'empilent en dessous (même style de texte, pas de
+  // second label) — pas de note séparée après les montants.
+  const restLignesHtml = restLignes.map((l) => `<p class="rachat-line__text">${escapeHtml(l)}</p>`).join("");
 
   return `
     <div class="rachat-apres8">
       <div class="rachat-line">
         <span class="rachat-line__label">${escapeHtml(bloc.label)} :</span>
-        <span class="rachat-line__text">${escapeHtml(bloc.intro)}</span>
+        <span class="rachat-line__text">${escapeHtml(firstLigne)}</span>
       </div>
+      ${restLignesHtml}
       <div class="rachat-apres8__amounts">${montants}</div>
-      <p class="rachat-apres8__note">${escapeHtml(bloc.note)}</p>
     </div>
   `;
 }

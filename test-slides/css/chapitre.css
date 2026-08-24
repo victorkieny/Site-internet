@@ -1522,7 +1522,12 @@
   color: rgba(var(--chap-ink-rgb), 1);
 }
 
+/* Utilisée en <span> (première ligne, à côté du label) ou en <p>
+   (lignes suivantes, empilées dessous, voir apres8Html) — margin:0 pour
+   que ce soit le gap du conteneur qui règle l'espacement, jamais la
+   marge par défaut du <p>. */
 .rachat-line__text {
+  margin: 0;
   font-weight: 450;
   font-size: 1.09375cqw;
   line-height: 1.45;
@@ -1583,14 +1588,6 @@
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: rgba(var(--chap-ink-rgb), 0.55);
-}
-
-.rachat-apres8__note {
-  margin: 0;
-  font-weight: 450;
-  font-size: 1.09375cqw;
-  line-height: 1.5;
-  color: rgba(var(--chap-ink-rgb), 0.72);
 }
 
 /* ---------- Gabarit "Transmission" (2 colonnes : principe / donation) ---------- */
@@ -1812,7 +1809,7 @@
      (plus grande taille de police) : sans correction, les points
      "..." rendent visuellement plus bas que le bas des montants à
      côté — remonté d'autant. */
-  margin-top: -0.234375cqw;
+  margin-top: -1.09375cqw;
   font-family: var(--font-serif-chapitre);
   font-size: 2.1875cqw;
   line-height: 1;

@@ -307,12 +307,14 @@
           },
           "apres8": {
             "label": "Après 8 ans",
-            "intro": "Les intérêts en dessous des abattements sont exonérés d'impôt sur le revenu",
+            "lignes": [
+              "L'impôt sur le revenu est réduit à 7,5 %.",
+              "Les intérêts en dessous des abattements annuels ne sont pas imposés."
+            ],
             "montants": [
               { "valeur": 4600, "who": "Personne seule", "icon": "personne" },
               { "valeur": 9200, "who": "Couple", "icon": "couple" }
-            ],
-            "note": "Abattement annuel sur les intérêts retirés. Seuls les intérêts contenus dans le rachat entrent dans l'assiette imposable, jamais le capital."
+            ]
           }
         },
         {}
