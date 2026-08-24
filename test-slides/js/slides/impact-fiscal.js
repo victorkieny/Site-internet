@@ -102,7 +102,7 @@ function introCuveHtml({ fillColor, label, escaping, introState, animate }) {
   // greenShown), l'or se distingue mal — bascule vers la couleur du fond
   // de la slide (papier) pour qu'il reste lisible, en négatif du vert.
   const shield = protectShown
-    ? `<div class="cuve__shield" style="bottom:${INTRO_CAPITAL_H + INTRO_INTEREST_H / 2}cqw"><span class="cuve__shield-inner${protectEntering ? " is-entering" : ""}"${protectEntering ? " data-reveal" : ""}>${iconSvg("bouclier", greenShown ? "var(--papier)" : "var(--or)", 26)}</span></div>`
+    ? `<div class="cuve__shield" style="bottom:${INTRO_CAPITAL_H + INTRO_INTEREST_H / 2}cqw"><span class="cuve__shield-inner${protectEntering ? " is-entering" : ""}"${protectEntering ? " data-reveal" : ""}>${iconSvg("bouclier", greenShown ? "var(--papier)" : "var(--or)", 40)}</span></div>`
     : "";
 
   // Toujours rendu dès l'état 1 (juste invisible, voir --invisible),

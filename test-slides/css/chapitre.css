@@ -1235,6 +1235,11 @@
     transform var(--chap-duration-move) var(--chap-ease-move);
 }
 
+.cuve__shield-inner .chap-icon {
+  width: 3.125cqw;
+  height: 3.125cqw;
+}
+
 .cuve__shield-inner.is-entering {
   opacity: 0;
   transform: scale(0.5);
