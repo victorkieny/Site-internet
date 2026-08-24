@@ -15,15 +15,82 @@ import { renderChapRail, iconSvg } from "./_chapitre.js";
 // 1280 de large, convertis en cqw — voir chapitre.css en tête de
 // fichier), pas réinventée.
 
-// Mot (normalisé, sans accent/casse) -> clé d'icône dans ICONS
-// (_chapitre.js). Couvre exactement les 4 classes d'actifs du deck de
-// base — un mot non couvert affiche juste son libellé sans icône.
-const ACTIF_ICONS = {
-  bureaux: "bureaux",
-  commerces: "commerces",
-  sante: "sante",
-  hotellerie: "hotellerie",
+// Pictogrammes fournis tels quels par le client (Claude Design,
+// assets/icons/{bureau,commerce,hotel,sante}.svg) — viewBox, paths/
+// rects/lines et stroke-width repris EXACTEMENT du fichier source, rien
+// redessiné ni réinterprété. Chaque icône garde son propre viewBox (pas
+// la grille 24×24 partagée de _chapitre.js/ICONS, à laquelle ces tracés
+// ne sont pas destinés) ; seule la couleur d'origine (#33312c, figée
+// dans les fichiers exportés) est remplacée par la variable d'encre du
+// thème, pour suivre --chap-ink-rgb comme le reste du deck (encre sur
+// papier, papier sur encre) plutôt que de rester figée si ce gabarit
+// est un jour réutilisé sur fond encre.
+const ACTIF_ICONS_RAW = {
+  bureaux: {
+    viewBox: "6.5 12.5 63 57",
+    strokeWidth: 2.08,
+    markup: `
+      <rect x="8" y="34" width="16" height="34"></rect>
+      <rect x="26" y="14" width="22" height="54"></rect>
+      <rect x="50" y="26" width="18" height="42"></rect>
+      <line x1="12" y1="42" x2="16" y2="42"></line><line x1="12" y1="50" x2="16" y2="50"></line><line x1="12" y1="58" x2="16" y2="58"></line>
+      <line x1="31" y1="22" x2="35" y2="22"></line><line x1="39" y1="22" x2="43" y2="22"></line>
+      <line x1="31" y1="30" x2="35" y2="30"></line><line x1="39" y1="30" x2="43" y2="30"></line>
+      <line x1="31" y1="38" x2="35" y2="38"></line><line x1="39" y1="38" x2="43" y2="38"></line>
+      <line x1="31" y1="46" x2="35" y2="46"></line><line x1="39" y1="46" x2="43" y2="46"></line>
+      <line x1="54" y1="33" x2="58" y2="33"></line><line x1="62" y1="33" x2="64" y2="33"></line>
+      <line x1="54" y1="41" x2="58" y2="41"></line><line x1="62" y1="41" x2="64" y2="41"></line>
+      <line x1="54" y1="49" x2="58" y2="49"></line><line x1="62" y1="49" x2="64" y2="49"></line>
+    `,
+  },
+  commerces: {
+    viewBox: "10.5 8.5 51 59",
+    strokeWidth: 2.15,
+    markup: `
+      <path d="M12 24 L16 10 H56 L60 24 Z"></path>
+      <line x1="12" y1="24" x2="60" y2="24"></line>
+      <line x1="20" y1="24" x2="18" y2="18"></line><line x1="28" y1="24" x2="27" y2="16"></line><line x1="36" y1="24" x2="36" y2="16"></line>
+      <line x1="44" y1="24" x2="45" y2="16"></line><line x1="52" y1="24" x2="54" y2="18"></line>
+      <rect x="16" y="24" width="40" height="42"></rect>
+      <rect x="30" y="46" width="12" height="20"></rect>
+      <rect x="20" y="32" width="9" height="9"></rect>
+      <rect x="43" y="32" width="9" height="9"></rect>
+    `,
+  },
+  hotellerie: {
+    viewBox: "12.5 4.5 51 81",
+    strokeWidth: 3,
+    markup: `
+      <rect x="22" y="6" width="32" height="12"></rect>
+      <text x="38" y="15" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="7" font-weight="700" fill="rgba(var(--chap-ink-rgb),.65)" stroke="none">HOTEL</text>
+      <rect x="14" y="18" width="48" height="66"></rect>
+      <rect x="21" y="28" width="8" height="11"></rect><rect x="34" y="28" width="8" height="11"></rect><rect x="47" y="28" width="8" height="11"></rect>
+      <rect x="21" y="46" width="8" height="11"></rect><rect x="34" y="46" width="8" height="11"></rect><rect x="47" y="46" width="8" height="11"></rect>
+      <rect x="21" y="64" width="8" height="11"></rect><rect x="34" y="64" width="8" height="11"></rect><rect x="47" y="64" width="8" height="11"></rect>
+    `,
+  },
+  sante: {
+    viewBox: "2.5 10.5 71 59",
+    strokeWidth: 2.3,
+    markup: `
+      <rect x="22" y="12" width="32" height="56"></rect>
+      <path d="M34 18 H42 V24 H48 V32 H42 V38 H34 V32 H28 V24 H34 Z"></path>
+      <rect x="27" y="44" width="8" height="9"></rect>
+      <rect x="41" y="44" width="8" height="9"></rect>
+      <rect x="32" y="58" width="12" height="10"></rect>
+      <rect x="4" y="26" width="18" height="42"></rect>
+      <rect x="54" y="26" width="18" height="42"></rect>
+      <rect x="10" y="33" width="6" height="8"></rect><rect x="10" y="45" width="6" height="8"></rect><rect x="10" y="57" width="6" height="8"></rect>
+      <rect x="60" y="33" width="6" height="8"></rect><rect x="60" y="45" width="6" height="8"></rect><rect x="60" y="57" width="6" height="8"></rect>
+    `,
+  },
 };
+
+function actifIconSvg(key) {
+  const icon = ACTIF_ICONS_RAW[key];
+  if (!icon) return "";
+  return `<svg class="chap-icon" viewBox="${icon.viewBox}" fill="none" stroke="rgba(var(--chap-ink-rgb),.65)" stroke-width="${icon.strokeWidth}" stroke-linecap="round" stroke-linejoin="round">${icon.markup}</svg>`;
+}
 
 function boxHtml({ left, top, width, height, cls, icon, kicker, titre, texte, extra, entering }) {
   const boxCls = "scpi-mecanisme__box" + (cls ? " " + cls : "") + (entering ? " is-entering" : "");
@@ -67,7 +134,7 @@ export function render(slide, opts = {}) {
         .toLowerCase();
       return `
         <div class="scpi-mecanisme__actif">
-          ${iconSvg(ACTIF_ICONS[key] || "", "rgba(var(--chap-ink-rgb),.65)", 28)}
+          ${actifIconSvg(key)}
         </div>
       `;
     })

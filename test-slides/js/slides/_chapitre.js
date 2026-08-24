@@ -133,18 +133,11 @@ export const ICONS = {
   // marché secondaire) : un échange, pas un flux à sens unique comme
   // les flèches du schéma "Comment ça marche".
   echange: '<path d="M4 8H17M17 8L13.5 4.5M17 8L13.5 11.5"/><path d="M20 16H7M7 16L10.5 12.5M7 16L10.5 19.5"/>',
-  // Les 4 classes d'actifs de la SCPI ("Comment ça marche") — chacune un
-  // bâtiment reconnaissable à sa silhouette ET à un trait d'architecture
-  // propre à son usage (pas juste un glyphe ajouté sur le même immeuble
-  // générique) : bureaux = tour étroite à grille dense de fenêtres ;
-  // commerces = façade basse et large avec auvent + vitrine ; santé =
-  // bâtiment avec croix ; hôtellerie = bâtiment avec porche/auvent
-  // d'entrée (porte-cochère), pas un fanion trop discret à petite
-  // taille.
-  bureaux: '<rect x="6" y="2.5" width="12" height="19"/><path d="M6 7.5H18M6 12.5H18M6 17.5H18M10 2.5V21M14 2.5V21"/>',
-  commerces: '<rect x="3" y="9" width="18" height="12"/><path d="M2 9H22"/><path d="M6 21V13H12V21M15 21V13H18V21"/>',
-  sante: '<rect x="4.5" y="6" width="15" height="15"/><path d="M12 9.5V17.5M8 13.5H16"/>',
-  hotellerie: '<rect x="5" y="4.5" width="14" height="16.5"/><path d="M9.5 21V15.5H14.5V21"/><path d="M6 15.5 A6 4.2 0 0 1 18 15.5"/>',
+  // Les 4 classes d'actifs de la SCPI ("Comment ça marche") ne sont plus
+  // ici : ce sont désormais les pictogrammes fournis tels quels par le
+  // client (assets/icons/*.svg, dessinés dans Claude Design), chacun
+  // avec son propre viewBox — voir ACTIF_ICONS_RAW dans
+  // scpi-mecanisme.js, pas la grille 24×24 partagée de ce fichier.
 };
 
 export function iconSvg(name, color, size = 38) {
