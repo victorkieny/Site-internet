@@ -442,7 +442,7 @@
         { "numero": "03", "libelle": "Préconisations" }
       ],
       "titre": "Préconisations patrimoniales",
-      "budget": "Quel effort d'épargne mensuel êtes-vous prêt à consacrer, entre versements programmés et capacité d'endettement ?",
+      "budget": "Effort d'épargne mensuel : 1 000 €/mois, capacité d'endettement incluse · jusqu'à 3 000 € complémentaires possibles, hors épargne de précaution, PEA et CTO.",
       "preconisations": [
         {
           "nom": "Assurance-vie",
