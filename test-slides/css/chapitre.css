@@ -533,7 +533,7 @@
 .section-title__sub {
   margin-top: 1.71875cqw;
   font-weight: 700;
-  font-size: 0.8203125cqw;
+  font-size: 1.23046875cqw;
   letter-spacing: 0.22em;
   text-transform: uppercase;
   white-space: nowrap;
@@ -563,7 +563,7 @@
 
 .chap-regles__kicker {
   font-weight: 700;
-  font-size: 0.8203125cqw;
+  font-size: 1.23046875cqw;
   letter-spacing: 0.22em;
   text-transform: uppercase;
   white-space: nowrap;
@@ -587,7 +587,7 @@
   margin: 1.40625cqw 0 0;
   max-width: 56.25cqw;
   font-weight: 450;
-  font-size: 1.25cqw;
+  font-size: 1.875cqw;
   line-height: 1.55;
   text-align: center;
   color: rgba(var(--chap-ink-rgb), 0.72);
@@ -768,7 +768,7 @@
   margin: 1.09375cqw 0 0;
   max-width: 54.6875cqw;
   font-weight: 450;
-  font-size: 1.171875cqw;
+  font-size: 1.7578125cqw;
   line-height: 1.5;
   text-align: center;
   color: rgba(var(--chap-ink-rgb), 0.65);
@@ -1016,7 +1016,7 @@
 .impact-fiscal__lead {
   margin-top: 1.71875cqw;
   font-weight: 600;
-  font-size: 1.40625cqw;
+  font-size: 2.109375cqw;
   line-height: 1.4;
   text-align: center;
   white-space: nowrap;
@@ -1617,7 +1617,7 @@
 .transmission__sub {
   margin: 0;
   font-weight: 450;
-  font-size: 1.09375cqw;
+  font-size: 1.640625cqw;
   color: rgba(var(--chap-ink-rgb), 0.6);
 }
 
@@ -1893,7 +1893,7 @@
 .synthese-chapitre__kicker {
   margin: 0;
   font-weight: 700;
-  font-size: 0.8203125cqw;
+  font-size: 1.23046875cqw;
   letter-spacing: 0.22em;
   text-transform: uppercase;
   white-space: nowrap;
@@ -2298,13 +2298,19 @@
    l'échelle d'espacement générique (le centrage par marge auto de la
    scène rend la relation non linéaire).
 */
+/* min-height calé sur 2 lignes (voir mesure dans scpi-financement.js) :
+   le paragraphe est toujours rendu, même vide (un espace, voir
+   --invisible) — sans plancher explicite, le placeholder d'un seul
+   caractère ne ferait qu'une ligne et la scène (centrée par margin:auto,
+   voir .scpi-financement__stage) sauterait entre états. */
 .scpi-financement__desc {
-  margin: 3.125cqw 0 0;
+  margin: 1.765625cqw auto 0;
+  max-width: 72cqw;
+  min-height: 6.328125cqw;
   font-weight: 600;
-  font-size: 1.40625cqw;
+  font-size: 2.109375cqw;
   line-height: 1.5;
   text-align: center;
-  white-space: nowrap;
   color: rgba(var(--chap-ink-rgb), 0.85);
 }
 
@@ -2863,12 +2869,12 @@
 }
 
 .cloture__budget {
-  margin: 1.09375cqw 0 0;
+  margin: 1.09375cqw auto 0;
+  max-width: 68.75cqw;
   font-weight: 450;
-  font-size: 1.09375cqw;
+  font-size: 1.640625cqw;
   line-height: 1.5;
   text-align: center;
-  white-space: nowrap;
   color: rgba(var(--chap-ink-rgb), 0.65);
 }
 
