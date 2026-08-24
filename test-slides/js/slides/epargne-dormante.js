@@ -43,7 +43,6 @@ export function render(slide, opts = {}) {
 
       <div class="epargne-dormante__intro">
         <h1 class="chap-title epargne-dormante__title">${escapeHtml(slide.titre)}</h1>
-        <p class="epargne-dormante__lead">${escapeHtml(slide.lead)}</p>
       </div>
 
       ${slide.diagrammeIntro ? `<p class="epargne-dormante__diagram-intro">${escapeHtml(slide.diagrammeIntro)}</p>` : ""}

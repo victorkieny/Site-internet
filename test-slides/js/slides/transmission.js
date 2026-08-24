@@ -19,12 +19,17 @@ import { renderChapRail, renderRailEtapes, iconSvg } from "./_chapitre.js";
 
 // 4e branche : un "..." plutôt qu'un 4e bénéficiaire chiffré, pour dire
 // "le nombre de bénéficiaires n'est pas limité à 3" — un repère, pas un
-// exemple de plus. TREE_X à 4 positions égales (1/8, 3/8, 5/8, 7/8 de
-// 300, mêmes fractions que .transmission__branches en flex:1 sans gap,
-// voir render()) plutôt que 3 : le rail doit s'étendre jusqu'à la
-// dernière branche, pas s'arrêter à l'avant-dernière.
-const TREE_X = [37.5, 112.5, 187.5, 262.5];
-const TREE_LEN_H = 225; // 262.5 - 37.5
+// exemple de plus. TREE_X à 4 positions égales, pas 3 : le rail doit
+// s'étendre jusqu'à la dernière branche, pas s'arrêter à l'avant-
+// dernière. Centres recalculés pour un espacement à 1cqw entre colonnes
+// (voir column-gap sur .transmission__branches, conteneur ~24,39cqw de
+// large à 4 colonnes) — sans ce recalcul les branches (alignées sur la
+// grille en dessous) se décaleraient des traits verticaux de l'arbre
+// (dessinés, eux, sur ce viewBox 0-300 fixe). TREE_LEN_H dérive du
+// premier/dernier centre plutôt qu'une valeur séparée, pour ne jamais
+// désynchroniser la longueur du rail (stroke-dasharray) de ces centres.
+const TREE_X = [32.887, 110.962, 189.038, 267.113];
+const TREE_LEN_H = TREE_X[TREE_X.length - 1] - TREE_X[0];
 const TREE_LEN_V = 60; // 70 - 10
 
 function treeHtml(entering) {

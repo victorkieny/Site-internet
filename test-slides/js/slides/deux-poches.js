@@ -26,7 +26,6 @@ function colBody(col) {
       <span class="deux-poches__name">${escapeHtml(col.nom)}</span>
       <span class="deux-poches__tag" ${tagStyle}>${escapeHtml(col.tag)}</span>
     </div>
-    <p class="deux-poches__lead">${escapeHtml(col.lead)}</p>
     ${(col.items || []).map((item) => itemHtml(item, iconColor)).join("")}
   `;
 }

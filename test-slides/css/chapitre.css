@@ -585,11 +585,11 @@
 
 .chap-regles__lead {
   margin: 1.40625cqw 0 0;
-  max-width: 56.25cqw;
   font-weight: 450;
   font-size: 1.875cqw;
   line-height: 1.55;
   text-align: center;
+  white-space: nowrap;
   color: rgba(var(--chap-ink-rgb), 0.72);
 }
 
@@ -598,11 +598,12 @@
 }
 
 /* Le sous-titre attend que le cadenas ait fini son animation d'ouverture
-   avant de commencer à apparaître (voir chapitre-regles.js) : même durée
-   que .chap-regles__picto--unlocking .chap-icon__shackle, posée en délai
+   avant de commencer à apparaître (voir chapitre-regles.js) : même délai
+   + durée totale que .chap-regles__picto--unlocking .chap-icon__shackle
+   (x1 avant l'ouverture + x3 pour l'ouverture elle-même), posée en délai
    plutôt qu'en état supplémentaire. */
 .chap-regles__lead[data-reveal] {
-  transition-delay: calc(var(--chap-duration-move) * 2);
+  transition-delay: calc(var(--chap-duration-move) * 4);
 }
 
 /* Halo temporaire sur le mot-clé du titre (état 2, en même temps que le
@@ -662,12 +663,18 @@
    ouvert) : l'anse pivote depuis une position fermée (approximativement
    symétrique, extrémité libre proche du corps) jusqu'à sa position
    dessinée (ouverte, extrémité détachée) — pivot sur le point où l'anse
-   rejoint le corps. Durée dérivée de --chap-duration-move (x2), comme le
-   pulse du halo : une seule source de vérité pour les durées. */
+   rejoint le corps. Délai d'un cran (x1) avant de démarrer : laisse le
+   temps de voir le cadenas fermé une fois le fondu d'apparition terminé,
+   plutôt qu'il ne commence à s'ouvrir pendant qu'il apparaît encore.
+   Ouverture elle-même ralentie (x3, pas x2) — un geste qu'on doit avoir
+   le temps de lire, pas un sursaut. Durées dérivées de
+   --chap-duration-move, comme le pulse du halo : une seule source de
+   vérité (voir aussi .chap-regles__lead[data-reveal] plus haut, qui
+   attend la fin de cette même animation avant d'apparaître). */
 .chap-regles__picto--unlocking .chap-icon__shackle {
   transform-box: view-box;
   transform-origin: 7px 11px;
-  animation: chap-lock-open calc(var(--chap-duration-move) * 2) var(--chap-ease-move);
+  animation: chap-lock-open calc(var(--chap-duration-move) * 3) var(--chap-ease-move) calc(var(--chap-duration-move) * 1) both;
 }
 
 @keyframes chap-lock-open {
@@ -764,18 +771,7 @@
   font-size: max(1.7rem, 3.125cqw);
 }
 
-.epargne-dormante__lead {
-  margin: 1.09375cqw 0 0;
-  max-width: 54.6875cqw;
-  font-weight: 450;
-  font-size: 1.7578125cqw;
-  line-height: 1.5;
-  text-align: center;
-  color: rgba(var(--chap-ink-rgb), 0.65);
-}
-
-/* Titre court introduisant le diagramme (pas le sous-titre général de la
-   slide, voir .epargne-dormante__lead) : sans-serif, poids marqué mais
+/* Titre court introduisant le diagramme : sans-serif, poids marqué mais
    plus petit que .epargne-dormante__title — juste assez de présence pour
    annoncer la chronologie sans concurrencer le titre principal. Porte
    margin-top:auto (déplacé depuis .epargne-dormante__grid ci-dessous) :
@@ -826,7 +822,7 @@
   padding-top: 0.9375cqw;
   border-top: 0.078125cqw solid rgba(var(--chap-ink-rgb), 0.3);
   font-weight: 700;
-  font-size: 0.9375cqw;
+  font-size: 1.09375cqw;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   text-align: center;
@@ -913,14 +909,6 @@
   letter-spacing: 0.18em;
   text-transform: uppercase;
   white-space: nowrap;
-}
-
-.deux-poches__lead {
-  margin: 0;
-  font-weight: 450;
-  font-size: 1.1328125cqw;
-  line-height: 1.5;
-  color: rgba(var(--chap-ink-rgb), 0.7);
 }
 
 .deux-poches__item {
@@ -1488,14 +1476,14 @@
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 0.703125cqw;
+  gap: 0.46875cqw;
 }
 
 .rachat-avant8 {
   display: flex;
   align-items: baseline;
   gap: 0.625cqw;
-  padding-top: 1.09375cqw;
+  padding-top: 0.859375cqw;
   border-top: 0.078125cqw solid rgba(var(--chap-ink-rgb), 0.25);
 }
 
@@ -1515,7 +1503,7 @@
 .rachat-line__label {
   flex: none;
   font-weight: 700;
-  font-size: 0.9375cqw;
+  font-size: 1.25cqw;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   white-space: nowrap;
@@ -1529,7 +1517,7 @@
 .rachat-line__text {
   margin: 0;
   font-weight: 450;
-  font-size: 1.09375cqw;
+  font-size: 1.40625cqw;
   line-height: 1.45;
   color: rgba(var(--chap-ink-rgb), 0.7);
 }
@@ -1547,8 +1535,8 @@
   grid-template-columns: auto 1fr;
   align-items: baseline;
   column-gap: 0.625cqw;
-  row-gap: 0.9375cqw;
-  padding-top: 1.09375cqw;
+  row-gap: 0.625cqw;
+  padding-top: 0.859375cqw;
   border-top: 0.078125cqw solid rgba(var(--chap-ink-rgb), 0.25);
 }
 
@@ -1600,7 +1588,7 @@
 
 .rachat-apres8__who {
   font-weight: 700;
-  font-size: 0.78125cqw;
+  font-size: 0.9375cqw;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: rgba(var(--chap-ink-rgb), 0.55);
@@ -1797,6 +1785,7 @@
 .transmission__branches {
   display: grid;
   width: 100%;
+  column-gap: 1cqw;
 }
 
 .transmission__branch {
