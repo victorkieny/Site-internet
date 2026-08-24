@@ -98,12 +98,11 @@ function introCuveHtml({ fillColor, label, escaping, introState, animate }) {
   // Le bouclier se pose au milieu de la zone grise (intérêts), pas
   // au-dessus : centré verticalement sur son point médian (bottom au
   // centre de la bande + translateY(50%) en CSS, voir .cuve__shield).
-  // Bleu sur fond gris (état 5, même teinte que la cuve bancaire) ; une
-  // fois le fond vert (état 6, voir greenShown), le bleu se distingue
-  // mal — bascule vers la couleur du fond de la slide (papier) pour
-  // qu'il reste lisible, en négatif du vert.
+  // Bleu sur fond gris (état 4) ; une fois le fond vert (état 5, voir
+  // greenShown), doré — c'est l'élément qui porte l'info clé (rien
+  // n'est jamais imposé), il redevient la couleur qui porte une donnée.
   const shield = protectShown
-    ? `<div class="cuve__shield" style="bottom:${INTRO_CAPITAL_H + INTRO_INTEREST_H / 2}cqw"><span class="cuve__shield-inner${protectEntering ? " is-entering" : ""}"${protectEntering ? " data-reveal" : ""}>${iconSvg("bouclier", greenShown ? "var(--papier)" : "var(--bleu)", 40)}</span></div>`
+    ? `<div class="cuve__shield" style="bottom:${INTRO_CAPITAL_H + INTRO_INTEREST_H / 2}cqw"><span class="cuve__shield-inner${protectEntering ? " is-entering" : ""}"${protectEntering ? " data-reveal" : ""}>${iconSvg("bouclier", greenShown ? "var(--or)" : "var(--bleu)", 40)}</span></div>`
     : "";
 
   // Toujours rendu dès l'état 1 (juste invisible, voir --invisible),
