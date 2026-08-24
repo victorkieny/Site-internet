@@ -84,8 +84,7 @@ const ETAPES = [
     desc: null,
   },
   {
-    desc: (v) =>
-      `Grâce à l'effet de levier, ${v.effM} pendant ${v.duree} ans représente un effort réel de ${v.effortTotal}, pour un patrimoine immobilier constitué de ${v.capital}.`,
+    desc: null,
   },
   {
     desc: (v) =>
@@ -193,6 +192,17 @@ export function render(slide, opts = {}) {
   const axisWidth = stateIndex >= 2 ? AXIS_END_CQW : STAGE_W;
   const axisAttrs = axisShrinking ? ` data-reveal data-reveal-width="${AXIS_END_CQW}cqw"` : "";
   const axisStyle = axisShrinking ? `width:${STAGE_W}cqw` : `width:${axisWidth}cqw`;
+
+  // Patrimoine cible (85 000 €, v.capital — jamais saisi en dur) :
+  // affiché dès l'état 1, au-dessus de la colonne. Centré sur la colonne
+  // elle-même (barWidth/2), pas sur la scène : suit donc la même
+  // transition que le repère de durée (tickAttrs/tickStyle ci-dessus)
+  // quand la colonne se rétracte au tiers à l'état 3 — aux états 1-2 la
+  // colonne occupe toute la largeur, donc ce centrage coïncide déjà avec
+  // le centrage sur la scène, sans cas particulier à coder.
+  const capitalLeft = stateIndex >= 2 ? THIRD_W / 2 : STAGE_W / 2;
+  const capitalAttrs = axisShrinking ? ` data-reveal data-reveal-left="${THIRD_W / 2}cqw"` : "";
+  const capitalStyle = axisShrinking ? `left:${STAGE_W / 2}cqw` : `left:${capitalLeft}cqw`;
 
   const effortAttrs = revenuGrowing ? ` data-reveal data-reveal-height="${v.hEff}cqw"` : "";
   const effortStyle = revenuGrowing ? `height:${BAR_HEIGHT_CQW}cqw` : `height:${effortHeight}cqw`;
@@ -314,6 +324,9 @@ export function render(slide, opts = {}) {
       </div>
 
       <div class="scpi-financement__stage">
+        <div class="scpi-financement__capital-cible"${capitalAttrs} style="${capitalStyle}">
+          <span class="scpi-financement__capital-cible-value">${v.capital}</span>
+        </div>
         ${
           stateIndex === 0
             ? `<div class="scpi-financement__bar" style="left:0;top:${BAR_TOP_CQW}cqw;height:${BAR_HEIGHT_CQW}cqw;width:${STAGE_W}cqw">${barSegmentsHtml(v.duree, effortLabel)}</div>`

@@ -281,7 +281,7 @@
           "avant8": {
             "label": "Avant 8 ans",
             "lignes": [
-              "Seuls les gains inclus dans le retrait sont imposables à 30 % (12,8 % d'impôt sur le revenu et 17,2 % de prélèvements sociaux)"
+              "Seuls les gains inclus dans le retrait sont imposables à 30 % (12,8 % d'impôt sur le revenu et 17,2 % de prélèvements sociaux)."
             ]
           }
         },
@@ -302,14 +302,14 @@
           "avant8": {
             "label": "Avant 8 ans",
             "lignes": [
-              "Seuls les gains inclus dans le retrait sont imposables à 30 % (12,8 % d'impôt sur le revenu et 17,2 % de prélèvements sociaux)"
+              "Seuls les gains inclus dans le retrait sont imposables à 30 % (12,8 % d'impôt sur le revenu et 17,2 % de prélèvements sociaux)."
             ]
           },
           "apres8": {
             "label": "Après 8 ans",
             "lignes": [
               "L'impôt sur le revenu est réduit à 7,5 %.",
-              "Les gains en dessous des abattements annuels ne sont pas imposés."
+              "Les gains en dessous des abattements annuels ne sont pas imposés :"
             ],
             "montants": [
               { "valeur": 4600, "who": "Personne seule", "icon": "personne" },

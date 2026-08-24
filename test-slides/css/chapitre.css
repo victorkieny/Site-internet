@@ -1022,7 +1022,7 @@
    ou non (remonté : elles se décalaient à gauche pour lui faire de la
    place). */
 .impact-fiscal__grid {
-  margin: auto 0;
+  margin: 1.5625cqw 0 auto;
   width: 100%;
   display: flex;
   justify-content: center;
@@ -1053,7 +1053,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.9375cqw;
+  gap: 0.625cqw;
 }
 
 .cuve-col__value {
@@ -1152,7 +1152,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.46875cqw;
+  gap: 0.3125cqw;
 }
 
 .cuve-col__label {
@@ -1318,11 +1318,14 @@
    positionné à gauche de .cuve (position:relative, voir plus haut),
    jamais dans son flux : les deux cuves restent centrées sur la slide
    que ce panneau soit affiché ou non. Texte aligné à droite pour "
-   pointer" vers la cuve bancaire, juste à côté. */
+   pointer" vers la cuve bancaire, juste à côté. `bottom` posé en style
+   inline (voir chiffresRender en JS, calé sur le vide au-dessus du
+   remplissage réel) : translateY(50%) centre le panneau sur ce repère
+   quelle que soit sa propre hauteur, même technique que
+   .cuve__verse-label. */
 .impact-fiscal__ecart {
   position: absolute;
   right: 100%;
-  bottom: 0.9375cqw;
   margin-right: 3.28125cqw;
   width: 15.625cqw;
   display: flex;
@@ -1330,11 +1333,12 @@
   align-items: flex-end;
   gap: 0.78125cqw;
   text-align: right;
+  transform: translateY(50%);
 }
 
 .impact-fiscal__ecart-label {
   font-weight: 700;
-  font-size: 0.8203125cqw;
+  font-size: 1.23046875cqw;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   white-space: nowrap;
@@ -2366,6 +2370,29 @@
   white-space: nowrap;
 }
 
+/* Patrimoine cible, au-dessus de la colonne (états 1-6, voir
+   scpi-financement.js) : centré sur la colonne elle-même
+   (transform:translateX(-50%) + left posé en style inline, même
+   technique que .scpi-financement__axis-label--center). */
+.scpi-financement__capital-cible {
+  position: absolute;
+  top: 0.78125cqw;
+  transform: translateX(-50%);
+  text-align: center;
+}
+
+.scpi-financement__capital-cible-value {
+  display: block;
+  font-family: var(--font-serif-chapitre);
+  font-weight: 400;
+  font-size: 2.5cqw;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: rgb(var(--chap-ink-rgb));
+}
+
 .scpi-financement__bar {
   position: absolute;
   box-sizing: border-box;
@@ -2976,9 +3003,9 @@
 .cloture-d__row-questions {
   flex: none;
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.3125cqw;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 0.9375cqw;
 }
 
 .cloture-d__row-question {

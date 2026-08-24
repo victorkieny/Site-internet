@@ -244,9 +244,17 @@ function chiffresRender(slide, chiffresState, animate) {
   const refMontant = slide.assuranceVie;
   const bancaireMontant = stage2 ? slide.bancaire : slide.assuranceVie;
 
+  // Centré (voir transform:translateY(50%) en CSS) sur le vide laissé
+  // au-dessus du remplissage bancaire une fois redescendu (stage 2) —
+  // le même repère visuel que .cuve__released, calculé ici avec la même
+  // formule (voir cuveHtml) puisque ce panneau est construit avant
+  // l'appel qui produit ce vide.
+  const bancaireFillHeight = (slide.bancaire / refMontant) * CUVE_HEIGHT_CQW;
+  const ecartCenter = (bancaireFillHeight + CUVE_HEIGHT_CQW) / 2;
+
   const ecart = stage2
     ? `
-      <div class="impact-fiscal__ecart${animate ? " is-entering" : ""}"${animate ? " data-reveal" : ""}>
+      <div class="impact-fiscal__ecart${animate ? " is-entering" : ""}"${animate ? " data-reveal" : ""} style="bottom:${ecartCenter}cqw">
         <span class="impact-fiscal__ecart-label">Écart à ${escapeHtml(slide.horizonLabel)}</span>
         <span class="impact-fiscal__ecart-value">− ${euro.format(slide.ecart)}</span>
       </div>`
