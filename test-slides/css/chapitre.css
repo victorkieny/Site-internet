@@ -1499,10 +1499,20 @@
   border-top: 0.078125cqw solid rgba(var(--chap-ink-rgb), 0.25);
 }
 
+/* Ligne "LABEL : texte" réutilisée par .rachat-avant8 (le bloc entier
+   est cette seule ligne) et par l'intro de .rachat-apres8 (même
+   traitement, une ligne parmi d'autres dans son bloc) — un seul
+   vocabulaire, pas une variante par bloc. */
+.rachat-line {
+  display: flex;
+  align-items: baseline;
+  gap: 0.625cqw;
+}
+
 /* Même taille/couleur que .transmission__section-title ("VERSEMENTS
    AVANT 70 ANS", slide "Transmission") — un seul traitement de libellé
    de section dans tout le deck, pas une variante par gabarit. */
-.rachat-avant8__label {
+.rachat-line__label {
   flex: none;
   font-weight: 700;
   font-size: 0.9375cqw;
@@ -1512,7 +1522,7 @@
   color: rgba(var(--chap-ink-rgb), 1);
 }
 
-.rachat-avant8__text {
+.rachat-line__text {
   font-weight: 450;
   font-size: 1.09375cqw;
   line-height: 1.45;
@@ -1528,14 +1538,6 @@
   gap: 0.9375cqw;
   padding-top: 1.09375cqw;
   border-top: 0.078125cqw solid rgba(var(--chap-ink-rgb), 0.25);
-}
-
-.rachat-apres8__label {
-  font-weight: 700;
-  font-size: 0.9375cqw;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: rgba(var(--chap-ink-rgb), 1);
 }
 
 .rachat-apres8__amounts {

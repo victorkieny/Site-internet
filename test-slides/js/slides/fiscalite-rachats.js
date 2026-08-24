@@ -118,8 +118,8 @@ function avant8Html(bloc) {
   const texte = (bloc.lignes || []).join(" · ");
   return `
     <div class="rachat-avant8">
-      <span class="rachat-avant8__label">${escapeHtml(bloc.label)} :</span>
-      <span class="rachat-avant8__text">${escapeHtml(texte)}</span>
+      <span class="rachat-line__label">${escapeHtml(bloc.label)} :</span>
+      <span class="rachat-line__text">${escapeHtml(texte)}</span>
     </div>
   `;
 }
@@ -142,7 +142,10 @@ function apres8Html(bloc) {
 
   return `
     <div class="rachat-apres8">
-      <span class="rachat-apres8__label">${escapeHtml(bloc.label)}</span>
+      <div class="rachat-line">
+        <span class="rachat-line__label">${escapeHtml(bloc.label)} :</span>
+        <span class="rachat-line__text">${escapeHtml(bloc.intro)}</span>
+      </div>
       <div class="rachat-apres8__amounts">${montants}</div>
       <p class="rachat-apres8__note">${escapeHtml(bloc.note)}</p>
     </div>

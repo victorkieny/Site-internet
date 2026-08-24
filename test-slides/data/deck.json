@@ -307,6 +307,7 @@
           },
           "apres8": {
             "label": "Après 8 ans",
+            "intro": "Les intérêts en dessous des abattements sont exonérés d'impôt sur le revenu",
             "montants": [
               { "valeur": 4600, "who": "Personne seule", "icon": "personne" },
               { "valeur": 9200, "who": "Couple", "icon": "couple" }
