@@ -164,13 +164,13 @@ export function render(slide, opts = {}) {
   });
 
   const scpiBox = boxHtml({
-    left: 32.265625,
+    left: 30.265625,
     top: 13.125,
-    width: 25.78125,
+    width: 29.78125,
     height: 12.1875,
     cls: "scpi-mecanisme__box--vehicule",
     kicker: "Le véhicule",
-    titre: "La SCPI",
+    titre: "SCPI",
     extra: `<div class="scpi-mecanisme__actifs">${actifsHtml}</div>`,
     entering: socleEntering,
   });

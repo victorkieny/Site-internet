@@ -194,7 +194,7 @@
       "ecart": 45000,
       "states": [
         { "label": "Mécanisme : capital" },
-        { "label": "Mécanisme : intérêts" },
+        { "label": "Mécanisme : gains" },
         { "label": "Mécanisme : fuite bancaire" },
         { "label": "Mécanisme : reste non imposé (bancaire)" },
         { "label": "Mécanisme : protection assurance vie" },
@@ -231,7 +231,7 @@
           "legend": [
             {
               "dot": "neutre",
-              "texte": "Intérêts générés par le contrat",
+              "texte": "Gains générés par le contrat",
               "muted": false
             },
             { "dot": "encre", "texte": "Capital versé", "muted": true }
@@ -242,7 +242,7 @@
           "legend": [
             {
               "dot": "bleu",
-              "texte": "Intérêts imposés",
+              "texte": "Gains imposés",
               "muted": false
             },
             { "dot": "encre", "texte": "Capital versé", "muted": true }
@@ -253,7 +253,7 @@
           "legend": [
             {
               "dot": "vert",
-              "texte": "Intérêts non imposés",
+              "texte": "Gains non imposés",
               "muted": false
             },
             { "dot": "encre", "texte": "Capital versé", "muted": true }
@@ -264,7 +264,7 @@
           "legend": [
             {
               "dot": "bleu",
-              "texte": "Intérêts imposés",
+              "texte": "Gains imposés",
               "muted": false
             },
             {
@@ -274,14 +274,14 @@
             },
             {
               "dot": "vert",
-              "texte": "Intérêts non imposés",
+              "texte": "Gains non imposés",
               "muted": true
             }
           ],
           "avant8": {
             "label": "Avant 8 ans",
             "lignes": [
-              "Seuls les intérêts inclus dans le retrait sont imposables à 30 % (12,8 % d'impôt sur le revenu et 17,2 % de prélèvements sociaux)"
+              "Seuls les gains inclus dans le retrait sont imposables à 30 % (12,8 % d'impôt sur le revenu et 17,2 % de prélèvements sociaux)"
             ]
           }
         },
@@ -290,7 +290,7 @@
           "legend": [
             {
               "dot": "vert",
-              "texte": "Intérêts non imposés",
+              "texte": "Gains non imposés",
               "muted": false
             },
             {
@@ -302,14 +302,14 @@
           "avant8": {
             "label": "Avant 8 ans",
             "lignes": [
-              "Seuls les intérêts inclus dans le retrait sont imposables à 30 % (12,8 % d'impôt sur le revenu et 17,2 % de prélèvements sociaux)"
+              "Seuls les gains inclus dans le retrait sont imposables à 30 % (12,8 % d'impôt sur le revenu et 17,2 % de prélèvements sociaux)"
             ]
           },
           "apres8": {
             "label": "Après 8 ans",
             "lignes": [
               "L'impôt sur le revenu est réduit à 7,5 %.",
-              "Les intérêts en dessous des abattements annuels ne sont pas imposés."
+              "Les gains en dessous des abattements annuels ne sont pas imposés."
             ],
             "montants": [
               { "valeur": 4600, "who": "Personne seule", "icon": "personne" },
@@ -387,6 +387,19 @@
       "states": [{}, {}, {}, {}, {}]
     },
     {
+      "id": "scpi-atouts",
+      "type": "scpi-atouts",
+      "client": "Prénom Nom",
+      "date": "2026-09-17",
+      "chapitreActif": 2,
+      "chapitres": [
+        { "numero": "01", "libelle": "Constat" },
+        { "numero": "02", "libelle": "Ingénieries" },
+        { "numero": "03", "libelle": "Préconisations" }
+      ],
+      "states": [{}, {}, {}, {}]
+    },
+    {
       "id": "scpi-cadence",
       "type": "scpi-cadence",
       "client": "Prénom Nom",
@@ -399,19 +412,6 @@
       ],
       "titre": "Délais, versements et liquidité",
       "states": [{}, {}, {}]
-    },
-    {
-      "id": "scpi-atouts",
-      "type": "scpi-atouts",
-      "client": "Prénom Nom",
-      "date": "2026-09-17",
-      "chapitreActif": 2,
-      "chapitres": [
-        { "numero": "01", "libelle": "Constat" },
-        { "numero": "02", "libelle": "Ingénieries" },
-        { "numero": "03", "libelle": "Préconisations" }
-      ],
-      "states": [{}, {}, {}, {}]
     },
     {
       "id": "scpi-financement",

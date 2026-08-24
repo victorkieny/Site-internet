@@ -1004,7 +1004,7 @@
 .impact-fiscal__lead {
   margin-top: 1.71875cqw;
   font-weight: 600;
-  font-size: 2.109375cqw;
+  font-size: 1.5625cqw;
   line-height: 1.4;
   text-align: center;
   white-space: nowrap;
@@ -1129,11 +1129,19 @@
   border-top: 0.078125cqw dashed rgba(var(--papier-rgb), 0.55);
 }
 
+/* Centré sur la cuve (left:0/right:0/text-align:center), et sur son
+   propre point médian verticalement (transform:translateY(50%), même
+   technique que .cuve__shield) — bottom posé en JS à verseBottom/2,
+   soit le milieu de la portion remplie à ce stade (0 à verseBottom),
+   pas juste sous le repère. */
 .cuve__verse-label {
   position: absolute;
-  left: 0.703125cqw;
+  left: 0;
+  right: 0;
+  text-align: center;
+  transform: translateY(50%);
   font-weight: 700;
-  font-size: 0.8203125cqw;
+  font-size: 1.09375cqw;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   white-space: nowrap;
@@ -1341,14 +1349,6 @@
   letter-spacing: -0.05em;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
-}
-
-.impact-fiscal__ecart-note {
-  margin: 0;
-  font-weight: 450;
-  font-size: 1.0546875cqw;
-  line-height: 1.45;
-  color: rgba(var(--chap-ink-rgb), 0.65);
 }
 
 /* ---------- Gabarit "Fiscalité des rachats" (slide 6, anneau à 6 états) ---------- */
@@ -1673,7 +1673,7 @@
 
 .transmission__clause-label {
   font-weight: 700;
-  font-size: 0.8203125cqw;
+  font-size: 1.09375cqw;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: rgba(var(--chap-ink-rgb), 0.55);
@@ -1841,7 +1841,7 @@
   text-align: center;
   white-space: nowrap;
   font-weight: 450;
-  font-size: clamp(0.7rem, 0.75cqw, 1.015625cqw);
+  font-size: clamp(0.85rem, 0.95cqw, 1.25cqw);
   line-height: 1.45;
   color: rgba(var(--chap-ink-rgb), 0.6);
 }
@@ -1872,7 +1872,7 @@
 .transmission__footer-text {
   margin: 0.625cqw 0 0;
   font-weight: 450;
-  font-size: 1.015625cqw;
+  font-size: 1.328125cqw;
   line-height: 1.5;
   color: rgba(var(--chap-ink-rgb), 0.68);
 }
@@ -2014,6 +2014,16 @@
   border-top: 0.15625cqw solid var(--or);
 }
 
+/* Case centrale : plus de picto dans l'en-tête (voir scpi-mecanisme.js),
+   kicker + titre centrés plutôt qu'alignés à gauche comme les deux
+   cases voisines — cette case est la seule à porter un contenu propre
+   en dessous (le registre de pictogrammes), elle peut se démarquer. */
+.scpi-mecanisme__box--vehicule .scpi-mecanisme__box-kicker,
+.scpi-mecanisme__box--vehicule .scpi-mecanisme__box-head {
+  justify-content: center;
+  text-align: center;
+}
+
 .scpi-mecanisme__box-head {
   display: flex;
   align-items: center;
@@ -2071,7 +2081,6 @@
 .scpi-mecanisme__actifs {
   margin-top: auto;
   padding: 0.859375cqw 0.9375cqw 0;
-  border-top: 0.078125cqw solid rgba(var(--chap-ink-rgb), 0.16);
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 0.46875cqw 0;
@@ -2082,10 +2091,17 @@
   justify-content: center;
 }
 
+/* Hauteur fixe, largeur libre (pas un carré) : ces pictogrammes fournis
+   tels quels (voir ACTIF_ICONS_RAW dans scpi-mecanisme.js) n'ont pas
+   tous le même ratio — les forcer dans une case carrée les faisait
+   paraître de tailles inégales (l'hôtel, en portrait, ou le commerce,
+   en paysage, y flottaient plus petits que la tour de bureaux, presque
+   carrée). À hauteur identique, chacun garde ses proportions d'origine
+   et occupe vraiment sa case. */
 .scpi-mecanisme__actif .chap-icon {
   flex: none;
-  width: 3.125cqw;
-  height: 3.125cqw;
+  width: auto;
+  height: 3.75cqw;
 }
 
 .scpi-mecanisme__flow {
@@ -2309,13 +2325,13 @@
    caractère ne ferait qu'une ligne et la scène (centrée par margin:auto,
    voir .scpi-financement__stage) sauterait entre états. */
 .scpi-financement__desc {
-  margin: 1.765625cqw auto 0;
-  max-width: 72cqw;
-  min-height: 6.328125cqw;
+  margin: 3.9375cqw 0 0;
+  min-height: 2.109375cqw;
   font-weight: 600;
-  font-size: 2.109375cqw;
+  font-size: 1.40625cqw;
   line-height: 1.5;
   text-align: center;
+  white-space: nowrap;
   color: rgba(var(--chap-ink-rgb), 0.85);
 }
 
@@ -2333,7 +2349,7 @@
 .scpi-financement__kicker {
   display: block;
   font-weight: 700;
-  font-size: 0.7421875cqw;
+  font-size: 0.9375cqw;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: rgba(var(--chap-ink-rgb), 0.5);
@@ -2362,7 +2378,7 @@
   flex: none;
   box-sizing: border-box;
   overflow: hidden;
-  background: var(--encre);
+  background: var(--bleu);
   display: flex;
   align-items: center;
   padding-left: 1.25cqw;
@@ -2409,7 +2425,7 @@
 .scpi-financement__bar-segment {
   flex: 1 1 0;
   min-width: 0;
-  background: var(--encre);
+  background: var(--bleu);
   transform-origin: bottom;
   animation: scpi-bar-segment-in var(--chap-duration-move) var(--chap-ease-move) backwards;
 }
@@ -2505,7 +2521,7 @@
   right: 0.625cqw;
   transform: translateY(50%);
   font-weight: 700;
-  font-size: 0.65625cqw;
+  font-size: 0.859375cqw;
   letter-spacing: 0.04em;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
@@ -2544,7 +2560,7 @@
 }
 
 .scpi-financement__levier-bar--effort {
-  background: var(--encre);
+  background: var(--bleu);
 }
 
 .scpi-financement__levier-bar--patrimoine {
@@ -2562,7 +2578,7 @@
 
 .scpi-financement__levier-caption {
   font-weight: 450;
-  font-size: 0.65625cqw;
+  font-size: 0.859375cqw;
   line-height: 1.2;
   text-align: center;
   white-space: nowrap;
@@ -2692,7 +2708,7 @@
   position: absolute;
   top: 19.6875cqw;
   font-weight: 700;
-  font-size: 0.7421875cqw;
+  font-size: 0.9375cqw;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   white-space: nowrap;
@@ -2875,11 +2891,12 @@
 
 .cloture__budget {
   margin: 1.09375cqw auto 0;
-  max-width: 68.75cqw;
+  max-width: 88cqw;
   font-weight: 450;
-  font-size: 1.640625cqw;
+  font-size: 1.2cqw;
   line-height: 1.5;
   text-align: center;
+  white-space: nowrap;
   color: rgba(var(--chap-ink-rgb), 0.65);
 }
 
@@ -2950,7 +2967,8 @@
 
 /* Variante "réflexion" (cloture-reflexion.js) : une question n'est pas
    une donnée chiffrée — Avenir (pas Bodoni, réservé aux chiffres),
-   encre atténuée (pas l'or, réservé à ce qui porte une valeur). */
+   mais reste en or : la question occupe la même place qu'un montant
+   dans la variante chiffrée, elle doit se voir au même titre. */
 /* Une ou deux questions empilées (versement programmé + versement
    initial pour assurance-vie/SCPI en direct ; une seule pour le
    financement, voir cloture-reflexion.js) — alignées à droite, comme
@@ -2968,7 +2986,7 @@
   font-size: 1.171875cqw;
   line-height: 1.2;
   white-space: nowrap;
-  color: rgba(var(--chap-ink-rgb), 0.7);
+  color: var(--or);
 }
 
 .cloture-d__bullets {

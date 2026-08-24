@@ -8,8 +8,9 @@ import { renderChapRail } from "./_chapitre.js";
 // sur un chiffre. La seule différence de fond est donc l'absence de
 // chiffres : le montant de chaque préconisation (cloture-d__row-montant,
 // Bodoni + or — réservé aux VALEURS, voir charte) devient une question
-// courte (cloture-d__row-question, Avenir + encre atténuée — ce n'est
-// pas une donnée), et la phrase de budget devient elle aussi une
+// courte (cloture-d__row-question, Avenir + or — occupe la même place
+// qu'un montant, reste en or même sans être une donnée chiffrée), et
+// la phrase de budget devient elle aussi une
 // question ouverte. Bullets et "à terme" restent inchangés (déjà
 // qualitatifs, aucun chiffre à retirer). Même mécanique de révélation
 // progressive que la variante chiffrée.

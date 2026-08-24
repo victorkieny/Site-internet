@@ -97,12 +97,13 @@ function introCuveHtml({ fillColor, label, escaping, introState, animate }) {
 
   // Le bouclier se pose au milieu de la zone grise (intérêts), pas
   // au-dessus : centré verticalement sur son point médian (bottom au
-  // centre de la bande + translateY(50%) en CSS, voir .cuve__shield). Or
-  // sur fond gris (état 5) ; une fois le fond vert (état 6, voir
-  // greenShown), l'or se distingue mal — bascule vers la couleur du fond
-  // de la slide (papier) pour qu'il reste lisible, en négatif du vert.
+  // centre de la bande + translateY(50%) en CSS, voir .cuve__shield).
+  // Bleu sur fond gris (état 5, même teinte que la cuve bancaire) ; une
+  // fois le fond vert (état 6, voir greenShown), le bleu se distingue
+  // mal — bascule vers la couleur du fond de la slide (papier) pour
+  // qu'il reste lisible, en négatif du vert.
   const shield = protectShown
-    ? `<div class="cuve__shield" style="bottom:${INTRO_CAPITAL_H + INTRO_INTEREST_H / 2}cqw"><span class="cuve__shield-inner${protectEntering ? " is-entering" : ""}"${protectEntering ? " data-reveal" : ""}>${iconSvg("bouclier", greenShown ? "var(--papier)" : "var(--or)", 40)}</span></div>`
+    ? `<div class="cuve__shield" style="bottom:${INTRO_CAPITAL_H + INTRO_INTEREST_H / 2}cqw"><span class="cuve__shield-inner${protectEntering ? " is-entering" : ""}"${protectEntering ? " data-reveal" : ""}>${iconSvg("bouclier", greenShown ? "var(--papier)" : "var(--bleu)", 40)}</span></div>`
     : "";
 
   // Toujours rendu dès l'état 1 (juste invisible, voir --invisible),
@@ -196,13 +197,14 @@ function cuveHtml({ montant, verse, refMontant, fillColor, label, desc, showRele
       : "";
 
   // Repère "Versé" : apparaît une fois que le remplissage l'atteint
-  // (fin du stage 0, même délai que sa propre animation de montée, voir
-  // .cuve__verse--delayed en CSS) — jamais avant, jamais en même temps
-  // que la montée du niveau. Le libellé se positionne EN DESSOUS du
-  // repère (jamais au-dessus, voir verseBottom - 1.09375 plus bas) : à
-  // ce stade précis, le remplissage s'arrête pile à ce niveau, donc
-  // au-dessus c'est encore vide — un texte en papier (clair) y serait
-  // illisible sur le fond clair de la cuve.
+  // (fin du stage 0, état 10, même délai que sa propre animation de
+  // montée, voir .cuve__verse--delayed en CSS) — jamais avant, jamais en
+  // même temps que la montée du niveau. Le libellé est centré (horizon-
+  // talement sur la cuve, verticalement sur son point médian, voir
+  // .cuve__verse-label) DANS la portion remplie (0 à verseBottom) plutôt
+  // que juste sous le repère : à ce stade précis le remplissage
+  // s'arrête pile à ce niveau, donc tout ce qui est en dessous EST la
+  // zone colorée — un texte en papier (clair) y reste lisible partout.
   const verseEntering = stage === 0 && animateNow;
   const verseCls = verseEntering ? " is-entering" : "";
   const verseAttrs = verseEntering ? " data-reveal" : "";
@@ -227,7 +229,7 @@ function cuveHtml({ montant, verse, refMontant, fillColor, label, desc, showRele
         ${overlay || ""}
         <span class="cuve__fill${growCls}"${fillAttrs} style="height:${fillStartHeight}cqw;background:${fillColor}"></span>
         <span class="cuve__verse-line cuve__verse--delayed${verseCls}"${verseAttrs} style="bottom:${verseBottom}cqw"></span>
-        <span class="cuve__verse-label cuve__verse--delayed${verseCls}"${verseAttrs} style="bottom:${verseBottom - 1.09375}cqw">Versé · ${euro.format(verse)}</span>
+        <span class="cuve__verse-label cuve__verse--delayed${verseCls}"${verseAttrs} style="bottom:${verseBottom / 2}cqw">Versé · ${euro.format(verse)}</span>
       </div>
       <div class="cuve-col__foot">
         <span class="cuve-col__label">${escapeHtml(label)}</span>
@@ -248,7 +250,6 @@ function chiffresRender(slide, chiffresState, animate) {
       <div class="impact-fiscal__ecart${animate ? " is-entering" : ""}"${animate ? " data-reveal" : ""}>
         <span class="impact-fiscal__ecart-label">Écart à ${escapeHtml(slide.horizonLabel)}</span>
         <span class="impact-fiscal__ecart-value">− ${euro.format(slide.ecart)}</span>
-        <p class="impact-fiscal__ecart-note">partis à l’impôt, et qui n’ont jamais travaillé.</p>
       </div>`
     : "";
 
