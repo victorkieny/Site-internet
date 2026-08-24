@@ -112,18 +112,20 @@ function legendEntryHtml(entry) {
 
 function avant8Html(bloc) {
   if (!bloc) return "";
+  // Une seule ligne "LABEL : texte" — lignes n'a plus qu'une entrée
+  // depuis la simplification du contenu, jointes ici au cas où une
+  // future donnée en porterait plusieurs (pas une puce par ligne).
+  const texte = (bloc.lignes || []).join(" · ");
   return `
     <div class="rachat-avant8">
-      <span class="rachat-avant8__label">${escapeHtml(bloc.label)}</span>
-      <div class="rachat-avant8__rows">
-        ${(bloc.lignes || []).map((l) => `<span class="rachat-avant8__row">${escapeHtml(l)}</span>`).join("")}
-      </div>
+      <span class="rachat-avant8__label">${escapeHtml(bloc.label)} :</span>
+      <span class="rachat-avant8__text">${escapeHtml(texte)}</span>
     </div>
   `;
 }
 
 function apres8Html(bloc) {
-  if (!bloc) return `<div></div><div></div>`;
+  if (!bloc) return "";
   const montants = (bloc.montants || [])
     .map(
       (m) => `
@@ -139,7 +141,6 @@ function apres8Html(bloc) {
     .join("");
 
   return `
-    <div class="fiscalite-rachats__divider"></div>
     <div class="rachat-apres8">
       <span class="rachat-apres8__label">${escapeHtml(bloc.label)}</span>
       <div class="rachat-apres8__amounts">${montants}</div>

@@ -1463,30 +1463,24 @@
 /* Hauteur réservée fixe, que les blocs avant8/apres8 soient présents ou
    non (états 1 à 4 n'en ont pas) : sinon le disque au-dessus (centré via
    margin:auto sur .fiscalite-rachats__stage) dérive verticalement d'un
-   état à l'autre selon que ce bloc est vide ou rempli. */
+   état à l'autre selon que ce bloc est vide ou rempli. "Après 8 ans"
+   empilé SOUS "avant 8 ans" (pas à sa droite) : min-height calée sur le
+   total des deux blocs l'un sous l'autre, pas sur le plus grand des
+   deux côte à côte. */
 .fiscalite-rachats__rules {
   flex: none;
   margin-top: auto;
-  min-height: 15cqw;
+  min-height: 21.5cqw;
   width: 100%;
-  display: grid;
-  grid-template-columns: 1fr 1px 1.5fr;
-  column-gap: 3.4375cqw;
-  /* Aligné en haut, pas en bas : "avant 8 ans" et "après 8 ans" doivent
-     démarrer à la même ligne, quelle que soit la hauteur de contenu de
-     chaque colonne (le bloc de droite est plus grand). */
-  align-items: start;
-}
-
-.fiscalite-rachats__divider {
-  background: rgba(var(--chap-ink-rgb), 0.16);
-  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  gap: 0.703125cqw;
 }
 
 .rachat-avant8 {
   display: flex;
-  flex-direction: column;
-  gap: 1.09375cqw;
+  align-items: baseline;
+  gap: 0.625cqw;
   padding-top: 1.09375cqw;
   border-top: 0.078125cqw solid rgba(var(--chap-ink-rgb), 0.25);
 }
@@ -1495,31 +1489,20 @@
    AVANT 70 ANS", slide "Transmission") — un seul traitement de libellé
    de section dans tout le deck, pas une variante par gabarit. */
 .rachat-avant8__label {
+  flex: none;
   font-weight: 700;
   font-size: 0.9375cqw;
   letter-spacing: 0.16em;
   text-transform: uppercase;
+  white-space: nowrap;
   color: rgba(var(--chap-ink-rgb), 1);
 }
 
-.rachat-avant8__rows {
-  display: flex;
-  flex-direction: column;
-}
-
-/* Filet seulement ENTRE deux lignes, jamais avant la première : sinon
-   il se colle à celui de .rachat-avant8 juste au-dessus (deux filets
-   presque superposés, lu comme un doublon plutôt qu'un repère). */
-.rachat-avant8__row {
-  padding: 0.78125cqw 0;
+.rachat-avant8__text {
   font-weight: 450;
   font-size: 1.09375cqw;
   line-height: 1.45;
   color: rgba(var(--chap-ink-rgb), 0.7);
-}
-
-.rachat-avant8__row + .rachat-avant8__row {
-  border-top: 0.078125cqw solid rgba(var(--chap-ink-rgb), 0.14);
 }
 
 /* Même filet d'en-tête que .rachat-avant8 (pas plus épais/foncé) : ce
@@ -1528,7 +1511,7 @@
 .rachat-apres8 {
   display: flex;
   flex-direction: column;
-  gap: 1.25cqw;
+  gap: 0.9375cqw;
   padding-top: 1.09375cqw;
   border-top: 0.078125cqw solid rgba(var(--chap-ink-rgb), 0.25);
 }
