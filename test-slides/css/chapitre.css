@@ -1161,7 +1161,7 @@
 
 .cuve-col__label {
   font-weight: 700;
-  font-size: 0.8203125cqw;
+  font-size: 1.23046875cqw;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   white-space: nowrap;
@@ -1537,12 +1537,28 @@
 /* Même filet d'en-tête que .rachat-avant8 (pas plus épais/foncé) : ce
    sont deux blocs parallèles ("avant" / "après"), pas une hiérarchie
    entre eux — un seul traitement de filet dans tout le gabarit. */
+/* Grille à 2 colonnes (label, contenu) plutôt qu'un empilement simple :
+   la 1re phrase suit le label sur sa rangée (colonne 2), les lignes
+   suivantes ET les montants restent tous alignés sous le DÉBUT de
+   cette phrase (même colonne 2), pas sous le label — voir
+   apres8Html en JS et les règles .rachat-line__label/__text ci-dessous. */
 .rachat-apres8 {
-  display: flex;
-  flex-direction: column;
-  gap: 0.9375cqw;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: baseline;
+  column-gap: 0.625cqw;
+  row-gap: 0.9375cqw;
   padding-top: 1.09375cqw;
   border-top: 0.078125cqw solid rgba(var(--chap-ink-rgb), 0.25);
+}
+
+.rachat-apres8 .rachat-line__label {
+  grid-column: 1;
+}
+
+.rachat-apres8 .rachat-line__text,
+.rachat-apres8 .rachat-apres8__amounts {
+  grid-column: 2;
 }
 
 .rachat-apres8__amounts {

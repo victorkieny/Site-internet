@@ -402,20 +402,18 @@ body.is-resizing-y * {
   user-select: none !important;
 }
 
-/* Panneaux d'aperçu vivant (slide courante, slide suivante) — un vrai
-   .slide__stage y est rendu directement (pas le transform:scale des
-   miniatures, réservé aux tailles très réduites). Problème résolu ici :
-   les unités cqw de .slide__stage ne réagissent qu'à la LARGEUR de son
-   container query (voir slides.css) ; si le panneau est réduit en
-   hauteur (splitter), width:100% + aspect-ratio peut donner une hauteur
-   supérieure à l'espace réellement disponible, et le panneau (overflow
-   hidden) rogne le bas de la slide. .presenter-preview devient lui-même
-   un container query de type "size" (largeur ET hauteur interrogeables),
-   et .slide__stage choisit explicitement la plus petite des deux largeurs
-   possibles : 100% de la largeur du panneau, ou la largeur qui donnerait
-   une hauteur de 100% du panneau (100cqh * 16/9) — jamais les deux à la
-   fois, donc jamais de dépassement, y compris pendant le glisser d'un
-   splitter (recalcul CSS continu, pas de mesure JS ponctuelle). */
+/* Panneaux d'aperçu vivant (slide courante, slide suivante) — même
+   verrou qu'en slides.css (.slide > .slide__stage) : rendu inconditionnel
+   à la largeur de référence (1280px, où cqw et planchers de lisibilité
+   se comportent toujours pareil) puis réduit globalement par
+   transform:scale, jamais recalculé selon la taille réelle du panneau —
+   sinon les cqw de .slide__stage réagiraient à CETTE taille-là (mise à
+   jour continue pendant le glisser d'un splitter), jamais tout à fait la
+   même d'un réglage à l'autre. .presenter-preview est un container query
+   de type "size" (largeur ET hauteur interrogeables) : le facteur choisit
+   la plus petite des deux mises à l'échelle possibles (100cqw/1280px ou
+   100cqh/720px) — jamais de dépassement, quelle que soit la forme du
+   panneau. */
 
 .presenter-preview {
   container-type: size;
@@ -429,29 +427,14 @@ body.is-resizing-y * {
 }
 
 .presenter-preview .slide__stage {
-  aspect-ratio: 16 / 9;
-  width: min(100cqw, 100cqh * 16 / 9);
-  height: auto;
-  margin: auto;
-}
-
-/* Repli petite scène (mobile / panneau très réduit) — même remède que
-   .slide__stage dans slides.css : sous ce seuil les planchers de
-   lisibilité empêchent le texte de rétrécir avec le panneau et il
-   déborde. Requête de container (pas de viewport) car ce panneau est
-   redimensionnable par le splitter, indépendamment de la fenêtre. */
-@container (max-width: 780px) or (max-height: 440px) {
-  .presenter-preview .slide__stage {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 1280px;
-    max-width: none;
-    max-height: none;
-    margin: 0;
-    transform-origin: center center;
-    transform: translate(-50%, -50%) scale(min(100cqw / 1280px, 100cqh / 720px));
-  }
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 1280px;
+  max-width: none;
+  max-height: none;
+  transform-origin: center center;
+  transform: translate(-50%, -50%) scale(min(100cqw / 1280px, 100cqh / 720px));
 }
 
 /* Aperçu réduit générique (miniatures uniquement) — voir js/deck.js :

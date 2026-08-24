@@ -1,11 +1,20 @@
 /* ---------- Deck shell ----------
    Chaque slide est verrouillée sur un ratio 16:9 fixe (.slide__stage),
    comme une vraie diapositive : elle s'adapte à l'écran sans jamais
-   dépasser la hauteur disponible, ni changer de forme. .slide__stage
-   est un container query CSS : tout le contenu à l'intérieur est mis à
-   l'échelle en unités "cqw" (% de la largeur de la scène), pas en vw/vh
-   (% du viewport) — sinon le texte serait mal proportionné dès que la
-   scène est plus petite que l'écran (letterboxing). */
+   dépasser la hauteur disponible, ni changer de forme.
+
+   Rendu inconditionnel à la largeur de référence (1280px, où les cqw et
+   les planchers de lisibilité font-size:max(Npx, Mcqw) — voir l'en-tête
+   de chapitre.css — se comportent tous deux exactement pareil), puis
+   réduit globalement par transform:scale — jamais de recalcul de mise
+   en page selon l'écran. Avant, ce repli n'existait que sous un seuil de
+   taille (mobile) ; au-dessus, .slide__stage prenait sa taille réelle et
+   ses cqw réagissaient à CETTE largeur-là, jamais tout à fait la même
+   d'un écran à l'autre — d'où des écarts visuellement différents
+   (planchers atteints ou non) selon le format. Toujours actif
+   maintenant : la scène rendue est bit pour bit identique quelle que
+   soit la fenêtre, seul le facteur d'agrandissement change (même
+   principe que .stage-preview pour les miniatures, voir presenter.css). */
 
 .deck {
   height: 100vh;
@@ -21,60 +30,41 @@
   width: 100%;
   scroll-snap-align: start;
   scroll-snap-stop: always;
-  display: grid;
-  place-items: center;
-  padding: clamp(0.75rem, 2.5vw, 2.5rem);
+  display: block;
+  position: relative;
+  padding: 0;
   box-sizing: border-box;
   background: var(--color-paper-alt);
 }
 
 .slide__stage {
   container: stage / size;
-  position: relative;
   aspect-ratio: 16 / 9;
-  width: 100%;
-  max-width: 100%;
-  max-height: 100%;
   background: var(--color-paper);
   border-radius: var(--radius);
   box-shadow: var(--shadow-card);
   overflow: hidden;
 }
 
-/* ---------- Repli petite scène (mobile) ----------
-   Sous ce seuil, les planchers de lisibilité (font-size:max(Npx, Mcqw)
-   dans chapitre.css — voir son en-tête) ne rétrécissent plus avec les
-   cqw et le contenu déborde de la scène. Même remède que .stage-preview
-   (miniatures, voir presenter.css) : .slide__stage est rendu à sa
-   largeur de référence (1280px, où planchers et cqw se comportent
-   normalement) puis réduit globalement par transform:scale — le
-   contenu reste proportionnel à la scène affichée, jamais de
-   dépassement, sans jamais recalculer la mise en page. */
-@media (max-width: 780px), (max-height: 440px) {
-  .slide {
-    display: block;
-    position: relative;
-    padding: 0;
-  }
-
-  /* Scopé à .slide > .slide__stage (pas .slide__stage seul) : les
-     panneaux d'aperçu du présentateur (.presenter-preview, voir
-     presenter.css) rendent aussi un .slide__stage mais ne sont pas des
-     .slide — --mobile-gutter n'y est pas défini, et leur propre repli
-     (basé sur leur container, pas le viewport) s'applique déjà. */
-  .slide > .slide__stage {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 1280px;
-    max-width: none;
-    max-height: none;
-    transform-origin: center center;
-    transform: translate(-50%, -50%) scale(min(
-      calc((100dvw - 2 * var(--mobile-gutter)) / 1280px),
-      calc((100dvh - 2 * var(--mobile-gutter)) / 720px)
-    ));
-  }
+/* Scopé à .slide > .slide__stage (pas .slide__stage seul) : les
+   panneaux d'aperçu du présentateur (.presenter-preview, voir
+   presenter.css) et les miniatures (.stage-preview) rendent aussi un
+   .slide__stage mais ne sont pas des .slide — --mobile-gutter n'y est
+   pas défini, et leur propre verrou (basé sur leur container, pas le
+   viewport) s'applique déjà, voir .presenter-preview .slide__stage et
+   .stage-preview .slide__stage. */
+.slide > .slide__stage {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 1280px;
+  max-width: none;
+  max-height: none;
+  transform-origin: center center;
+  transform: translate(-50%, -50%) scale(min(
+    calc((100dvw - 2 * var(--mobile-gutter)) / 1280px),
+    calc((100dvh - 2 * var(--mobile-gutter)) / 720px)
+  ));
 }
 
 .slide__content {

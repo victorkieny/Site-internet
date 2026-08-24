@@ -140,17 +140,17 @@ function apres8Html(bloc) {
     `
     )
     .join("");
-  // Comme .rachat-avant8 : la 1re ligne suit le label sur la même ligne,
-  // les suivantes s'empilent en dessous (même style de texte, pas de
-  // second label) — pas de note séparée après les montants.
+  // Grille à 2 colonnes (label, puis contenu) plutôt qu'un .rachat-line
+  // en flex-row : la 1re ligne suit le label sur la même rangée, les
+  // suivantes ET les montants s'alignent tous sous le DÉBUT de la
+  // phrase (colonne 2), pas sous le label (voir .rachat-apres8) — même
+  // style de texte pour les lignes suivantes, pas de second label.
   const restLignesHtml = restLignes.map((l) => `<p class="rachat-line__text">${escapeHtml(l)}</p>`).join("");
 
   return `
     <div class="rachat-apres8">
-      <div class="rachat-line">
-        <span class="rachat-line__label">${escapeHtml(bloc.label)} :</span>
-        <span class="rachat-line__text">${escapeHtml(firstLigne)}</span>
-      </div>
+      <span class="rachat-line__label">${escapeHtml(bloc.label)} :</span>
+      <span class="rachat-line__text">${escapeHtml(firstLigne)}</span>
       ${restLignesHtml}
       <div class="rachat-apres8__amounts">${montants}</div>
     </div>
