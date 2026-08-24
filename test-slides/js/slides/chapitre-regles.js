@@ -85,7 +85,7 @@ export function render(slide, opts = {}) {
       </div>
 
       <div class="${pictoCls}"${pictoEntering ? " data-reveal" : ""}>
-        ${iconSvg(slide.picto || "disponibilite", "rgba(var(--chap-ink-rgb),.8)", 64)}
+        ${iconSvg(slide.picto || "disponibilite", "var(--or)", 96)}
       </div>
 
       <div class="chap-regles__grid" style="grid-template-columns:repeat(${regles.length},1fr)">

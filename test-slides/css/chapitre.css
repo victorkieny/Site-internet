@@ -645,6 +645,15 @@
   justify-content: center;
 }
 
+/* x1,5 par rapport au reste des pictogrammes du système (5cqw) — celui-ci
+   porte seul toute une slide d'arrivée, il a le droit d'être plus
+   présent. En cqw (pas un px fixe sur le <svg>, voir chapitre-regles.js)
+   pour rester à l'échelle du reste de la scène. */
+.chap-regles__picto .chap-icon {
+  width: 7.5cqw;
+  height: 7.5cqw;
+}
+
 .chap-regles__picto--invisible {
   opacity: 0;
 }
