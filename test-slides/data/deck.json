@@ -281,7 +281,7 @@
           "avant8": {
             "label": "Avant 8 ans",
             "lignes": [
-              "Imposition de 30 % sur les intérêts générés"
+              "Seuls les intérêts inclus dans le retrait sont imposables à 30 % (12,8 % d'impôt sur le revenu et 17,2 % de prélèvements sociaux)"
             ]
           }
         },
@@ -302,7 +302,7 @@
           "avant8": {
             "label": "Avant 8 ans",
             "lignes": [
-              "Imposition de 30 % sur les intérêts générés"
+              "Seuls les intérêts inclus dans le retrait sont imposables à 30 % (12,8 % d'impôt sur le revenu et 17,2 % de prélèvements sociaux)"
             ]
           },
           "apres8": {
