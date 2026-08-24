@@ -1270,6 +1270,12 @@ h3 {
        longs paragraphes à cette largeur. Augmenté une 2e fois (10px → 24px),
        jugé encore insuffisant. */
     padding-inline: 24px;
+    /* .about-opening (le logo) est masqué sur mobile (cf. règle plus bas) —
+       la photo, qui suivait juste après, perdait du même coup tout le gap
+       de #a-propos .home-page-content (48-80px) qui les séparait : elle se
+       retrouvait collée sous la nav. Restaure cet espace directement ici,
+       même valeur que ce gap partagé pour rester cohérent. */
+    margin-top: clamp(48px, 8svh, 80px);
   }
 
   .about-portrait-rail {
@@ -1496,6 +1502,17 @@ h3 {
      classes), l'emporte quel que soit l'ordre dans la feuille — le titre de
      la modale (Partenaires/Habilitations) doit rester visible à toute
      largeur, sinon la carte s'ouvre sans en-tête sur téléphone. */
+  display: flex;
+}
+
+/* Même bug, même correctif ciblé (id + classe, plus spécifique que la seule
+   .section-heading) : sur mentions-légales et confidentialité, ces titres
+   ("Éditeur du site", "Statut professionnel", "Responsable du traitement",
+   etc.) segmentent le contenu — sans eux sur téléphone, les sections
+   s'enchaînent en un seul bloc de texte indifférencié. Demandé par Victor :
+   reprendre sur mobile les mêmes titres que sur ordinateur. */
+#mentions-legales .section-heading,
+#confidentialite .section-heading {
   display: flex;
 }
 
@@ -8747,6 +8764,16 @@ body[data-mode="scpi"] .tool-field[data-field="dureeTotale"] .tool-input-wrap in
     gap: 24px;
   }
 
+  /* Phrase d'ouverture agrandie sur téléphone : au floor du clamp partagé
+     (2rem, cf. .resources-opening-text plus haut — 5vw y est presque
+     toujours plus petit que 2rem à cette largeur), l'habillage sur 2 lignes
+     + le <br> forcé (cf. markup) laissait "solides," quasi seule sur une
+     ligne — pas très beau, signalé par Victor. Plus gros pour un
+     enchaînement à 3 lignes plus équilibré. */
+  .resources-opening-text {
+    font-size: 2.4rem;
+  }
+
   /* Le format "cartes qui se tirent" (empilées, tournées, décalées pour
      laisser deviner la carte du dessous) ne fonctionne qu'en fenêtre assez
      large/"paysage" : dès que la largeur se resserre, la carte de fond
@@ -8785,10 +8812,18 @@ body[data-mode="scpi"] .tool-field[data-field="dureeTotale"] .tool-input-wrap in
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 1px solid var(--line);
+    /* Contour + libellé noirs (var(--ink), contre var(--line)/var(--muted)
+       plus discrets ailleurs) : demandé par Victor pour ces 2 boutons sur
+       téléphone spécifiquement — un contraste plus net une fois les cartes
+       repassées en blocs simples pleine largeur (cf. commentaire plus haut). */
+    border: 1px solid var(--ink);
     border-radius: 22px;
     box-shadow: 0 10px 26px rgba(43, 37, 30, 0.08);
     transform: none;
+  }
+
+  .resources-opening-teaser-label {
+    color: var(--ink);
   }
 
   /* Ordre visuel indépendant de l'ordre du DOM (habilitations, puis
