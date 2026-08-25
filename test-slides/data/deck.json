@@ -377,6 +377,20 @@
       "states": [{}, {}, {}, {}, {}]
     },
     {
+      "id": "scpi-titre",
+      "type": "section-title",
+      "client": "Prénom Nom",
+      "date": "2026-09-17",
+      "chapitreActif": 2,
+      "chapitres": [
+        { "numero": "01", "libelle": "Constat" },
+        { "numero": "02", "libelle": "Ingénieries" },
+        { "numero": "03", "libelle": "Préconisations" }
+      ],
+      "titre": "SCPI",
+      "sousTitre": "Présentation de l'ingénierie"
+    },
+    {
       "id": "scpi-mecanisme",
       "type": "scpi-mecanisme",
       "client": "Prénom Nom",
