@@ -391,7 +391,7 @@
     },
     {
       "id": "scpi-atouts",
-      "type": "scpi-atouts",
+      "type": "atouts",
       "client": "Prénom Nom",
       "date": "2026-09-17",
       "chapitreActif": 2,
@@ -399,6 +399,44 @@
         { "numero": "01", "libelle": "Constat" },
         { "numero": "02", "libelle": "Ingénieries" },
         { "numero": "03", "libelle": "Préconisations" }
+      ],
+      "titre": "Les atouts",
+      "atouts": [
+        {
+          "numero": "01",
+          "icon": "rendement-locatif",
+          "label": "Rendement locatif optimisé",
+          "bullets": [
+            "L'immobilier : une valeur refuge à long terme",
+            "Un rendement attractif assis sur de l'immobilier professionnel"
+          ]
+        },
+        {
+          "numero": "02",
+          "icon": "risque-maitrise",
+          "label": "Un risque maîtrisé",
+          "bullets": ["Une forte diversification du patrimoine", "Une mutualisation du risque locatif"]
+        },
+        {
+          "numero": "03",
+          "icon": "placement-sur-mesure",
+          "label": "Un placement sur-mesure",
+          "bullets": [
+            "Un placement accessible",
+            "Un montant d'investissement calibré",
+            "Possibilité d'acquisition progressive",
+            "Une transmission simplifiée"
+          ]
+        },
+        {
+          "numero": "04",
+          "icon": "gestion-cle-en-main",
+          "label": "Une gestion clé en mains",
+          "bullets": [
+            "Une procédure d'acquisition simple (pas de notaire)",
+            "Une gestion locative déléguée à des experts"
+          ]
+        }
       ],
       "states": [{}, {}, {}, {}]
     },

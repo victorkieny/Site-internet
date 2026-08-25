@@ -10,7 +10,7 @@ import * as transmission from "./slides/transmission.js";
 import * as syntheseChapitre from "./slides/synthese-chapitre.js";
 import * as scpiMecanisme from "./slides/scpi-mecanisme.js";
 import * as scpiCadence from "./slides/scpi-cadence.js";
-import * as scpiAtouts from "./slides/scpi-atouts.js";
+import * as atouts from "./slides/atouts.js";
 import * as scpiFinancement from "./slides/scpi-financement.js";
 import * as clotureReflexion from "./slides/cloture-reflexion.js";
 import * as clotureDetail from "./slides/cloture-detail.js";
@@ -34,7 +34,7 @@ export const renderers = {
   "synthese-chapitre": { render: syntheseChapitre.render },
   "scpi-mecanisme": { render: scpiMecanisme.render },
   "scpi-cadence": { render: scpiCadence.render },
-  "scpi-atouts": { render: scpiAtouts.render },
+  atouts: { render: atouts.render },
   "scpi-financement": { render: scpiFinancement.render },
   "cloture-reflexion": { render: clotureReflexion.render },
   "cloture-detail": { render: clotureDetail.render },

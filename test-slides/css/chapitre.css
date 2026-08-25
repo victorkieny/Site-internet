@@ -42,7 +42,7 @@
 .slide__stage.slide--synthese-chapitre,
 .slide__stage.slide--scpi-mecanisme,
 .slide__stage.slide--scpi-cadence,
-.slide__stage.slide--scpi-atouts,
+.slide__stage.slide--atouts,
 .slide__stage.slide--scpi-financement {
   background: var(--papier);
   --chap-ink-rgb: var(--encre-rgb);
@@ -61,7 +61,7 @@
 .slide--synthese-chapitre .slide__content,
 .slide--scpi-mecanisme .slide__content,
 .slide--scpi-cadence .slide__content,
-.slide--scpi-atouts .slide__content,
+.slide--atouts .slide__content,
 .slide--scpi-financement .slide__content {
   padding: 0;
   color: rgb(var(--chap-ink-rgb));
@@ -2152,7 +2152,7 @@
 
 /* ---------- Gabarit "Les atouts" (chapitre SCPI) ---------- */
 
-.scpi-atouts {
+.atouts {
   height: 100%;
   box-sizing: border-box;
   padding: 2.8125cqw 4.84375cqw 4.21875cqw;
@@ -2161,151 +2161,136 @@
   font-family: var(--font-sans-chapitre);
 }
 
-.scpi-atouts__intro {
+.atouts__intro {
   padding-top: 2.34375cqw;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
-.scpi-atouts__title {
+.atouts__title {
   font-size: max(1.7rem, 3.125cqw);
 }
 
-/* Hauteur réservée à l'atout le plus haut (4 puces, "sur-mesure") :
-   .scpi-atouts__stage est centré verticalement dans la slide
-   (margin:auto 0) — sans ce plancher, sa hauteur varie avec le nombre
-   de puces de l'atout actif, et le centrage déplace le repère (numéros
-   + filet) d'un atout à l'autre. Avec le plancher, la scène garde
-   toujours la même hauteur : le repère reste à la même position, seul
-   l'espace sous les puces les plus courtes reste vide. */
-.scpi-atouts__stage {
+/* min-height calée sur l'atout qui a le plus de puces (4, "placement
+   sur-mesure") : la scène garde toujours la même hauteur d'un atout à
+   l'autre — seul l'espace sous les puces les plus courtes reste vide,
+   jamais un repère (stepper) qui se déplace. */
+.atouts__stage {
   margin: auto 0;
   width: 100%;
-  min-height: 26.5625cqw;
+  min-height: 28.125cqw;
+  display: flex;
 }
 
-.scpi-atouts__track {
+/* Largeur fixe : le stepper ne doit jamais se redimensionner selon la
+   longueur des libellés (chacun a la même largeur de colonne, quel que
+   soit l'atout actif). */
+.atouts__side {
   position: relative;
-  width: 100%;
-  height: 7.5cqw;
+  flex: none;
+  width: 32.8125cqw;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
-.scpi-atouts__track-line {
+.atouts__side-line {
   position: absolute;
-  left: 11.328125cqw;
-  right: 11.328125cqw;
-  top: 3.671875cqw;
-  height: 0.078125cqw;
-  background: rgba(var(--chap-ink-rgb), 0.2);
+  left: 2.1875cqw;
+  top: 2.1875cqw;
+  bottom: 2.1875cqw;
+  width: 0.078125cqw;
+  background: rgba(var(--chap-ink-rgb), 0.16);
 }
 
-.scpi-atouts__track-row {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-}
-
-.scpi-atouts__num-cell {
+.atouts__step {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 1.71875cqw;
 }
 
-.scpi-atouts__num-circle {
-  width: 7.5cqw;
-  height: 7.5cqw;
+.atouts__step-circle {
+  flex: none;
+  width: 4.375cqw;
+  height: 4.375cqw;
   border-radius: 50%;
   box-sizing: border-box;
-  border: 0.078125cqw solid rgba(185, 151, 97, 0.5);
+  border: 0.078125cqw solid rgba(var(--chap-ink-rgb), 0.22);
   background: var(--papier);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.scpi-atouts__num-circle--active {
+.atouts__step--active .atouts__step-circle {
   border-color: var(--or);
   background: var(--or);
 }
 
-.scpi-atouts__num {
-  font-family: var(--font-serif-chapitre);
-  font-weight: 400;
-  font-size: 2.03125cqw;
-  line-height: 1;
-  color: rgba(var(--chap-ink-rgb), 0.45);
+.atouts__step-circle .chap-icon {
+  width: 2.03125cqw;
+  height: 2.03125cqw;
 }
 
-.scpi-atouts__num-circle--active .scpi-atouts__num {
-  color: var(--papier);
+.atouts__step-label {
+  font-weight: 450;
+  font-size: 1.171875cqw;
+  letter-spacing: 0.04em;
+  color: rgba(var(--chap-ink-rgb), 0.4);
 }
 
-.scpi-atouts__labels {
-  margin-top: 1.40625cqw;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  column-gap: 1.71875cqw;
-}
-
-.scpi-atouts__label {
+.atouts__step--active .atouts__step-label {
   font-weight: 700;
-  font-size: 0.859375cqw;
-  line-height: 1.4;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  text-align: center;
-  color: rgba(var(--chap-ink-rgb), 0.38);
+  color: rgb(var(--chap-ink-rgb));
 }
 
-.scpi-atouts__label--active {
-  color: rgba(var(--chap-ink-rgb), 0.85);
-}
-
-.scpi-atouts__rule {
-  margin-top: 1.875cqw;
-  position: relative;
-  height: 0.078125cqw;
-  background: rgba(185, 151, 97, 0.6);
-}
-
-.scpi-atouts__caret {
-  position: absolute;
-  top: 0;
-  transform: translateX(-50%);
-  width: 0;
-  height: 0;
-  border-left: 0.703125cqw solid transparent;
-  border-right: 0.703125cqw solid transparent;
-  border-top: 0.78125cqw solid var(--or);
-}
-
-.scpi-atouts__bullets {
-  padding-left: 13.28125cqw;
+/* Filet vertical + contenu centré à égale distance du haut et du bas
+   de la scène (justify-content:center) : jamais de vide disproportionné
+   sous les puces les plus courtes, comme l'aurait fait un flex-start. */
+.atouts__content {
+  flex: 1 1 auto;
+  min-width: 0;
+  border-left: 0.078125cqw solid rgba(var(--chap-ink-rgb), 0.16);
+  padding-left: 4.375cqw;
   display: flex;
   flex-direction: column;
+  justify-content: center;
+  gap: 2.1875cqw;
 }
 
-.scpi-atouts__bullet {
+.atouts__kicker {
+  font-weight: 700;
+  font-size: 1.015625cqw;
+  letter-spacing: 0.14em;
+  color: var(--or);
+}
+
+.atouts__bullets {
+  display: flex;
+  flex-direction: column;
+  gap: 1.875cqw;
+}
+
+.atouts__bullet {
   display: flex;
   align-items: baseline;
-  gap: 1.40625cqw;
+  gap: 1.25cqw;
 }
 
-.scpi-atouts__bullet-dash {
+.atouts__bullet-dash {
   flex: none;
-  width: 1.71875cqw;
-  height: 0.078125cqw;
-  background: var(--or);
-  transform: translateY(-0.46875cqw);
+  font-size: 1.171875cqw;
+  color: var(--or);
 }
 
-.scpi-atouts__bullet-text {
+.atouts__bullet-text {
   font-weight: 450;
-  font-size: 1.40625cqw;
-  line-height: 1.4;
-  text-wrap: pretty;
+  font-size: 1.5625cqw;
+  line-height: 1.5;
+  color: rgb(var(--chap-ink-rgb));
 }
 
 /* ---------- Gabarit "Investir en financement" (chapitre SCPI) ----------
@@ -2859,7 +2844,7 @@
    titre), plutôt que de compter sur le fait qu'une case révélée est
    toujours présente pour dimensionner la rangée : .scpi-cadence__stage
    est centré verticalement dans la slide (margin:auto 0), voir
-   .scpi-atouts__stage plus haut dans ce fichier pour la même logique. */
+   .atouts__stage plus haut dans ce fichier pour la même logique. */
 .scpi-cadence__stage {
   margin: auto 0;
   display: flex;

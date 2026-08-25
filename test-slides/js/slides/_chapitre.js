@@ -138,10 +138,24 @@ export const ICONS = {
   // client (assets/icons/*.svg, dessinés dans Claude Design), chacun
   // avec son propre viewBox — voir ACTIF_ICONS_RAW dans
   // scpi-mecanisme.js, pas la grille 24×24 partagée de ce fichier.
+  // Les 4 atouts SCPI ("Les atouts") — fournis tels quels par le client
+  // (assets/icons/picto-*.svg, Claude Design), repris ici tel quel car
+  // déjà sur la grille 24×24 partagée (contrairement aux icônes
+  // d'actifs ci-dessus) : un seul endroit pour tous les pictos qui la
+  // suivent, pas une exception de plus.
+  "rendement-locatif": '<polyline points="3,17 9,11 13,15 21,7"/><polyline points="15,7 21,7 21,13"/>',
+  "risque-maitrise":
+    '<path d="M12 3 L19 6 V11 C19 15.5 16 19 12 21 C8 19 5 15.5 5 11 V6 Z"/><polyline points="8.5,12 11,14.5 15.5,9.5"/>',
+  // Point central plein (fill="currentColor") : seule icône du registre
+  // à mélanger trait et remplissage — voir style="color" posé par
+  // iconSvg() pour que currentColor suive la même couleur que le trait.
+  "placement-sur-mesure": '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/>',
+  "gestion-cle-en-main":
+    '<circle cx="8" cy="8.5" r="3.3"/><line x1="10.3" y1="10.8" x2="20.5" y2="21"/><line x1="15.8" y1="16.3" x2="18.3" y2="13.8"/><line x1="18" y1="18.5" x2="20.5" y2="16"/>',
 };
 
 export function iconSvg(name, color, size = 38) {
   const path = ICONS[name];
   if (!path) return "";
-  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" stroke="${color}" stroke-width="1.4" fill="none" stroke-linecap="round" stroke-linejoin="round" class="chap-icon">${path}</svg>`;
+  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" stroke="${color}" stroke-width="1.4" fill="none" stroke-linecap="round" stroke-linejoin="round" style="color:${color}" class="chap-icon">${path}</svg>`;
 }
