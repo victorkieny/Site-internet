@@ -142,7 +142,21 @@ function values(slide) {
 // marge réservée pour les légendes ("Sans/Avec financement") sous les
 // colonnes.
 const LEVIER_TOP_CQW = 0.3125; // top de .scpi-financement__levier, voir chapitre.css
-const LEVIER_BAR_MAX_CQW = AXIS_TOP_CQW - LEVIER_TOP_CQW; // hauteur de la colonne "Patrimoine détenu" — même bas que la colonne de gauche
+// Titre au-dessus du diagramme ("À effort d'épargne équivalent (...)")
+// : réserve une bande fixe au-dessus de la rangée axe+colonnes plutôt
+// que de laisser le titre pousser le reste par le flux — LEVIER_ROW_TOP
+// (et donc LEVIER_BAR_MAX_CQW, dérivée) doit rester synchronisée avec
+// la hauteur de ligne réelle de .scpi-financement__levier-title
+// (1.09375cqw × line-height 1.2 = 1.3125cqw) et le gap qui l'en sépare
+// (voir .scpi-financement__levier en CSS). Ce gap doit aussi couvrir la
+// moitié de la hauteur du premier repère d'ordonnée ("Patrimoine
+// immobilier détenu"), qui déborde au-dessus du haut de la rangée —
+// centré dessus via translateY(50%), voir .scpi-financement__levier-
+// axis-label.
+const LEVIER_TITLE_H_CQW = 1.3125;
+const LEVIER_TITLE_GAP_CQW = 1.875;
+const LEVIER_ROW_TOP_CQW = LEVIER_TOP_CQW + LEVIER_TITLE_H_CQW + LEVIER_TITLE_GAP_CQW;
+const LEVIER_BAR_MAX_CQW = AXIS_TOP_CQW - LEVIER_ROW_TOP_CQW; // hauteur de la colonne "Patrimoine détenu" — même bas que la colonne de gauche
 
 function barSegmentsHtml(count, label) {
   const segments = Array.from(
@@ -224,38 +238,41 @@ export function render(slide, opts = {}) {
   const levierHtml = showLevier
     ? `
       <div class="scpi-financement__levier${levierEntering ? " is-entering" : ""}"${levierEntering ? " data-reveal" : ""} style="left:${LEVIER_LEFT}cqw">
-        <div class="scpi-financement__levier-axis" style="height:${LEVIER_BAR_MAX_CQW}cqw">
-          <span class="scpi-financement__levier-axis-label" style="bottom:${patrimoineBarH}cqw">Patrimoine immobilier détenu : ${v.capital}</span>
-          <span class="scpi-financement__levier-axis-label" style="bottom:${effortBarH}cqw">${v.effM} pendant ${v.duree} ans : ${v.effortTotal}</span>
-          <span class="scpi-financement__levier-axis-label" style="bottom:0">0 €</span>
-        </div>
-        <div class="scpi-financement__levier-diagram">
-          <div class="scpi-financement__levier-col">
-            <div class="scpi-financement__levier-bar-wrap" style="height:${LEVIER_BAR_MAX_CQW}cqw">
-              <div class="scpi-financement__levier-bar scpi-financement__levier-bar--effort"${levierEntering ? ` data-reveal data-reveal-height="${effortBarH}cqw"` : ""} style="height:${levierEntering ? 0 : effortBarH}cqw"></div>
-            </div>
-            <span class="scpi-financement__levier-caption">Sans financement</span>
+        <span class="scpi-financement__levier-title">À effort d'épargne équivalent (${v.effM})</span>
+        <div class="scpi-financement__levier-row">
+          <div class="scpi-financement__levier-axis" style="height:${LEVIER_BAR_MAX_CQW}cqw">
+            <span class="scpi-financement__levier-axis-label" style="bottom:${patrimoineBarH}cqw">Patrimoine immobilier détenu : ${v.capital}</span>
+            <span class="scpi-financement__levier-axis-label" style="bottom:${effortBarH}cqw">${v.effM} pendant ${v.duree} ans : ${v.effortTotal}</span>
+            <span class="scpi-financement__levier-axis-label" style="bottom:0">0 €</span>
           </div>
-          <div class="scpi-financement__levier-col">
-            <div class="scpi-financement__levier-bar-wrap" style="height:${LEVIER_BAR_MAX_CQW}cqw">
-              <div class="scpi-financement__levier-bar scpi-financement__levier-bar--patrimoine"${levierEntering ? ` data-reveal data-reveal-height="${patrimoineBarH}cqw"` : ""} style="height:${levierEntering ? 0 : patrimoineBarH}cqw">
-                <div class="scpi-financement__levier-bar-gap"${levierEntering ? ` data-reveal data-reveal-height="${gapBarH}cqw"` : ""} style="height:${levierEntering ? 0 : gapBarH}cqw">
-                  <div class="scpi-financement__levier-annotation">
-                    <span class="scpi-financement__levier-arrow">
-                      <span class="scpi-financement__levier-arrow-head scpi-financement__levier-arrow-head--up"></span>
-                      <span class="scpi-financement__levier-arrow-line"></span>
-                      <span class="scpi-financement__levier-arrow-head scpi-financement__levier-arrow-head--down"></span>
-                    </span>
-                    <div class="scpi-financement__levier-text">
-                      <span class="scpi-financement__levier-kicker">Effet de levier</span>
-                      <span class="scpi-financement__levier-value">${v.levier}</span>
-                      <span class="scpi-financement__levier-pct">${v.levierPctRounded}</span>
+          <div class="scpi-financement__levier-diagram">
+            <div class="scpi-financement__levier-col">
+              <div class="scpi-financement__levier-bar-wrap" style="height:${LEVIER_BAR_MAX_CQW}cqw">
+                <div class="scpi-financement__levier-bar scpi-financement__levier-bar--effort"${levierEntering ? ` data-reveal data-reveal-height="${effortBarH}cqw"` : ""} style="height:${levierEntering ? 0 : effortBarH}cqw"></div>
+              </div>
+              <span class="scpi-financement__levier-caption">Sans financement</span>
+            </div>
+            <div class="scpi-financement__levier-col">
+              <div class="scpi-financement__levier-bar-wrap" style="height:${LEVIER_BAR_MAX_CQW}cqw">
+                <div class="scpi-financement__levier-bar scpi-financement__levier-bar--patrimoine"${levierEntering ? ` data-reveal data-reveal-height="${patrimoineBarH}cqw"` : ""} style="height:${levierEntering ? 0 : patrimoineBarH}cqw">
+                  <div class="scpi-financement__levier-bar-gap"${levierEntering ? ` data-reveal data-reveal-height="${gapBarH}cqw"` : ""} style="height:${levierEntering ? 0 : gapBarH}cqw">
+                    <div class="scpi-financement__levier-annotation">
+                      <span class="scpi-financement__levier-arrow">
+                        <span class="scpi-financement__levier-arrow-head scpi-financement__levier-arrow-head--up"></span>
+                        <span class="scpi-financement__levier-arrow-line"></span>
+                        <span class="scpi-financement__levier-arrow-head scpi-financement__levier-arrow-head--down"></span>
+                      </span>
+                      <div class="scpi-financement__levier-text">
+                        <span class="scpi-financement__levier-kicker">Effet de levier</span>
+                        <span class="scpi-financement__levier-value">${v.levier}</span>
+                        <span class="scpi-financement__levier-pct">${v.levierPctRounded}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
+              <span class="scpi-financement__levier-caption">Avec financement</span>
             </div>
-            <span class="scpi-financement__levier-caption">Avec financement</span>
           </div>
         </div>
       </div>

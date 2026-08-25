@@ -2491,11 +2491,27 @@
 /* Diagramme de l'effet de levier (état 5+, voir scpi-financement.js) —
    ancré à gauche (left:LEVIER_LEFT, marge fixe après la colonne
    rétractée) plutôt que centré sur un bloc de texte aujourd'hui retiré.
-   Rangée : axe, deux colonnes, effet de levier. */
+   Colonne : titre, puis la rangée (axe, deux colonnes, effet de
+   levier). */
 .scpi-financement__levier {
   position: absolute;
   top: 0.3125cqw;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 1.875cqw;
+}
+
+.scpi-financement__levier-title {
+  display: block;
+  font-weight: 600;
+  font-size: 1.09375cqw;
+  line-height: 1.2;
+  white-space: nowrap;
+  color: rgba(var(--chap-ink-rgb), 0.75);
+}
+
+.scpi-financement__levier-row {
   display: flex;
   align-items: flex-end;
   gap: 1.09375cqw;
