@@ -2885,8 +2885,8 @@
 
 .scpi-cadence__kicker {
   font-weight: 700;
-  font-size: 0.7421875cqw;
-  letter-spacing: 0.18em;
+  font-size: 1.09375cqw;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   color: rgba(var(--chap-ink-rgb), 0.45);
 }
@@ -2894,19 +2894,19 @@
 .scpi-cadence__box-head {
   display: flex;
   align-items: center;
-  gap: 0.625cqw;
+  gap: 0.9375cqw;
 }
 
 .scpi-cadence__box-head .chap-icon {
   flex: none;
-  width: 1.875cqw;
-  height: 1.875cqw;
+  width: 2.5cqw;
+  height: 2.5cqw;
 }
 
 .scpi-cadence__titre {
   font-family: var(--font-serif-chapitre);
   font-weight: 400;
-  font-size: 1.40625cqw;
+  font-size: 2.03125cqw;
   line-height: 1.15;
 }
 
