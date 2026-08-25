@@ -2460,11 +2460,11 @@
    levier). */
 .scpi-financement__levier {
   position: absolute;
-  top: 0.3125cqw;
+  top: 0;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 2.5cqw;
+  gap: 4.5cqw;
 }
 
 .scpi-financement__levier-title {

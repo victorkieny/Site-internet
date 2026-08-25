@@ -124,7 +124,7 @@ function values(slide) {
 // diagramme n'a plus besoin de rester au-dessus d'une ligne visible ;
 // marge réservée pour les légendes ("Sans/Avec financement") sous les
 // colonnes.
-const LEVIER_TOP_CQW = 0.3125; // top de .scpi-financement__levier, voir chapitre.css
+const LEVIER_TOP_CQW = 0; // top de .scpi-financement__levier, voir chapitre.css
 // Titre au-dessus du diagramme ("À effort d'épargne équivalent (...)")
 // : réserve une bande fixe au-dessus de la rangée axe+colonnes plutôt
 // que de laisser le titre pousser le reste par le flux — LEVIER_ROW_TOP
@@ -137,7 +137,7 @@ const LEVIER_TOP_CQW = 0.3125; // top de .scpi-financement__levier, voir chapitr
 // centré dessus via translateY(50%), voir .scpi-financement__levier-
 // axis-label.
 const LEVIER_TITLE_H_CQW = 1.875;
-const LEVIER_TITLE_GAP_CQW = 3.75;
+const LEVIER_TITLE_GAP_CQW = 4.5;
 const LEVIER_ROW_TOP_CQW = LEVIER_TOP_CQW + LEVIER_TITLE_H_CQW + LEVIER_TITLE_GAP_CQW;
 const LEVIER_BAR_MAX_CQW = AXIS_TOP_CQW - LEVIER_ROW_TOP_CQW; // hauteur de la colonne "Patrimoine détenu" — même bas que la colonne de gauche
 
