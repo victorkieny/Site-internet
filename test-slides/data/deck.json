@@ -413,7 +413,7 @@
         { "numero": "02", "libelle": "Ingénieries" },
         { "numero": "03", "libelle": "Préconisations" }
       ],
-      "titre": "Points clés",
+      "titre": "Les points clés",
       "states": [{}, {}, {}]
     },
     {
