@@ -1845,7 +1845,7 @@
   text-align: center;
   white-space: nowrap;
   font-weight: 450;
-  font-size: clamp(0.85rem, 0.95cqw, 1.25cqw);
+  font-size: 1.328125cqw;
   line-height: 1.45;
   color: rgba(var(--chap-ink-rgb), 0.6);
 }
