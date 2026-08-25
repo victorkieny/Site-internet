@@ -267,17 +267,18 @@ export function render(slide, opts = {}) {
   // affiché comme un repère de durée qui prolonge l'axe au-delà de
   // "25 ans", pas un nouveau calcul. Kicker + grande valeur (même
   // vocabulaire que le bilan/l'effet de levier) plutôt qu'une légende
-  // discrète : c'est la conclusion de la slide, elle doit se voir.
-  // Centré sous la flèche au bout de la ligne (AXIS_END_CQW — l'axe est
-  // déjà rétracté à ce stade, voir axisWidth) plutôt qu'à côté du
-  // diagramme ou sous le milieu de la ligne. Note explicative sous la
-  // valeur : rend le lien avec le patrimoine (v.capital, dérivé, jamais
-  // saisi en dur) explicite plutôt que de le laisser implicite via l'axe.
+  // discrète : c'est la conclusion de la slide, elle doit se voir. À
+  // côté de la pointe de flèche (AXIS_END_CQW + petite marge), au même
+  // niveau vertical qu'elle (voir top/transform en CSS) plutôt que
+  // dessous — se lit comme un repère qui prolonge la ligne, pas comme
+  // une légende d'axe. Note explicative sous la valeur : rend le lien
+  // avec le patrimoine (v.capital, dérivé, jamais saisi en dur) explicite
+  // plutôt que de le laisser implicite via l'axe.
   const showViager = stateIndex >= 5;
   const viagerEntering = animate && stateIndex === 5;
   const viagerHtml = showViager
     ? `
-      <div class="scpi-financement__viager${viagerEntering ? " is-entering" : ""}"${viagerEntering ? " data-reveal" : ""} style="left:${AXIS_END_CQW}cqw">
+      <div class="scpi-financement__viager${viagerEntering ? " is-entering" : ""}"${viagerEntering ? " data-reveal" : ""} style="left:${AXIS_END_CQW + 1.5}cqw">
         <span class="scpi-financement__viager-kicker">Puis, à vie</span>
         <span class="scpi-financement__viager-value">${v.revM}</span>
         <p class="scpi-financement__viager-note">Puis, à vie, les loyers continuent d'être versés, base ${v.capital}</p>
