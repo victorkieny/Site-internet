@@ -2348,7 +2348,7 @@
    technique que .scpi-financement__axis-label--center). */
 .scpi-financement__capital-cible {
   position: absolute;
-  top: 0.78125cqw;
+  top: 2.28125cqw;
   transform: translateX(-50%);
   text-align: center;
 }
@@ -2460,7 +2460,7 @@
    levier). */
 .scpi-financement__levier {
   position: absolute;
-  top: 0;
+  top: 1.5cqw;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -2709,7 +2709,7 @@
 .scpi-financement__axis {
   position: absolute;
   left: 0;
-  top: 24.4375cqw;
+  top: 25.9375cqw;
   height: 0.078125cqw;
   background: rgba(var(--chap-ink-rgb), 0.3);
 }
@@ -2732,7 +2732,7 @@
 
 .scpi-financement__tick {
   position: absolute;
-  top: 24.4375cqw;
+  top: 25.9375cqw;
   width: 0.078125cqw;
   height: 0.625cqw;
   background: rgba(var(--chap-ink-rgb), 0.3);
@@ -2740,7 +2740,7 @@
 
 .scpi-financement__axis-label {
   position: absolute;
-  top: 25.6875cqw;
+  top: 27.1875cqw;
   font-weight: 700;
   font-size: 0.9375cqw;
   letter-spacing: 0.16em;
@@ -2771,7 +2771,7 @@
    plutôt que de déborder symétriquement de part et d'autre. */
 .scpi-financement__viager {
   position: absolute;
-  top: 23.79296875cqw;
+  top: 25.29296875cqw;
   display: flex;
   flex-direction: column;
   align-items: flex-start;

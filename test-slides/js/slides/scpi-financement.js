@@ -34,7 +34,7 @@ import { renderChapRail } from "./_chapitre.js";
 // colonne repose sur l'axe, son top se déduit de sa hauteur plutôt que
 // d'être saisi en dur en plus (jamais désynchronisé si l'une des deux
 // valeurs change).
-const AXIS_TOP_CQW = 24.4375;
+const AXIS_TOP_CQW = 25.9375;
 const BAR_HEIGHT_CQW = 19.75;
 const BAR_TOP_CQW = AXIS_TOP_CQW - BAR_HEIGHT_CQW;
 
@@ -124,7 +124,7 @@ function values(slide) {
 // diagramme n'a plus besoin de rester au-dessus d'une ligne visible ;
 // marge réservée pour les légendes ("Sans/Avec financement") sous les
 // colonnes.
-const LEVIER_TOP_CQW = 0; // top de .scpi-financement__levier, voir chapitre.css
+const LEVIER_TOP_CQW = 1.5; // top de .scpi-financement__levier, voir chapitre.css
 // Titre au-dessus du diagramme ("À effort d'épargne équivalent (...)")
 // : réserve une bande fixe au-dessus de la rangée axe+colonnes plutôt
 // que de laisser le titre pousser le reste par le flux — LEVIER_ROW_TOP
