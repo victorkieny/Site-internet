@@ -134,7 +134,7 @@ const LEVIER_TOP_CQW = 0.3125; // top de .scpi-financement__levier, voir chapitr
 // centré dessus via translateY(50%), voir .scpi-financement__levier-
 // axis-label.
 const LEVIER_TITLE_H_CQW = 1.3125;
-const LEVIER_TITLE_GAP_CQW = 1.875;
+const LEVIER_TITLE_GAP_CQW = 2.5;
 const LEVIER_ROW_TOP_CQW = LEVIER_TOP_CQW + LEVIER_TITLE_H_CQW + LEVIER_TITLE_GAP_CQW;
 const LEVIER_BAR_MAX_CQW = AXIS_TOP_CQW - LEVIER_ROW_TOP_CQW; // hauteur de la colonne "Patrimoine détenu" — même bas que la colonne de gauche
 

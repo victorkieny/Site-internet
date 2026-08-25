@@ -2479,7 +2479,7 @@
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 1.875cqw;
+  gap: 2.5cqw;
 }
 
 .scpi-financement__levier-title {
