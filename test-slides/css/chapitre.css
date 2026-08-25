@@ -2382,26 +2382,6 @@
   height: 23.4375cqw;
 }
 
-.scpi-financement__kicker {
-  display: block;
-  font-weight: 700;
-  font-size: 0.9375cqw;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: rgba(var(--chap-ink-rgb), 0.5);
-}
-
-.scpi-financement__value {
-  display: block;
-  margin-top: 0.46875cqw;
-  font-family: var(--font-serif-chapitre);
-  font-weight: 400;
-  font-size: 2.34375cqw;
-  line-height: 1;
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
-
 /* Patrimoine cible, au-dessus de la colonne (états 1-6, voir
    scpi-financement.js) : centré sur la colonne elle-même
    (transform:translateX(-50%) + left posé en style inline, même
@@ -2513,44 +2493,10 @@
   transform: translateY(-50%);
 }
 
-/* Bilan (état 4+) : texte à gauche (montants), diagramme d'effet de
-   levier à droite dès l'état 5 (voir scpi-financement.js) — même
-   rangée, "à côté de" 40 500 € et 85 000 €, pas en dessous de l'axe.
-   space-between plutôt qu'un gap fixe : le diagramme rejoint le bout de
-   l'axe (même repère que "25 ans"/l'extrémité de la colonne à l'état 1)
-   au lieu de rester collé au bloc de texte avec un grand vide à droite. */
-.scpi-financement__resultat {
-  position: absolute;
-  box-sizing: border-box;
-  display: flex;
-  justify-content: center;
-}
-
-.scpi-financement__resultat-text {
-  flex: none;
-  display: flex;
-  flex-direction: column;
-  gap: 1.09375cqw;
-}
-
-.scpi-financement__resultat-row {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3125cqw;
-  padding-bottom: 1.09375cqw;
-  border-bottom: 0.078125cqw solid rgba(var(--chap-ink-rgb), 0.16);
-}
-
-.scpi-financement__resultat-row--last {
-  padding-bottom: 0;
-  border-bottom: none;
-}
-
-/* Indépendant de .scpi-financement__resultat (voir scpi-financement.js) :
-   ancré au bloc central (left:LEVIER_LEFT — autant d'écart bloc ->
-   diagramme que colonne -> bloc) plutôt que second enfant d'un même
-   conteneur flex — le bloc central ne doit pas se déplacer pour lui
-   laisser sa place. Rangée : axe, deux colonnes, effet de levier. */
+/* Diagramme de l'effet de levier (état 5+, voir scpi-financement.js) —
+   ancré à gauche (left:LEVIER_LEFT, marge fixe après la colonne
+   rétractée) plutôt que centré sur un bloc de texte aujourd'hui retiré.
+   Rangée : axe, deux colonnes, effet de levier. */
 .scpi-financement__levier {
   position: absolute;
   top: 0.3125cqw;
@@ -2568,10 +2514,20 @@
    scpi-financement.js) — jamais dupliquée en dur ici, sous peine de se
    désynchroniser de la vraie hauteur des colonnes si l'une des deux
    valeurs change sans l'autre (bug déjà rencontré). */
+/* margin-bottom : .scpi-financement__levier aligne ses enfants par le
+   bas (align-items:flex-end) — sans ce correctif l'axe (haut de
+   LEVIER_BAR_MAX_CQW seulement) se cale sur le bas du DIAGRAMME
+   (colonnes + légende "Sans/Avec financement" sous elles, plus haut que
+   l'axe), et ses repères tombent alors plus bas que le sommet réel des
+   colonnes qu'ils légendent. Valeur = gap de .scpi-financement__levier-
+   col (0.9375cqw) + hauteur de ligne de .scpi-financement__levier-
+   caption (1.09375cqw × line-height 1.2 = 1.3125cqw) — à resynchroniser
+   si l'un de ces deux réglages change. */
 .scpi-financement__levier-axis {
   position: relative;
   flex: none;
   width: 5.625cqw;
+  margin-bottom: 2.25cqw;
   border-right: 0.078125cqw solid rgba(var(--chap-ink-rgb), 0.3);
 }
 
@@ -2637,7 +2593,7 @@
 
 .scpi-financement__levier-caption {
   font-weight: 450;
-  font-size: 0.859375cqw;
+  font-size: 1.09375cqw;
   line-height: 1.2;
   text-align: center;
   white-space: nowrap;
@@ -2710,7 +2666,7 @@
 .scpi-financement__levier-value {
   font-family: var(--font-serif-chapitre);
   font-weight: 400;
-  font-size: 1.71875cqw;
+  font-size: 2.109375cqw;
   line-height: 1;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
@@ -2719,7 +2675,7 @@
 
 .scpi-financement__levier-pct {
   font-family: var(--font-sans-chapitre);
-  font-size: 0.9375cqw;
+  font-size: 1.171875cqw;
   font-weight: 450;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
@@ -2829,7 +2785,7 @@
   padding-top: 0.9375cqw;
   border-top: 0.078125cqw solid rgba(var(--chap-ink-rgb), 0.16);
   font-weight: 450;
-  font-size: 0.859375cqw;
+  font-size: 0.8828125cqw;
   line-height: 1.5;
   color: rgba(var(--chap-ink-rgb), 0.45);
 }

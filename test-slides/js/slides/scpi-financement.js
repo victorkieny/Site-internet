@@ -55,26 +55,21 @@ const SEGMENT_STEP_MS = 16;
 const STAGE_W = 90.3125;
 const THIRD_W = STAGE_W / 3;
 
-// Le bloc central (résultat-text) est centré sur STAGE_W mais de
-// largeur intrinsèque (dépend du texte réel, pas fixée en CSS) — sa
-// largeur exacte n'est donc pas connue à l'écriture de ce fichier.
-// TEXT_W_ASSUMED est une estimation (mesurée sur le contenu réel de ce
-// client) qui sert UNIQUEMENT à calculer un espacement symétrique de
-// part et d'autre du bloc (colonne -> bloc, bloc -> diagramme) ; ce
-// n'est pas une contrainte posée sur le texte lui-même, qui reste libre
-// de s'ajuster à son propre contenu.
-const TEXT_W_ASSUMED = 16.5;
-const TEXT_LEFT_ASSUMED = STAGE_W / 2 - TEXT_W_ASSUMED / 2;
-const TEXT_RIGHT_ASSUMED = STAGE_W / 2 + TEXT_W_ASSUMED / 2;
-const BAR_TEXT_GAP = TEXT_LEFT_ASSUMED - THIRD_W;
-const LEVIER_LEFT = TEXT_RIGHT_ASSUMED + BAR_TEXT_GAP;
+// Le diagramme de levier (état 5) n'a plus de bloc central à côtoyer
+// (le bilan chiffré, redondant avec la phrase d'hypothèse, a été
+// retiré) : il dispose de tout l'espace entre la colonne rétractée et
+// le bord de la scène. LEVIER_LEFT lui laisse une marge à gauche assez
+// large pour que les légendes d'ordonnées (désormais des phrases
+// complètes, pas juste un montant, voir levierHtml) aient la place de
+// déborder vers la gauche de leur axe sans jamais chevaucher la colonne.
+const LEVIER_LEFT = 44.0625;
 
-// L'axe s'arrête juste après le bloc central plutôt que de courir sous
-// tout le diagramme de levier (voir .scpi-financement__axis, largeur
-// posée en style inline) — celui-ci n'a alors plus besoin de rester
-// au-dessus d'une ligne visible, et peut descendre jusqu'à son niveau
-// (AXIS_TOP_CQW) au lieu de s'arrêter bien avant par précaution.
-const AXIS_END_CQW = TEXT_RIGHT_ASSUMED + 2;
+// L'axe s'arrête juste après la colonne rétractée (voir
+// .scpi-financement__axis, largeur posée en style inline) plutôt que de
+// courir sous tout le diagramme de levier — laisse le maximum de place
+// à ce dernier, qui n'a de toute façon plus besoin de rester au-dessus
+// d'une ligne visible.
+const AXIS_END_CQW = THIRD_W + 2;
 
 const ETAPES = [
   {
@@ -209,32 +204,16 @@ export function render(slide, opts = {}) {
   const revenuAttrs = revenuGrowing ? ` data-reveal data-reveal-height="${v.hRev}cqw"` : "";
   const revenuStyle = revenuGrowing ? `height:0cqw` : `height:${revenuHeight}cqw`;
 
-  // État 4 (index 3) : bilan (effort réel cumulé / patrimoine détenu).
-  const showResultat = stateIndex >= 3;
-  const resultatEntering = animate && stateIndex === 3;
-  const resultatTextHtml = showResultat
-    ? `
-      <div class="scpi-financement__resultat-text${resultatEntering ? " is-entering" : ""}"${resultatEntering ? " data-reveal" : ""}>
-        <div class="scpi-financement__resultat-row">
-          <span class="scpi-financement__kicker">${escapeHtml(v.effM)} pendant ${v.duree} ans</span>
-          <span class="scpi-financement__value">${v.effortTotal}</span>
-        </div>
-        <div class="scpi-financement__resultat-row scpi-financement__resultat-row--last">
-          <span class="scpi-financement__kicker">Patrimoine immobilier détenu</span>
-          <span class="scpi-financement__value">${v.capital}</span>
-        </div>
-      </div>
-    `
-    : "";
-
-  // État 5 (index 4) : effet de levier — diagramme ancré au bloc
-  // central (pas au bout de l'axe) : autant d'écart colonne -> bloc que
-  // bloc -> diagramme (voir LEVIER_LEFT/BAR_TEXT_GAP). Axe des
-  // ordonnées à gauche des deux colonnes ("Sans financement" /
-  // "Avec financement"), effet de levier (+montant, +%) à droite.
-  // Colonnes à l'échelle l'une de l'autre : l'écart au sommet de
-  // "Avec financement" (en or) EST le levier — montants toujours
-  // dérivés (jamais saisis en dur — charte CLAUDE.md).
+  // État 5 (index 4) : effet de levier. Axe des ordonnées à gauche des
+  // deux colonnes ("Sans financement" / "Avec financement"), effet de
+  // levier (+montant, +%) à droite. Colonnes à l'échelle l'une de
+  // l'autre : l'écart au sommet de "Avec financement" (en or) EST le
+  // levier — montants toujours dérivés (jamais saisis en dur — charte
+  // CLAUDE.md). Légendes d'ordonnées complètes (pas juste le montant) :
+  // le bilan chiffré qui les portait autrefois dans un bloc séparé a été
+  // retiré (redondant avec la phrase d'hypothèse), ces deux repères sont
+  // désormais le seul endroit qui rattache chaque montant à ce qu'il
+  // représente.
   const showLevier = stateIndex >= 4;
   const levierEntering = animate && stateIndex === 4;
   const patrimoineBarH = LEVIER_BAR_MAX_CQW;
@@ -244,8 +223,8 @@ export function render(slide, opts = {}) {
     ? `
       <div class="scpi-financement__levier${levierEntering ? " is-entering" : ""}"${levierEntering ? " data-reveal" : ""} style="left:${LEVIER_LEFT}cqw">
         <div class="scpi-financement__levier-axis" style="height:${LEVIER_BAR_MAX_CQW}cqw">
-          <span class="scpi-financement__levier-axis-label" style="bottom:${patrimoineBarH}cqw">${v.capital}</span>
-          <span class="scpi-financement__levier-axis-label" style="bottom:${effortBarH}cqw">${v.effortTotal}</span>
+          <span class="scpi-financement__levier-axis-label" style="bottom:${patrimoineBarH}cqw">Patrimoine immobilier détenu : ${v.capital}</span>
+          <span class="scpi-financement__levier-axis-label" style="bottom:${effortBarH}cqw">${v.effM} pendant ${v.duree} ans : ${v.effortTotal}</span>
           <span class="scpi-financement__levier-axis-label" style="bottom:0">0 €</span>
         </div>
         <div class="scpi-financement__levier-diagram">
@@ -304,16 +283,6 @@ export function render(slide, opts = {}) {
     `
     : "";
 
-  // État 4 (bilan) : bloc centré par rapport au TITRE, donc sur la
-  // pleine largeur de la scène (left:0/width:STAGE_W). Position FIXE :
-  // aux états 5-6, le diagramme de levier apparaît comme un élément
-  // indépendant ancré à droite (voir levierHtml, left:STAGE_W) plutôt
-  // que comme un second enfant du même conteneur flex — sinon ce bloc
-  // se déplacerait pour laisser sa place, comme avant cette correction.
-  const resultatHtml = showResultat
-    ? `<div class="scpi-financement__resultat" style="left:0;top:4.375cqw;width:${STAGE_W}cqw">${resultatTextHtml}</div>`
-    : "";
-
   return `
     <div class="scpi-financement">
       ${renderChapRail(slide)}
@@ -342,7 +311,6 @@ export function render(slide, opts = {}) {
         `
         }
 
-        ${resultatHtml}
         ${levierHtml}
 
         <div class="scpi-financement__axis"${axisAttrs} style="${axisStyle}">
