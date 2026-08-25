@@ -239,9 +239,14 @@
     left var(--chap-duration-move) var(--chap-ease-move);
 }
 
+/* scale(0.985), pas plus marqué : au-delà (0.94 à l'origine), le texte
+   qui grossit pendant la transition perd son antialiasing sur Chrome
+   (rendu flou le temps du fondu, surtout visible sur du texte en gras/
+   grande taille — repéré sur le panneau de "Les atouts") — un zoom aussi
+   discret reste perceptible sans ce défaut. */
 [data-reveal].is-entering {
   opacity: 0;
-  transform: scale(0.94);
+  transform: scale(0.985);
 }
 
 @media (prefers-reduced-motion: reduce) {
