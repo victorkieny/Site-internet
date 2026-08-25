@@ -2736,15 +2736,18 @@
    bilan/l'effet de levier), pas une légende discrète : c'est la
    conclusion de la slide. */
 /* À côté de la pointe de flèche (voir left:AXIS_END_CQW+gap en JS), pas
-   dessous : top posé au niveau de la ligne d'axe elle-même
-   (AXIS_TOP_CQW) + translateY(-50%) centre le bloc sur cette ligne,
-   même technique que .scpi-financement__levier-axis-label. Aligné à
+   dessous : top calé pour que ce soit la PREMIÈRE ligne ("Puis, à vie",
+   voir .scpi-financement__viager-kicker) qui tombe au niveau de la
+   ligne d'axe (AXIS_TOP_CQW) — valeur/note suivent en dessous — pas le
+   bloc entier centré dessus (qui alignait la ligne de VALEUR, au milieu
+   du bloc, avec la flèche). top = AXIS_TOP_CQW - la moitié de la
+   hauteur de ligne du kicker (1.2890625cqw, mesurée à son font-size
+   actuel 0.859375cqw — à resynchroniser si celui-ci change). Aligné à
    gauche (pas centré) : le bloc part du point d'ancrage vers la droite,
    plutôt que de déborder symétriquement de part et d'autre. */
 .scpi-financement__viager {
   position: absolute;
-  top: 18.4375cqw;
-  transform: translateY(-50%);
+  top: 17.79296875cqw;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
