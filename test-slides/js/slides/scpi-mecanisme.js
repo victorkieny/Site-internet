@@ -92,11 +92,10 @@ function actifIconSvg(key) {
   return `<svg class="chap-icon" viewBox="${icon.viewBox}" fill="none" stroke="rgba(var(--chap-ink-rgb),.65)" stroke-width="${icon.strokeWidth}" stroke-linecap="round" stroke-linejoin="round">${icon.markup}</svg>`;
 }
 
-function boxHtml({ left, top, width, height, cls, icon, kicker, titre, texte, extra, entering }) {
+function boxHtml({ left, top, width, height, cls, icon, titre, texte, extra, entering }) {
   const boxCls = "scpi-mecanisme__box" + (cls ? " " + cls : "") + (entering ? " is-entering" : "");
   return `
     <div class="${boxCls}"${entering ? " data-reveal" : ""} style="left:${left}cqw;top:${top}cqw;width:${width}cqw;height:${height}cqw">
-      ${kicker ? `<span class="scpi-mecanisme__box-kicker">${escapeHtml(kicker)}</span>` : ""}
       <span class="scpi-mecanisme__box-head">
         ${icon ? iconSvg(icon, "rgba(var(--chap-ink-rgb),.65)") : ""}
         <span class="scpi-mecanisme__box-titre">${escapeHtml(titre)}</span>
@@ -158,7 +157,6 @@ export function render(slide, opts = {}) {
     height: 12.1875,
     cls: "scpi-mecanisme__box--center",
     icon: "personne",
-    kicker: "Associé",
     titre: "L'investisseur",
     entering: socleEntering,
   });
@@ -169,7 +167,6 @@ export function render(slide, opts = {}) {
     width: 16.5625,
     height: 16.25,
     cls: "scpi-mecanisme__box--vehicule",
-    kicker: "Le véhicule",
     titre: "SCPI",
     extra: `<div class="scpi-mecanisme__actifs">${actifsHtml}</div>`,
     entering: socleEntering,
@@ -183,7 +180,6 @@ export function render(slide, opts = {}) {
         height: 12.1875,
         cls: "scpi-mecanisme__box--center",
         icon: "cle",
-        kicker: "L'exploitant",
         titre: "La société de gestion",
         entering: gestionEntering,
       })

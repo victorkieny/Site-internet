@@ -2044,15 +2044,18 @@
   padding-top: 0;
 }
 
+/* padding-bottom : espace entre les deux icônes du bas et le bord
+   inférieur de la case — sans lui, .scpi-mecanisme__actifs (margin-
+   top:auto, voir plus bas) vient se plaquer contre le bord bas de la
+   case, seul l'espace au-dessus du registre d'icônes grandit. */
 .scpi-mecanisme__box--vehicule {
   border-top: 0.15625cqw solid var(--or);
+  padding-bottom: 1.09375cqw;
 }
 
-/* Case centrale : plus de picto dans l'en-tête (voir scpi-mecanisme.js),
-   kicker + titre centrés plutôt qu'alignés à gauche comme les deux
+/* Case centrale : titre centré plutôt qu'aligné à gauche comme les deux
    cases voisines — cette case est la seule à porter un contenu propre
    en dessous (le registre de pictogrammes), elle peut se démarquer. */
-.scpi-mecanisme__box--vehicule .scpi-mecanisme__box-kicker,
 .scpi-mecanisme__box--vehicule .scpi-mecanisme__box-head {
   justify-content: center;
   text-align: center;
@@ -2068,14 +2071,6 @@
   flex: none;
   width: 1.875cqw;
   height: 1.875cqw;
-}
-
-.scpi-mecanisme__box-kicker {
-  font-weight: 700;
-  font-size: 0.7421875cqw;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: rgba(var(--chap-ink-rgb), 0.45);
 }
 
 .scpi-mecanisme__box-titre {
