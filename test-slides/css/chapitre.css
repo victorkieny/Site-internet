@@ -2268,7 +2268,11 @@
   color: var(--or);
 }
 
+/* margin-left : les tirets ne démarrent pas à l'aplomb du titre doré
+   au-dessus (voir .atouts__kicker) — un léger retrait les distingue
+   d'un second niveau de titre plutôt que de lire comme alignés dessus. */
 .atouts__bullets {
+  margin-left: 1.09375cqw;
   display: flex;
   flex-direction: column;
   gap: 1.875cqw;
@@ -2278,6 +2282,14 @@
   display: flex;
   align-items: baseline;
   gap: 1.25cqw;
+}
+
+/* Toujours rendue, même au-delà de visibleCount (voir atouts.js) : la
+   liste garde sa hauteur pleine dès le premier tiret, sinon le panneau
+   (centré via justify-content:center sur .atouts__content) sauterait de
+   position à chaque clic. */
+.atouts__bullet--invisible {
+  opacity: 0;
 }
 
 .atouts__bullet-dash {
