@@ -64,7 +64,7 @@ const THIRD_W = STAGE_W / 3;
 // gauche de leur axe sans jamais chevaucher la flèche de l'axe
 // principal (celui-ci s'arrête à AXIS_END_CQW, mais son repère visuel —
 // pointe de flèche — dépasse encore un peu au-delà).
-const LEVIER_LEFT = 53.0625;
+const LEVIER_LEFT = 50.5625;
 
 // L'axe s'arrête juste après la colonne rétractée (voir
 // .scpi-financement__axis, largeur posée en style inline) plutôt que de
