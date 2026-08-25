@@ -71,7 +71,7 @@ const LEVIER_LEFT = 51.5625;
 // courir sous tout le diagramme de levier — laisse le maximum de place
 // à ce dernier, qui n'a de toute façon plus besoin de rester au-dessus
 // d'une ligne visible.
-const AXIS_END_CQW = THIRD_W + 2;
+const AXIS_END_CQW = THIRD_W + 4;
 
 const ETAPES = [
   {
