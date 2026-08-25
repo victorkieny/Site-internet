@@ -1462,7 +1462,7 @@
 
 .fiscalite-rachats__entry-text {
   font-weight: 450;
-  font-size: 1.25cqw;
+  font-size: 1.40625cqw;
   line-height: 1.4;
 }
 
@@ -1873,11 +1873,41 @@
   border-top: 0.078125cqw solid rgba(var(--chap-ink-rgb), 0.16);
 }
 
-.transmission__footer-text {
-  margin: 0.625cqw 0 0;
+/* Deux faits distincts (abattement sur le capital, exonération sur les
+   plus-values) — bullet list plutôt qu'une phrase unique, même langage
+   que .cloture-d__bullets. Bloc centré comme le reste de la colonne
+   (héritage align-items:center sur .transmission__block, voir plus
+   haut) ; le texte, lui, reste aligné à gauche À L'INTÉRIEUR du bloc
+   (align-items:flex-start sur .transmission__footer-bullets) — sinon le
+   tiret de chaque puce se retrouverait à une position différente d'une
+   ligne à l'autre. */
+.transmission__footer-bullets {
+  margin-top: 0.625cqw;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.46875cqw;
+}
+
+.transmission__footer-bullet {
+  display: flex;
+  align-items: baseline;
+  gap: 0.78125cqw;
+}
+
+.transmission__footer-bullet-dash {
+  flex: none;
+  width: 0.9375cqw;
+  height: 0.078125cqw;
+  background: var(--or);
+  transform: translateY(-0.328125cqw);
+}
+
+.transmission__footer-bullet-text {
   font-weight: 450;
   font-size: 1.328125cqw;
   line-height: 1.5;
+  text-align: left;
   color: rgba(var(--chap-ink-rgb), 0.68);
 }
 

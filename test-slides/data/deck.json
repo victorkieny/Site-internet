@@ -347,7 +347,10 @@
       },
       "apres70": {
         "label": "Versements après 70 ans",
-        "texte": "Exonération totale des plus-values, et abattement global de 30 500 € sur le capital versé."
+        "bullets": [
+          "Abattement global de 30 500 € sur le capital versé",
+          "Exonération totale des plus-values"
+        ]
       },
       "states": [{}, {}, {}, {}]
     },

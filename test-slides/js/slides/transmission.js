@@ -128,7 +128,18 @@ export function render(slide, opts = {}) {
 
             <div class="transmission__block${showApres70 ? "" : " transmission__block--invisible"}${apres70Entering ? " is-entering" : ""}"${apres70Entering ? " data-reveal" : ""}>
               <span class="transmission__section-title transmission__section-title--apres70">${escapeHtml(a.label)}</span>
-              <p class="transmission__footer-text">${escapeHtml(a.texte)}</p>
+              <div class="transmission__footer-bullets">
+                ${(a.bullets || [])
+                  .map(
+                    (b) => `
+                  <div class="transmission__footer-bullet">
+                    <span class="transmission__footer-bullet-dash"></span>
+                    <span class="transmission__footer-bullet-text">${escapeHtml(b)}</span>
+                  </div>
+                `
+                  )
+                  .join("")}
+              </div>
             </div>
           </div>
         </div>
