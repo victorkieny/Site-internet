@@ -110,6 +110,14 @@ export const ICONS = {
   // rachats").
   couple:
     '<circle cx="8" cy="8" r="2.6"/><path d="M2.8 20.5c0-3 2.3-5.4 5.2-5.4s5.2 2.4 5.2 5.4"/><circle cx="16" cy="8" r="2.6"/><path d="M10.8 20.5c0-3 2.3-5.4 5.2-5.4s5.2 2.4 5.2 5.4"/>',
+  // Une silhouette au premier plan devant deux autres, en retrait de
+  // part et d'autre — l'investisseur d'un schéma ("Comment ça marche")
+  // n'est pas seul, il co-investit avec d'autres associés. Les deux
+  // silhouettes arrière n'ont qu'une épaule dessinée (celle visible,
+  // qui dépasse derrière la figure du premier plan) : suggérer un
+  // groupe, pas doubler le "couple" ci-dessus.
+  groupe:
+    '<circle cx="4.6" cy="8" r="2.3"/><path d="M0.8 19.5c0-3 1.7-5.4 3.8-5.4"/><circle cx="19.4" cy="8" r="2.3"/><path d="M23.2 19.5c0-3-1.7-5.4-3.8-5.4"/><circle cx="12" cy="8.6" r="3.5"/><path d="M4.6 21.5c0-4.1 3.3-7.4 7.4-7.4s7.4 3.3 7.4 7.4"/>',
   // Pile de pièces — le capital transmis, au-dessus du repère "Capital
   // transmis" ("Transmission") : un empilement simple (une ellipse
   // dessus, deux tranches en dessous), pas un symbole monétaire.

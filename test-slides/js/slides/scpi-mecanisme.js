@@ -116,6 +116,29 @@ function lineGroupHtml(entering, markup) {
   return `<g class="scpi-mecanisme__lines-group${cls}"${entering ? " data-reveal" : ""}>${markup}</g>`;
 }
 
+// Géométrie des trois cases du socle (investisseur / SCPI / société de
+// gestion) — nommée plutôt que saisie en dur à chaque appel de
+// boxHtml(), pour que les flèches (plus bas) se calent dessus sans se
+// désynchroniser si une case bouge. cqw ⇔ px du viewBox (0-1156, voir
+// le <svg> du render) : 1cqw = 12.8px, même échelle que le reste du
+// fichier.
+const CQW_PX = 12.8;
+const INVESTISSEUR_LEFT = 0;
+const INVESTISSEUR_WIDTH = 21.25;
+const SCPI_LEFT = 36.875;
+const SCPI_WIDTH = 16.5625;
+const GESTION_LEFT = 69.0625;
+const STAGE_CENTER = 45.15625; // milieu de la scène (90.3125cqw de large) — axe de la case SCPI et de la case AMF
+
+// Distance standard entre l'extrémité d'une flèche et le bord de la
+// case qu'elle touche — mesurée à l'origine sur l'écart case
+// "L'investisseur" <-> flèches (16px), puis appliquée à CHAQUE
+// extrémité de CHAQUE flèche (les deux côtés de souscription/
+// distribution, les deux côtés de gestion) : aucune flèche n'entre
+// dans une case, et l'espacement se lit comme un choix, pas un hasard
+// de géométrie.
+const ARROW_GAP_PX = 1.25 * CQW_PX;
+
 export function render(slide, opts = {}) {
   const stateIndex = Math.min(Math.max(opts.stateIndex ?? 0, 0), 4);
   const animate = !!opts.animate;
@@ -151,20 +174,20 @@ export function render(slide, opts = {}) {
   const amfEntering = animate && stateIndex === 4;
 
   const investisseurBox = boxHtml({
-    left: 0,
+    left: INVESTISSEUR_LEFT,
     top: 13.125,
-    width: 21.25,
+    width: INVESTISSEUR_WIDTH,
     height: 12.1875,
     cls: "scpi-mecanisme__box--center",
-    icon: "personne",
+    icon: "groupe",
     titre: "L'investisseur",
     entering: socleEntering,
   });
 
   const scpiBox = boxHtml({
-    left: 36.875,
+    left: SCPI_LEFT,
     top: 13.125,
-    width: 16.5625,
+    width: SCPI_WIDTH,
     height: 16.25,
     cls: "scpi-mecanisme__box--vehicule",
     titre: "SCPI",
@@ -174,7 +197,7 @@ export function render(slide, opts = {}) {
 
   const gestionBox = showGestion
     ? boxHtml({
-        left: 69.0625,
+        left: GESTION_LEFT,
         top: 13.125,
         width: 21.25,
         height: 12.1875,
@@ -185,11 +208,18 @@ export function render(slide, opts = {}) {
       })
     : "";
 
+  // Largeur réduite au strict nécessaire pour "Autorité des marchés
+  // financiers" (plus long que "L'AMF" + pictogramme) — l'ancienne
+  // largeur (23,4375cqw) laissait ~21px de vide après le texte. Centrée
+  // sur le même axe que la case SCPI (45,15625cqw, milieu de la scène),
+  // pas sur une valeur saisie à part qui s'en désynchroniserait si la
+  // scène changeait de largeur.
+  const AMF_WIDTH = 18.75;
   const amfBox = showAmf
     ? boxHtml({
-        left: 33.4375,
+        left: STAGE_CENTER - AMF_WIDTH / 2,
         top: 0,
-        width: 23.4375,
+        width: AMF_WIDTH,
         height: 5.625,
         cls: "scpi-mecanisme__box--amf",
         icon: "bouclier",
@@ -211,29 +241,33 @@ export function render(slide, opts = {}) {
     : "";
   const gestionFlow = showGestion ? flowLabelHtml(58.046875, 16.71875, 11.015625, "Gestion clé en main", false, gestionEntering) : "";
 
-  // x2/x1 des flèches entrantes calés sur le bord de la case SCPI
-  // (472px = 36.875cqw, son left ; 684px = 53.4375cqw, son right — voir
-  // scpiBox ci-dessus), avec le même léger débord dans la case (~10-20px)
-  // que l'origine du handoff, pour que la pointe touche visuellement le
-  // bord plutôt que de flotter dans l'espace vide.
+  // Chaque extrémité de flèche s'arrête à ARROW_GAP_PX du bord de la
+  // case qu'elle touche — jamais à l'intérieur, jamais flottant à une
+  // distance différente d'une flèche à l'autre (voir ARROW_GAP_PX plus
+  // haut).
+  const investisseurRightPx = (INVESTISSEUR_LEFT + INVESTISSEUR_WIDTH) * CQW_PX;
+  const scpiLeftPx = SCPI_LEFT * CQW_PX;
+  const scpiRightPx = (SCPI_LEFT + SCPI_WIDTH) * CQW_PX;
+  const gestionLeftPx = GESTION_LEFT * CQW_PX;
+
   const souscriptionArrow = showSouscription
     ? lineGroupHtml(
         souscriptionEntering,
-        `<line x1="288" y1="206" x2="482" y2="206" stroke="rgba(var(--chap-ink-rgb),.45)" stroke-width="1.2" marker-end="url(#scpi-ar-d)"/>`
+        `<line x1="${investisseurRightPx + ARROW_GAP_PX}" y1="206" x2="${scpiLeftPx - ARROW_GAP_PX}" y2="206" stroke="rgba(var(--chap-ink-rgb),.45)" stroke-width="1.2" marker-end="url(#scpi-ar-d)"/>`
       )
     : "";
 
   const distributionArrow = showDistribution
     ? lineGroupHtml(
         distributionEntering,
-        `<line x1="482" y1="286" x2="288" y2="286" stroke="var(--or)" stroke-width="1.2" marker-end="url(#scpi-ar-g)"/>`
+        `<line x1="${scpiLeftPx - ARROW_GAP_PX}" y1="286" x2="${investisseurRightPx + ARROW_GAP_PX}" y2="286" stroke="var(--or)" stroke-width="1.2" marker-end="url(#scpi-ar-g)"/>`
       )
     : "";
 
   const gestionArrow = showGestion
     ? lineGroupHtml(
         gestionEntering,
-        `<line x1="858" y1="246" x2="664" y2="246" stroke="rgba(var(--chap-ink-rgb),.45)" stroke-width="1.2" marker-end="url(#scpi-ar-d)"/>`
+        `<line x1="${gestionLeftPx - ARROW_GAP_PX}" y1="246" x2="${scpiRightPx + ARROW_GAP_PX}" y2="246" stroke="rgba(var(--chap-ink-rgb),.45)" stroke-width="1.2" marker-end="url(#scpi-ar-d)"/>`
       )
     : "";
 
