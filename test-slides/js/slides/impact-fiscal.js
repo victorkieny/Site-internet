@@ -100,10 +100,10 @@ function introCuveHtml({ fillColor, label, escaping, introState, animate }) {
   // centre de la bande + translateY(50%) en CSS, voir .cuve__shield).
   // Doré à son apparition sur fond gris (état 5) — porte l'info clé
   // (rien n'est jamais imposé) ; une fois le fond vert (état 6, voir
-  // greenShown), il se fond dans ce fond (même vert) — le point est
-  // déjà fait, il n'a plus besoin de ressortir.
+  // greenShown), couleur du fond de LA SLIDE (papier, pas celui de la
+  // cuve) — se détache du vert plutôt que de s'y fondre.
   const shield = protectShown
-    ? `<div class="cuve__shield" style="bottom:${INTRO_CAPITAL_H + INTRO_INTEREST_H / 2}cqw"><span class="cuve__shield-inner${protectEntering ? " is-entering" : ""}"${protectEntering ? " data-reveal" : ""}>${iconSvg("bouclier", greenShown ? "var(--vert)" : "var(--or)", 40)}</span></div>`
+    ? `<div class="cuve__shield" style="bottom:${INTRO_CAPITAL_H + INTRO_INTEREST_H / 2}cqw"><span class="cuve__shield-inner${protectEntering ? " is-entering" : ""}"${protectEntering ? " data-reveal" : ""}>${iconSvg("bouclier", greenShown ? "var(--papier)" : "var(--or)", 40)}</span></div>`
     : "";
 
   // Toujours rendu dès l'état 1 (juste invisible, voir --invisible),
