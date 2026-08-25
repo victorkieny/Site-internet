@@ -164,10 +164,10 @@ export function render(slide, opts = {}) {
   });
 
   const scpiBox = boxHtml({
-    left: 30.265625,
+    left: 36.875,
     top: 13.125,
-    width: 29.78125,
-    height: 12.1875,
+    width: 16.5625,
+    height: 16.25,
     cls: "scpi-mecanisme__box--vehicule",
     kicker: "Le véhicule",
     titre: "SCPI",
@@ -215,24 +215,29 @@ export function render(slide, opts = {}) {
     : "";
   const gestionFlow = showGestion ? flowLabelHtml(58.046875, 16.71875, 11.015625, "Gestion clé en main", false, gestionEntering) : "";
 
+  // x2/x1 des flèches entrantes calés sur le bord de la case SCPI
+  // (472px = 36.875cqw, son left ; 684px = 53.4375cqw, son right — voir
+  // scpiBox ci-dessus), avec le même léger débord dans la case (~10-20px)
+  // que l'origine du handoff, pour que la pointe touche visuellement le
+  // bord plutôt que de flotter dans l'espace vide.
   const souscriptionArrow = showSouscription
     ? lineGroupHtml(
         souscriptionEntering,
-        `<line x1="288" y1="206" x2="397" y2="206" stroke="rgba(var(--chap-ink-rgb),.45)" stroke-width="1.2" marker-end="url(#scpi-ar-d)"/>`
+        `<line x1="288" y1="206" x2="482" y2="206" stroke="rgba(var(--chap-ink-rgb),.45)" stroke-width="1.2" marker-end="url(#scpi-ar-d)"/>`
       )
     : "";
 
   const distributionArrow = showDistribution
     ? lineGroupHtml(
         distributionEntering,
-        `<line x1="397" y1="286" x2="288" y2="286" stroke="var(--or)" stroke-width="1.2" marker-end="url(#scpi-ar-g)"/>`
+        `<line x1="482" y1="286" x2="288" y2="286" stroke="var(--or)" stroke-width="1.2" marker-end="url(#scpi-ar-g)"/>`
       )
     : "";
 
   const gestionArrow = showGestion
     ? lineGroupHtml(
         gestionEntering,
-        `<line x1="858" y1="246" x2="749" y2="246" stroke="rgba(var(--chap-ink-rgb),.45)" stroke-width="1.2" marker-end="url(#scpi-ar-d)"/>`
+        `<line x1="858" y1="246" x2="664" y2="246" stroke="rgba(var(--chap-ink-rgb),.45)" stroke-width="1.2" marker-end="url(#scpi-ar-d)"/>`
       )
     : "";
 

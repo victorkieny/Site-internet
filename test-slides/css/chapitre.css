@@ -2116,8 +2116,10 @@
   margin-top: auto;
   padding: 0.859375cqw 0.9375cqw 0;
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 0.46875cqw 0;
+  grid-template-columns: repeat(2, max-content);
+  justify-content: center;
+  column-gap: 2.34375cqw;
+  row-gap: 1.5625cqw;
 }
 
 .scpi-mecanisme__actif {

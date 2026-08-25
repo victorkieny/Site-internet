@@ -19,11 +19,7 @@ import { renderChapRail } from "./_chapitre.js";
 const ATOUTS = [
   {
     label: "Rendement locatif optimisé",
-    bullets: [
-      "L'immobilier : une valeur refuge à long terme",
-      "Un rendement attractif assis sur de l'immobilier professionnel",
-      "Une revalorisation des loyers sur le long-terme",
-    ],
+    bullets: ["L'immobilier : une valeur refuge à long terme", "Un rendement attractif assis sur de l'immobilier professionnel"],
     bulletsTop: 3.125,
     bulletsGap: 1.5625,
   },
