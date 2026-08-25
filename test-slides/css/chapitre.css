@@ -2214,8 +2214,8 @@
 
 .atouts__step-circle {
   flex: none;
-  width: 4.375cqw;
-  height: 4.375cqw;
+  width: 5.46875cqw;
+  height: 5.46875cqw;
   border-radius: 50%;
   box-sizing: border-box;
   border: 0.078125cqw solid rgba(var(--chap-ink-rgb), 0.22);
@@ -2231,13 +2231,13 @@
 }
 
 .atouts__step-circle .chap-icon {
-  width: 2.03125cqw;
-  height: 2.03125cqw;
+  width: 2.65625cqw;
+  height: 2.65625cqw;
 }
 
 .atouts__step-label {
   font-weight: 450;
-  font-size: 1.171875cqw;
+  font-size: 1.5625cqw;
   letter-spacing: 0.04em;
   color: rgba(var(--chap-ink-rgb), 0.4);
 }
@@ -2263,8 +2263,8 @@
 
 .atouts__kicker {
   font-weight: 700;
-  font-size: 1.015625cqw;
-  letter-spacing: 0.14em;
+  font-size: 1.640625cqw;
+  letter-spacing: 0.1em;
   color: var(--or);
 }
 

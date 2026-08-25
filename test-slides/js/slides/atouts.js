@@ -7,7 +7,7 @@ import { renderChapRail, iconSvg } from "./_chapitre.js";
 // dur. Révélation progressive à N états (opts.stateIndex, un état par
 // atout — même mécanisme que "Les atouts" précédent) : le stepper de
 // gauche marque l'atout actif en or, le panneau de droite affiche son
-// contenu (kicker numéroté + puces).
+// contenu (titre doré + puces).
 //
 // Colonne de gauche à largeur fixe (voir .atouts__side), reliée par un
 // filet vertical continu derrière les cercles — un cercle plein or (+
@@ -64,7 +64,7 @@ export function render(slide, opts = {}) {
           ${stepper}
         </div>
         <div class="atouts__content${animate ? " is-entering" : ""}"${animate ? " data-reveal" : ""}>
-          <span class="atouts__kicker">${escapeHtml(atout.numero)} — ${escapeHtml((atout.label || "").toUpperCase())}</span>
+          <span class="atouts__kicker">${escapeHtml((atout.label || "").toUpperCase())}</span>
           <div class="atouts__bullets">${bullets}</div>
         </div>
       </div>
