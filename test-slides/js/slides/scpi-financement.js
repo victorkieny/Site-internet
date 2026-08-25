@@ -59,10 +59,12 @@ const THIRD_W = STAGE_W / 3;
 // (le bilan chiffré, redondant avec la phrase d'hypothèse, a été
 // retiré) : il dispose de tout l'espace entre la colonne rétractée et
 // le bord de la scène. LEVIER_LEFT lui laisse une marge à gauche assez
-// large pour que les légendes d'ordonnées (désormais des phrases
-// complètes, pas juste un montant, voir levierHtml) aient la place de
-// déborder vers la gauche de leur axe sans jamais chevaucher la colonne.
-const LEVIER_LEFT = 44.0625;
+// large pour que les légendes d'ordonnées (des phrases complètes, pas
+// juste un montant, voir levierHtml) aient la place de déborder vers la
+// gauche de leur axe sans jamais chevaucher la flèche de l'axe
+// principal (celui-ci s'arrête à AXIS_END_CQW, mais son repère visuel —
+// pointe de flèche — dépasse encore un peu au-delà).
+const LEVIER_LEFT = 49.0625;
 
 // L'axe s'arrête juste après la colonne rétractée (voir
 // .scpi-financement__axis, largeur posée en style inline) plutôt que de
