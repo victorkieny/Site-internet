@@ -73,12 +73,15 @@ const LEVIER_LEFT = 53.0625;
 // d'une ligne visible.
 const AXIS_END_CQW = THIRD_W + 4;
 
-// 6 états (voir en-tête de fichier) — le sous-titre est désormais fixe
-// (slide.sousTitre, toujours affiché sous le titre, même registre que
-// les autres gabarits du deck) plutôt qu'une phrase révélée à partir
-// d'un état donné : elle ne variait de toute façon plus d'un état à
-// l'autre une fois apparue.
-const STATE_COUNT = 6;
+// 7 états — le sous-titre est désormais fixe (slide.sousTitre, toujours
+// affiché sous le titre, même registre que les autres gabarits du
+// deck) plutôt qu'une phrase révélée à partir d'un état donné : elle ne
+// variait de toute façon plus d'un état à l'autre une fois apparue.
+// États 5-7 : le diagramme de levier se raconte en trois temps (voir
+// showGold/showAnnotation plus bas) — le bleu (effort réel, même
+// hauteur des deux côtés), puis le doré (le patrimoine atteint en plus
+// grâce au levier), puis l'annotation qui chiffre cet écart.
+const STATE_COUNT = 7;
 
 function values(slide) {
   const financementMensuel = slide.financementMensuel;
@@ -133,8 +136,8 @@ const LEVIER_TOP_CQW = 0.3125; // top de .scpi-financement__levier, voir chapitr
 // immobilier détenu"), qui déborde au-dessus du haut de la rangée —
 // centré dessus via translateY(50%), voir .scpi-financement__levier-
 // axis-label.
-const LEVIER_TITLE_H_CQW = 1.3125;
-const LEVIER_TITLE_GAP_CQW = 2.5;
+const LEVIER_TITLE_H_CQW = 1.875;
+const LEVIER_TITLE_GAP_CQW = 3.75;
 const LEVIER_ROW_TOP_CQW = LEVIER_TOP_CQW + LEVIER_TITLE_H_CQW + LEVIER_TITLE_GAP_CQW;
 const LEVIER_BAR_MAX_CQW = AXIS_TOP_CQW - LEVIER_ROW_TOP_CQW; // hauteur de la colonne "Patrimoine détenu" — même bas que la colonne de gauche
 
@@ -216,13 +219,75 @@ export function render(slide, opts = {}) {
   const patrimoineBarH = LEVIER_BAR_MAX_CQW;
   const effortBarH = LEVIER_BAR_MAX_CQW * (v.effortTotalRaw / v.capitalRaw);
   const gapBarH = patrimoineBarH - effortBarH;
+
+  // État 6 (index 5) : le rectangle doré (écart) et sa légende
+  // apparaissent — état 5 (index 4) ne montre que le bleu (mêmes deux
+  // colonnes à hauteur "effort réel", même légende bleue), pour
+  // raconter le mécanisme en plusieurs temps plutôt que de tout montrer
+  // d'un coup. La colonne "avec financement" grandit donc elle aussi
+  // en deux temps : 0 → effortBarH à l'état 5 (avec la colonne "sans
+  // financement"), puis effortBarH → patrimoineBarH à l'état 6 (le
+  // doré vient s'ajouter par-dessus, pas remplacer). État 7 (index 6) :
+  // l'annotation "Effet de levier" (flèche + montant + %) apparaît à
+  // son tour, une fois le rectangle doré déjà en place — un repère de
+  // plus, pas ce qui fait apparaître le rectangle.
+  const showGold = stateIndex >= 5;
+  const goldEntering = animate && stateIndex === 5;
+  const showAnnotation = stateIndex >= 6;
+  const annotationEntering = animate && stateIndex === 6;
+
+  let patrimoineBarAttrs, patrimoineBarStyle;
+  if (levierEntering) {
+    patrimoineBarAttrs = ` data-reveal data-reveal-height="${effortBarH}cqw"`;
+    patrimoineBarStyle = `height:0cqw`;
+  } else if (goldEntering) {
+    patrimoineBarAttrs = ` data-reveal data-reveal-height="${patrimoineBarH}cqw"`;
+    patrimoineBarStyle = `height:${effortBarH}cqw`;
+  } else {
+    patrimoineBarAttrs = "";
+    patrimoineBarStyle = `height:${showGold ? patrimoineBarH : effortBarH}cqw`;
+  }
+
+  const goldAxisLabel = showGold
+    ? `<span class="scpi-financement__levier-axis-label scpi-financement__levier-axis-label--desc scpi-financement__levier-axis-label--or${goldEntering ? " is-entering" : ""}"${goldEntering ? " data-reveal" : ""} style="bottom:${patrimoineBarH}cqw">Patrimoine immobilier constitué par effet de levier</span>`
+    : "";
+
+  const goldValue = showGold
+    ? `<span class="scpi-financement__levier-bar-value${goldEntering ? " is-entering" : ""}"${goldEntering ? " data-reveal" : ""}>${v.capital}</span>`
+    : "";
+
+  const annotationHtml = showAnnotation
+    ? `
+      <div class="scpi-financement__levier-annotation${annotationEntering ? " is-entering" : ""}"${annotationEntering ? " data-reveal" : ""}>
+        <span class="scpi-financement__levier-arrow">
+          <span class="scpi-financement__levier-arrow-head scpi-financement__levier-arrow-head--up"></span>
+          <span class="scpi-financement__levier-arrow-line"></span>
+          <span class="scpi-financement__levier-arrow-head scpi-financement__levier-arrow-head--down"></span>
+        </span>
+        <div class="scpi-financement__levier-text">
+          <span class="scpi-financement__levier-kicker">Effet de levier</span>
+          <span class="scpi-financement__levier-value">${v.levier}</span>
+          <span class="scpi-financement__levier-pct">${v.levierPctRounded}</span>
+        </div>
+      </div>
+    `
+    : "";
+
+  const gapHtml = showGold
+    ? `
+      <div class="scpi-financement__levier-bar-gap"${goldEntering ? ` data-reveal data-reveal-height="${gapBarH}cqw"` : ""} style="height:${goldEntering ? 0 : gapBarH}cqw">
+        ${annotationHtml}
+      </div>
+    `
+    : "";
+
   const levierHtml = showLevier
     ? `
       <div class="scpi-financement__levier${levierEntering ? " is-entering" : ""}"${levierEntering ? " data-reveal" : ""} style="left:${LEVIER_LEFT}cqw">
         <span class="scpi-financement__levier-title">À effort d'épargne équivalent (${v.effM})</span>
         <div class="scpi-financement__levier-row">
           <div class="scpi-financement__levier-axis" style="height:${LEVIER_BAR_MAX_CQW}cqw">
-            <span class="scpi-financement__levier-axis-label scpi-financement__levier-axis-label--desc scpi-financement__levier-axis-label--or" style="bottom:${patrimoineBarH}cqw">Patrimoine immobilier constitué par effet de levier</span>
+            ${goldAxisLabel}
             <span class="scpi-financement__levier-axis-label scpi-financement__levier-axis-label--desc scpi-financement__levier-axis-label--bleu" style="bottom:${effortBarH}cqw">Patrimoine immobilier constitué via l'effort d'épargne réel</span>
             <span class="scpi-financement__levier-axis-label" style="bottom:0">0 €</span>
           </div>
@@ -237,22 +302,9 @@ export function render(slide, opts = {}) {
             </div>
             <div class="scpi-financement__levier-col">
               <div class="scpi-financement__levier-bar-wrap" style="height:${LEVIER_BAR_MAX_CQW}cqw">
-                <div class="scpi-financement__levier-bar scpi-financement__levier-bar--patrimoine"${levierEntering ? ` data-reveal data-reveal-height="${patrimoineBarH}cqw"` : ""} style="height:${levierEntering ? 0 : patrimoineBarH}cqw">
-                  <span class="scpi-financement__levier-bar-value">${v.capital}</span>
-                  <div class="scpi-financement__levier-bar-gap"${levierEntering ? ` data-reveal data-reveal-height="${gapBarH}cqw"` : ""} style="height:${levierEntering ? 0 : gapBarH}cqw">
-                    <div class="scpi-financement__levier-annotation">
-                      <span class="scpi-financement__levier-arrow">
-                        <span class="scpi-financement__levier-arrow-head scpi-financement__levier-arrow-head--up"></span>
-                        <span class="scpi-financement__levier-arrow-line"></span>
-                        <span class="scpi-financement__levier-arrow-head scpi-financement__levier-arrow-head--down"></span>
-                      </span>
-                      <div class="scpi-financement__levier-text">
-                        <span class="scpi-financement__levier-kicker">Effet de levier</span>
-                        <span class="scpi-financement__levier-value">${v.levier}</span>
-                        <span class="scpi-financement__levier-pct">${v.levierPctRounded}</span>
-                      </div>
-                    </div>
-                  </div>
+                <div class="scpi-financement__levier-bar scpi-financement__levier-bar--patrimoine"${patrimoineBarAttrs} style="${patrimoineBarStyle}">
+                  ${goldValue}
+                  ${gapHtml}
                 </div>
               </div>
               <span class="scpi-financement__levier-caption">Avec financement</span>
@@ -282,7 +334,7 @@ export function render(slide, opts = {}) {
       <div class="scpi-financement__viager${viagerEntering ? " is-entering" : ""}"${viagerEntering ? " data-reveal" : ""} style="left:${AXIS_END_CQW + 1.5}cqw">
         <span class="scpi-financement__viager-kicker">Puis, à vie</span>
         <span class="scpi-financement__viager-value">${v.revM}</span>
-        <p class="scpi-financement__viager-note">Puis, à vie, les loyers continuent d'être versés, base ${v.capital}</p>
+        <p class="scpi-financement__viager-note">Les loyers continuent d'être versés, base ${v.capital}</p>
       </div>
     `
     : "";

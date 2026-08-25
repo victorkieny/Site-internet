@@ -2470,10 +2470,10 @@
 .scpi-financement__levier-title {
   display: block;
   font-weight: 600;
-  font-size: 1.09375cqw;
+  font-size: 1.5625cqw;
   line-height: 1.2;
   white-space: nowrap;
-  color: rgba(var(--chap-ink-rgb), 0.75);
+  color: var(--bleu);
 }
 
 .scpi-financement__levier-row {
