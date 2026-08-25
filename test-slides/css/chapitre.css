@@ -2906,8 +2906,9 @@
 .scpi-cadence__titre {
   font-family: var(--font-serif-chapitre);
   font-weight: 400;
-  font-size: 2.03125cqw;
+  font-size: 1.5cqw;
   line-height: 1.15;
+  white-space: nowrap;
 }
 
 /* ---------- Gabarit "Clôture" (dernière slide du RDV, fond encre à la
