@@ -2539,6 +2539,7 @@
 .scpi-financement__levier-axis-label--desc {
   white-space: normal;
   width: 15.625cqw;
+  font-size: 0.9375cqw;
   line-height: 1.3;
   text-align: right;
 }
@@ -2623,7 +2624,7 @@
 }
 
 .scpi-financement__levier-caption {
-  font-weight: 450;
+  font-weight: 700;
   font-size: 1.09375cqw;
   line-height: 1.2;
   text-align: center;
