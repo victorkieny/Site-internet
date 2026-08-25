@@ -1,5 +1,5 @@
 import { euro, escapeHtml } from "../editable.js";
-import { renderChapRail, formatPct } from "./_chapitre.js";
+import { renderChapRail } from "./_chapitre.js";
 
 // Gabarit "Investir en financement" (chapitre SCPI) — UNE SEULE slide en
 // révélation progressive à 6 états (opts.stateIndex direct, pas de
@@ -73,29 +73,12 @@ const LEVIER_LEFT = 53.0625;
 // d'une ligne visible.
 const AXIS_END_CQW = THIRD_W + 4;
 
-const ETAPES = [
-  {
-    desc: null,
-  },
-  {
-    desc: null,
-  },
-  {
-    desc: null,
-  },
-  {
-    desc: (v) =>
-      `Grâce à l'effet de levier, ${v.effM} pendant ${v.duree} ans représente un effort réel de ${v.effortTotal}, pour un patrimoine immobilier constitué de ${v.capital}.`,
-  },
-  {
-    desc: (v) =>
-      `Grâce à l'effet de levier, ${v.effM} pendant ${v.duree} ans représente un effort réel de ${v.effortTotal}, pour un patrimoine immobilier constitué de ${v.capital}.`,
-  },
-  {
-    desc: (v) =>
-      `Grâce à l'effet de levier, ${v.effM} pendant ${v.duree} ans représente un effort réel de ${v.effortTotal}, pour un patrimoine immobilier constitué de ${v.capital}.`,
-  },
-];
+// 6 états (voir en-tête de fichier) — le sous-titre est désormais fixe
+// (slide.sousTitre, toujours affiché sous le titre, même registre que
+// les autres gabarits du deck) plutôt qu'une phrase révélée à partir
+// d'un état donné : elle ne variait de toute façon plus d'un état à
+// l'autre une fois apparue.
+const STATE_COUNT = 6;
 
 function values(slide) {
   const financementMensuel = slide.financementMensuel;
@@ -118,11 +101,8 @@ function values(slide) {
     effM: `${euro.format(effort)}/mois`,
     effortTotal: euro.format(effortTotal),
     levier: `+${euro.format(levier)}`,
-    levierPctSigned: `+${formatPct(levierPct)}`,
-    // Arrondi à l'entier : la statistique "à droite des bâtons" est une
-    // accroche visuelle (+110 %), pas une donnée de précision — le
-    // détail au dixième près reste dans le texte descriptif
-    // (levierPctSigned, ETAPES[4]).
+    // Arrondi à l'entier : la statistique à droite des bâtons est une
+    // accroche visuelle (+110 %), pas une donnée de précision.
     levierPctRounded: `+${Math.round(levierPct)} %`,
     td: slide.tauxDistribution,
     tf: slide.tauxFinancement,
@@ -172,10 +152,9 @@ function barSegmentsHtml(count, label) {
 }
 
 export function render(slide, opts = {}) {
-  const stateIndex = Math.min(Math.max(opts.stateIndex ?? 0, 0), ETAPES.length - 1);
+  const stateIndex = Math.min(Math.max(opts.stateIndex ?? 0, 0), STATE_COUNT - 1);
   const animate = !!opts.animate;
   const v = values(slide);
-  const etape = ETAPES[stateIndex];
 
   // État 2 (index 1) : les revenus SCPI montent depuis le bas, l'effort
   // se rétracte d'autant — voir en-tête de fichier.
@@ -223,13 +202,15 @@ export function render(slide, opts = {}) {
   // État 5 (index 4) : effet de levier. Axe des ordonnées à gauche des
   // deux colonnes ("Sans financement" / "Avec financement"), effet de
   // levier (+montant, +%) à droite. Colonnes à l'échelle l'une de
-  // l'autre : l'écart au sommet de "Avec financement" (en or) EST le
-  // levier — montants toujours dérivés (jamais saisis en dur — charte
-  // CLAUDE.md). Légendes d'ordonnées complètes (pas juste le montant) :
-  // le bilan chiffré qui les portait autrefois dans un bloc séparé a été
-  // retiré (redondant avec la phrase d'hypothèse), ces deux repères sont
-  // désormais le seul endroit qui rattache chaque montant à ce qu'il
-  // représente.
+  // l'autre, et désormais de la MÊME couleur (bleu) : les deux
+  // représentent le même effort d'épargne réel — seul l'écart au sommet
+  // de "Avec financement" (en or) EST le levier — montants toujours
+  // dérivés (jamais saisis en dur — charte CLAUDE.md). Les repères
+  // d'ordonnées ne portent plus le montant (déplacé au-dessus de chaque
+  // colonne, voir scpi-financement__levier-bar-value, qui suit sa
+  // hauteur dynamique sans recalcul) mais ce qu'il représente — coloré
+  // pour rattacher chaque phrase à sa colonne (bleu/or, mêmes couleurs
+  // que les barres).
   const showLevier = stateIndex >= 4;
   const levierEntering = animate && stateIndex === 4;
   const patrimoineBarH = LEVIER_BAR_MAX_CQW;
@@ -241,20 +222,23 @@ export function render(slide, opts = {}) {
         <span class="scpi-financement__levier-title">À effort d'épargne équivalent (${v.effM})</span>
         <div class="scpi-financement__levier-row">
           <div class="scpi-financement__levier-axis" style="height:${LEVIER_BAR_MAX_CQW}cqw">
-            <span class="scpi-financement__levier-axis-label" style="bottom:${patrimoineBarH}cqw">Patrimoine immobilier détenu : ${v.capital}</span>
-            <span class="scpi-financement__levier-axis-label" style="bottom:${effortBarH}cqw">${v.effM} pendant ${v.duree} ans : ${v.effortTotal}</span>
+            <span class="scpi-financement__levier-axis-label scpi-financement__levier-axis-label--desc scpi-financement__levier-axis-label--or" style="bottom:${patrimoineBarH}cqw">Patrimoine immobilier constitué par effet de levier</span>
+            <span class="scpi-financement__levier-axis-label scpi-financement__levier-axis-label--desc scpi-financement__levier-axis-label--bleu" style="bottom:${effortBarH}cqw">Patrimoine immobilier constitué via l'effort d'épargne réel</span>
             <span class="scpi-financement__levier-axis-label" style="bottom:0">0 €</span>
           </div>
           <div class="scpi-financement__levier-diagram">
             <div class="scpi-financement__levier-col">
               <div class="scpi-financement__levier-bar-wrap" style="height:${LEVIER_BAR_MAX_CQW}cqw">
-                <div class="scpi-financement__levier-bar scpi-financement__levier-bar--effort"${levierEntering ? ` data-reveal data-reveal-height="${effortBarH}cqw"` : ""} style="height:${levierEntering ? 0 : effortBarH}cqw"></div>
+                <div class="scpi-financement__levier-bar scpi-financement__levier-bar--effort"${levierEntering ? ` data-reveal data-reveal-height="${effortBarH}cqw"` : ""} style="height:${levierEntering ? 0 : effortBarH}cqw">
+                  <span class="scpi-financement__levier-bar-value">${v.effortTotal}</span>
+                </div>
               </div>
               <span class="scpi-financement__levier-caption">Sans financement</span>
             </div>
             <div class="scpi-financement__levier-col">
               <div class="scpi-financement__levier-bar-wrap" style="height:${LEVIER_BAR_MAX_CQW}cqw">
                 <div class="scpi-financement__levier-bar scpi-financement__levier-bar--patrimoine"${levierEntering ? ` data-reveal data-reveal-height="${patrimoineBarH}cqw"` : ""} style="height:${levierEntering ? 0 : patrimoineBarH}cqw">
+                  <span class="scpi-financement__levier-bar-value">${v.capital}</span>
                   <div class="scpi-financement__levier-bar-gap"${levierEntering ? ` data-reveal data-reveal-height="${gapBarH}cqw"` : ""} style="height:${levierEntering ? 0 : gapBarH}cqw">
                     <div class="scpi-financement__levier-annotation">
                       <span class="scpi-financement__levier-arrow">
@@ -309,7 +293,7 @@ export function render(slide, opts = {}) {
 
       <div class="scpi-financement__intro">
         <h1 class="chap-title scpi-financement__title">${escapeHtml(slide.titre)}</h1>
-        <p class="scpi-financement__desc${etape.desc ? "" : " scpi-financement__desc--invisible"}">${etape.desc ? escapeHtml(etape.desc(v)) : " "}</p>
+        <p class="scpi-financement__sub">${escapeHtml(slide.sousTitre)}</p>
       </div>
 
       <div class="scpi-financement__stage">

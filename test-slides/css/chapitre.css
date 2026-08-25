@@ -2331,43 +2331,23 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 0.703125cqw;
 }
 
 .scpi-financement__title {
   font-size: max(1.7rem, 3.125cqw);
 }
 
-/* Toujours rendu, même aux états 1-2 qui n'ont pas de phrase (voir
-   etape.desc en JS) : seule la visibilité change (--invisible), jamais
-   sa présence — sinon la hauteur du bloc titre+sous-titre varie d'un
-   état à l'autre, ce qui redéplace toute la scène (centrée par
-   margin:auto 0, voir .scpi-financement__stage). Même taille que la
-   phrase d'intro du diagramme "Épargne dormante"
-   (.epargne-dormante__diagram-intro) — même registre de phrase-clé, pas
-   une variante propre à ce gabarit. Marge du haut calculée pour que la
-   phrase tombe à égale distance du titre et du haut du diagramme de
-   levier (états 5-6) — vérifiée à la mesure, pas une valeur de
-   l'échelle d'espacement générique (le centrage par marge auto de la
-   scène rend la relation non linéaire).
-*/
-/* min-height calé sur 2 lignes (voir mesure dans scpi-financement.js) :
-   le paragraphe est toujours rendu, même vide (un espace, voir
-   --invisible) — sans plancher explicite, le placeholder d'un seul
-   caractère ne ferait qu'une ligne et la scène (centrée par margin:auto,
-   voir .scpi-financement__stage) sauterait entre états. */
-.scpi-financement__desc {
-  margin: 3.9375cqw 0 0;
-  min-height: 2.109375cqw;
-  font-weight: 600;
-  font-size: 1.40625cqw;
-  line-height: 1.5;
-  text-align: center;
-  white-space: nowrap;
-  color: rgba(var(--chap-ink-rgb), 0.85);
-}
-
-.scpi-financement__desc--invisible {
-  visibility: hidden;
+/* Sous-titre fixe (slide.sousTitre), toujours affiché — même registre
+   que .transmission__sub (slide "Assurance vie pour protéger ses
+   proches") : une seule ligne, rapprochée du titre par le gap ci-dessus
+   plutôt que la longue marge qu'exigeait l'ancienne phrase révélée à
+   partir de l'état 4 (retirée, voir scpi-financement.js). */
+.scpi-financement__sub {
+  margin: 0;
+  font-weight: 450;
+  font-size: 1.640625cqw;
+  color: rgba(var(--chap-ink-rgb), 0.6);
 }
 
 .scpi-financement__stage {
@@ -2554,6 +2534,26 @@
   color: rgba(var(--chap-ink-rgb), 0.5);
 }
 
+/* Les deux repères "descriptifs" (ce que chaque niveau représente,
+   plus le montant lui-même — désormais affiché au-dessus de sa colonne,
+   voir .scpi-financement__levier-bar-value) peuvent revenir à la ligne
+   plutôt que forcer une seule ligne très longue : max-width + line-
+   height, text-align:right pour rester lisible malgré le retour. */
+.scpi-financement__levier-axis-label--desc {
+  white-space: normal;
+  width: 15.625cqw;
+  line-height: 1.3;
+  text-align: right;
+}
+
+.scpi-financement__levier-axis-label--bleu {
+  color: var(--bleu);
+}
+
+.scpi-financement__levier-axis-label--or {
+  color: var(--or);
+}
+
 /* Deux colonnes à l'échelle l'une de l'autre : "Sans financement"
    (encre, base commune) et "Avec financement", dont seul l'écart au
    sommet (scpi-financement__levier-bar-gap, or) EST l'effet de levier —
@@ -2580,6 +2580,7 @@
 }
 
 .scpi-financement__levier-bar {
+  position: relative;
   flex: none;
   width: 4.6875cqw;
   box-sizing: border-box;
@@ -2589,9 +2590,31 @@
   background: var(--bleu);
 }
 
+/* Même bleu que "Sans financement" (scpi-financement__levier-bar--
+   effort) : les deux représentent le même effort d'épargne réel — seul
+   l'écart doré au sommet (scpi-financement__levier-bar-gap) est propre
+   à cette colonne, l'effet de levier. */
 .scpi-financement__levier-bar--patrimoine {
-  position: relative;
-  background: rgba(var(--chap-ink-rgb), 0.18);
+  background: var(--bleu);
+}
+
+/* Montant au-dessus de la colonne (40 500 € / 85 000 €) : bottom:100%
+   du bord de la barre ELLE-MÊME (hauteur dynamique, dérivée des
+   montants réels) — reste juste au-dessus quelle que soit sa hauteur,
+   sans recalcul JS. */
+.scpi-financement__levier-bar-value {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 0.46875cqw;
+  font-family: var(--font-serif-chapitre);
+  font-weight: 400;
+  font-size: 1.328125cqw;
+  line-height: 1;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  color: rgb(var(--chap-ink-rgb));
 }
 
 .scpi-financement__levier-bar-gap {
