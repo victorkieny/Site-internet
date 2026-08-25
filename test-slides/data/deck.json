@@ -356,7 +356,7 @@
     },
     {
       "id": "av-synthese",
-      "type": "synthese-chapitre",
+      "type": "chap-regles",
       "client": "Prénom Nom",
       "date": "2026-09-17",
       "chapitreActif": 2,
@@ -367,12 +367,14 @@
       ],
       "kicker": "En synthèse",
       "titre": "L'assurance vie",
-      "lignes": [
-        "Une épargne disponible, à l'abri de la fiscalité",
-        "Une solution flexible, dont la gestion est sur mesure",
-        "Un complément de revenu très optimisé fiscalement",
-        "Un outil de transmission pour protéger ses proches"
-      ]
+      "picto": "disponibilite",
+      "lead": "Votre épargne reste disponible à tout moment, elle n'est jamais bloquée.",
+      "regles": [
+        { "numero": "1", "label": "Rendement" },
+        { "numero": "2", "label": "Fiscalité" },
+        { "numero": "3", "label": "Transmission" }
+      ],
+      "states": [{}, {}, {}, {}, {}]
     },
     {
       "id": "scpi-mecanisme",

@@ -39,7 +39,6 @@
 .slide__stage.slide--impact-fiscal,
 .slide__stage.slide--fiscalite-rachats,
 .slide__stage.slide--transmission,
-.slide__stage.slide--synthese-chapitre,
 .slide__stage.slide--scpi-mecanisme,
 .slide__stage.slide--scpi-cadence,
 .slide__stage.slide--atouts,
@@ -58,7 +57,6 @@
 .slide--impact-fiscal .slide__content,
 .slide--fiscalite-rachats .slide__content,
 .slide--transmission .slide__content,
-.slide--synthese-chapitre .slide__content,
 .slide--scpi-mecanisme .slide__content,
 .slide--scpi-cadence .slide__content,
 .slide--atouts .slide__content,
@@ -1909,85 +1907,6 @@
   line-height: 1.5;
   text-align: left;
   color: rgba(var(--chap-ink-rgb), 0.68);
-}
-
-/* ---------- Gabarit "Synthèse de chapitre" (slide 8) ---------- */
-
-.synthese-chapitre {
-  height: 100%;
-  box-sizing: border-box;
-  padding: 2.8125cqw 4.84375cqw 4.21875cqw;
-  display: flex;
-  flex-direction: column;
-  font-family: var(--font-sans-chapitre);
-}
-
-.synthese-chapitre__intro {
-  padding-top: 2.65625cqw;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.synthese-chapitre__kicker {
-  margin: 0;
-  font-weight: 700;
-  font-size: 1.23046875cqw;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  white-space: nowrap;
-  color: rgba(var(--chap-ink-rgb), 0.5);
-}
-
-.synthese-chapitre__rule {
-  margin-top: 1.5625cqw;
-  width: 5.46875cqw;
-  height: 0.15625cqw;
-  background: var(--or);
-  display: block;
-}
-
-.synthese-chapitre__title {
-  margin-top: 1.5625cqw;
-  font-size: max(1.7rem, 3.125cqw);
-}
-
-.synthese-chapitre__list {
-  /* Centré comme bloc (largeur au contenu, pas 100%) par rapport au
-     titre — margin auto des deux côtés le centre horizontalement dans
-     .synthese-chapitre (align-self plutôt que le stretch par défaut du
-     parent) et verticalement dans l'espace sous le titre (margin auto
-     haut/bas plutôt que haut seul, qui le plaquait en bas). Le texte
-     reste aligné à gauche à l'intérieur du bloc (voir .synthese-
-     chapitre__item), seul le bloc lui-même est centré. */
-  align-self: center;
-  margin: auto 0;
-  width: auto;
-  padding-left: 4.84375cqw;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-}
-
-.synthese-chapitre__item {
-  padding: 1.5625cqw 0;
-  display: flex;
-  align-items: center;
-  gap: 1.09375cqw;
-}
-
-.synthese-chapitre__item .chap-icon {
-  flex: none;
-  width: 1.875cqw;
-  height: 1.875cqw;
-}
-
-.synthese-chapitre__item-text {
-  font-family: var(--font-serif-chapitre);
-  font-weight: 400;
-  font-size: 1.875cqw;
-  line-height: 1.25;
-  letter-spacing: -0.02em;
 }
 
 /* ---------- Gabarit "Comment ça marche" (chapitre SCPI) ---------- */

@@ -7,7 +7,6 @@ import * as deuxPoches from "./slides/deux-poches.js";
 import * as impactFiscal from "./slides/impact-fiscal.js";
 import * as fiscaliteRachats from "./slides/fiscalite-rachats.js";
 import * as transmission from "./slides/transmission.js";
-import * as syntheseChapitre from "./slides/synthese-chapitre.js";
 import * as scpiMecanisme from "./slides/scpi-mecanisme.js";
 import * as scpiCadence from "./slides/scpi-cadence.js";
 import * as atouts from "./slides/atouts.js";
@@ -31,7 +30,6 @@ export const renderers = {
   "impact-fiscal": { render: impactFiscal.render },
   "fiscalite-rachats": { render: fiscaliteRachats.render },
   transmission: { render: transmission.render },
-  "synthese-chapitre": { render: syntheseChapitre.render },
   "scpi-mecanisme": { render: scpiMecanisme.render },
   "scpi-cadence": { render: scpiCadence.render },
   atouts: { render: atouts.render },
