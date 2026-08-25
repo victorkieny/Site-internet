@@ -98,11 +98,12 @@ function introCuveHtml({ fillColor, label, escaping, introState, animate }) {
   // Le bouclier se pose au milieu de la zone grise (intérêts), pas
   // au-dessus : centré verticalement sur son point médian (bottom au
   // centre de la bande + translateY(50%) en CSS, voir .cuve__shield).
-  // Bleu sur fond gris (état 4) ; une fois le fond vert (état 5, voir
-  // greenShown), doré — c'est l'élément qui porte l'info clé (rien
-  // n'est jamais imposé), il redevient la couleur qui porte une donnée.
+  // Doré à son apparition sur fond gris (état 5) — porte l'info clé
+  // (rien n'est jamais imposé) ; une fois le fond vert (état 6, voir
+  // greenShown), il se fond dans ce fond (même vert) — le point est
+  // déjà fait, il n'a plus besoin de ressortir.
   const shield = protectShown
-    ? `<div class="cuve__shield" style="bottom:${INTRO_CAPITAL_H + INTRO_INTEREST_H / 2}cqw"><span class="cuve__shield-inner${protectEntering ? " is-entering" : ""}"${protectEntering ? " data-reveal" : ""}>${iconSvg("bouclier", greenShown ? "var(--or)" : "var(--bleu)", 40)}</span></div>`
+    ? `<div class="cuve__shield" style="bottom:${INTRO_CAPITAL_H + INTRO_INTEREST_H / 2}cqw"><span class="cuve__shield-inner${protectEntering ? " is-entering" : ""}"${protectEntering ? " data-reveal" : ""}>${iconSvg("bouclier", greenShown ? "var(--vert)" : "var(--or)", 40)}</span></div>`
     : "";
 
   // Toujours rendu dès l'état 1 (juste invisible, voir --invisible),
