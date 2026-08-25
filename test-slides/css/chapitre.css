@@ -2339,7 +2339,7 @@
   margin: auto 0;
   position: relative;
   width: 100%;
-  height: 23.4375cqw;
+  height: 32.4375cqw;
 }
 
 /* Patrimoine cible, au-dessus de la colonne (états 1-6, voir
@@ -2709,7 +2709,7 @@
 .scpi-financement__axis {
   position: absolute;
   left: 0;
-  top: 18.4375cqw;
+  top: 24.4375cqw;
   height: 0.078125cqw;
   background: rgba(var(--chap-ink-rgb), 0.3);
 }
@@ -2732,7 +2732,7 @@
 
 .scpi-financement__tick {
   position: absolute;
-  top: 18.4375cqw;
+  top: 24.4375cqw;
   width: 0.078125cqw;
   height: 0.625cqw;
   background: rgba(var(--chap-ink-rgb), 0.3);
@@ -2740,7 +2740,7 @@
 
 .scpi-financement__axis-label {
   position: absolute;
-  top: 19.6875cqw;
+  top: 25.6875cqw;
   font-weight: 700;
   font-size: 0.9375cqw;
   letter-spacing: 0.16em;
@@ -2771,7 +2771,7 @@
    plutôt que de déborder symétriquement de part et d'autre. */
 .scpi-financement__viager {
   position: absolute;
-  top: 17.79296875cqw;
+  top: 23.79296875cqw;
   display: flex;
   flex-direction: column;
   align-items: flex-start;

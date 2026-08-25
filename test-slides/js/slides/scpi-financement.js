@@ -34,8 +34,8 @@ import { renderChapRail } from "./_chapitre.js";
 // colonne repose sur l'axe, son top se déduit de sa hauteur plutôt que
 // d'être saisi en dur en plus (jamais désynchronisé si l'une des deux
 // valeurs change).
-const AXIS_TOP_CQW = 18.4375;
-const BAR_HEIGHT_CQW = 13.75;
+const AXIS_TOP_CQW = 24.4375;
+const BAR_HEIGHT_CQW = 19.75;
 const BAR_TOP_CQW = AXIS_TOP_CQW - BAR_HEIGHT_CQW;
 
 // État 1 : la colonne se construit visuellement mois après mois plutôt
