@@ -308,8 +308,8 @@
           "apres8": {
             "label": "Après 8 ans",
             "lignes": [
-              "L'impôt sur le revenu est réduit à 7,5 %.",
-              "Les gains en dessous des abattements annuels ne sont pas imposés :"
+              "L'impôt sur le revenu pour les gains est réduit à 7,5 % (+17,2 % de prélèvements sociaux).",
+              "Les gains en dessous des abattements annuels ne sont pas imposés à l'impôt sur le revenu :"
             ],
             "montants": [
               { "valeur": 4600, "who": "Personne seule", "icon": "personne" },
@@ -490,6 +490,156 @@
       "tauxDistribution": "5,1 %",
       "tauxFinancement": "5,85 %",
       "states": [{}, {}, {}, {}, {}, {}, {}, {}]
+    },
+    {
+      "id": "per-titre",
+      "type": "section-title",
+      "client": "Prénom Nom",
+      "date": "2026-09-17",
+      "chapitreActif": 2,
+      "chapitres": [
+        { "numero": "01", "libelle": "Constat" },
+        { "numero": "02", "libelle": "Ingénieries" },
+        { "numero": "03", "libelle": "Préconisations" }
+      ],
+      "titre": "PER",
+      "sousTitre": "Présentation de l'ingénierie"
+    },
+    {
+      "id": "per-pourquoi",
+      "type": "chap-regles",
+      "client": "Prénom Nom",
+      "date": "2026-09-17",
+      "chapitreActif": 2,
+      "chapitres": [
+        { "numero": "01", "libelle": "Constat" },
+        { "numero": "02", "libelle": "Ingénieries" },
+        { "numero": "03", "libelle": "Préconisations" }
+      ],
+      "kicker": "Pourquoi le PER ?",
+      "titre": "Une solution retraite aux multiples atouts",
+      "titreHalo": "atouts",
+      "picto": "formes",
+      "lead": "Un placement qui combine retraite, fiscalité, prévoyance et transmission.",
+      "regles": [
+        { "numero": "1", "label": "Retraite" },
+        { "numero": "2", "label": "Impôts" },
+        { "numero": "3", "label": "Prévoyance" },
+        { "numero": "4", "label": "Transmission" }
+      ],
+      "states": [{}, {}, {}, {}, {}, {}]
+    },
+    {
+      "id": "per-plafond",
+      "type": "atouts",
+      "client": "Prénom Nom",
+      "date": "2026-09-17",
+      "chapitreActif": 2,
+      "chapitres": [
+        { "numero": "01", "libelle": "Constat" },
+        { "numero": "02", "libelle": "Ingénieries" },
+        { "numero": "03", "libelle": "Préconisations" }
+      ],
+      "railEtapes": ["Retraite", "Impôts", "Prévoyance", "Transmission"],
+      "railActive": 2,
+      "titre": "Le plafond de déduction",
+      "atouts": [
+        {
+          "numero": "01",
+          "icon": "plafond",
+          "label": "Le plafond annuel",
+          "bullets": [
+            "10 % des revenus professionnels de l'année précédente",
+            "Plancher de 4 710 € même en l'absence de revenus suffisants (10 % du PASS 2025)",
+            "Plafonné à 37 680 € (8 fois le plancher)"
+          ]
+        },
+        {
+          "numero": "02",
+          "icon": "cycle",
+          "label": "Le rattrapage",
+          "bullets": [
+            "Les plafonds non utilisés se cumulent sur les 5 dernières années (plafonds constitués à partir de 2026)",
+            "Une capacité de déduction qui peut dépasser 37 680 € sur une seule année"
+          ]
+        },
+        {
+          "numero": "03",
+          "icon": "couple",
+          "label": "La mutualisation",
+          "bullets": [
+            "Un conjoint ou partenaire de Pacs peut utiliser le plafond disponible de l'autre",
+            "Une optimisation à l'échelle du foyer fiscal"
+          ]
+        },
+        {
+          "numero": "04",
+          "icon": "cle",
+          "label": "Le bonus résidence principale",
+          "bullets": [
+            "Déblocage anticipé possible pour financer l'achat de la résidence principale",
+            "L'un des cas de sortie anticipée prévus par la loi, aux côtés des accidents de la vie"
+          ]
+        }
+      ],
+      "states": [{}, {}, {}, {}, {}, {}, {}, {}, {}]
+    },
+    {
+      "id": "per-transmission",
+      "type": "transmission",
+      "client": "Prénom Nom",
+      "date": "2026-09-17",
+      "chapitreActif": 2,
+      "chapitres": [
+        { "numero": "01", "libelle": "Constat" },
+        { "numero": "02", "libelle": "Ingénieries" },
+        { "numero": "03", "libelle": "Préconisations" }
+      ],
+      "railEtapes": ["Retraite", "Impôts", "Prévoyance", "Transmission"],
+      "railActive": 4,
+      "titre": "Le PER pour protéger ses proches",
+      "sousTitre": "Le même régime de transmission qu'une assurance vie, pour un PER assurantiel",
+      "clause": {
+        "label": "Clause bénéficiaire",
+        "texte": "Un ou plusieurs bénéficiaires, libre choix des montants"
+      },
+      "donation": {
+        "label": "Versements avant 70 ans",
+        "montant": 152500,
+        "note": "d'abattement par bénéficiaire, exonéré de droits de succession",
+        "beneficiaires": ["Enfant 1", "Enfant 2", "Enfant 3"]
+      },
+      "apres70": {
+        "label": "Versements après 70 ans",
+        "bullets": [
+          "Abattement global de 30 500 € sur le capital versé",
+          "Exonération totale des plus-values"
+        ]
+      },
+      "states": [{}, {}, {}, {}]
+    },
+    {
+      "id": "per-synthese",
+      "type": "chap-regles",
+      "client": "Prénom Nom",
+      "date": "2026-09-17",
+      "chapitreActif": 2,
+      "chapitres": [
+        { "numero": "01", "libelle": "Constat" },
+        { "numero": "02", "libelle": "Ingénieries" },
+        { "numero": "03", "libelle": "Préconisations" }
+      ],
+      "kicker": "En synthèse",
+      "titre": "Le plan d'épargne retraite",
+      "picto": "formes",
+      "lead": "Un placement qui combine retraite, fiscalité, prévoyance et transmission.",
+      "regles": [
+        { "numero": "1", "label": "Retraite" },
+        { "numero": "2", "label": "Impôts" },
+        { "numero": "3", "label": "Prévoyance" },
+        { "numero": "4", "label": "Transmission" }
+      ],
+      "states": [{}, {}, {}, {}, {}, {}]
     },
     {
       "id": "cloture-reflexion",

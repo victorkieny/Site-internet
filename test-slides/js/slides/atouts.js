@@ -1,5 +1,5 @@
 import { escapeHtml } from "../editable.js";
-import { renderChapRail, iconSvg } from "./_chapitre.js";
+import { renderChapRail, renderRailEtapes, iconSvg } from "./_chapitre.js";
 
 // Gabarit "Les atouts" (chapitre SCPI, import Claude Design "Atouts -
 // Design final") — PARAMÉTRIQUE : nombre d'atouts (2 à 4) et de puces
@@ -87,6 +87,7 @@ export function render(slide, opts = {}) {
   return `
     <div class="atouts">
       ${renderChapRail(slide)}
+      ${slide.railEtapes ? renderRailEtapes(slide.railEtapes, slide.railActive) : ""}
 
       <div class="atouts__intro">
         <h1 class="chap-title atouts__title">${escapeHtml(slide.titre)}</h1>
