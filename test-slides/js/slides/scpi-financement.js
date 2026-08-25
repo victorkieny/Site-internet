@@ -73,15 +73,17 @@ const LEVIER_LEFT = 50.5625;
 // d'une ligne visible.
 const AXIS_END_CQW = THIRD_W + 4;
 
-// 7 états — le sous-titre est désormais fixe (slide.sousTitre, toujours
+// 8 états — le sous-titre est désormais fixe (slide.sousTitre, toujours
 // affiché sous le titre, même registre que les autres gabarits du
 // deck) plutôt qu'une phrase révélée à partir d'un état donné : elle ne
 // variait de toute façon plus d'un état à l'autre une fois apparue.
 // États 5-7 : le diagramme de levier se raconte en trois temps (voir
 // showGold/showAnnotation plus bas) — le bleu (effort réel, même
 // hauteur des deux côtés), puis le doré (le patrimoine atteint en plus
-// grâce au levier), puis l'annotation qui chiffre cet écart.
-const STATE_COUNT = 7;
+// grâce au levier), puis l'annotation qui chiffre cet écart. État 8 :
+// "Puis, à vie" (showViager plus bas) — indépendant du graphe, une
+// conclusion à part plutôt qu'accrochée au dernier de ses trois temps.
+const STATE_COUNT = 8;
 
 function values(slide) {
   const financementMensuel = slide.financementMensuel;
@@ -315,7 +317,7 @@ export function render(slide, opts = {}) {
     `
     : "";
 
-  // État 6 (index 5) : les revenus se poursuivent à vie une fois le
+  // État 8 (index 7) : les revenus se poursuivent à vie une fois le
   // financement soldé — même montant qu'aux états 2-3 (v.revM), mais
   // affiché comme un repère de durée qui prolonge l'axe au-delà de
   // "25 ans", pas un nouveau calcul. Kicker + grande valeur (même
@@ -326,9 +328,12 @@ export function render(slide, opts = {}) {
   // dessous — se lit comme un repère qui prolonge la ligne, pas comme
   // une légende d'axe. Note explicative sous la valeur : rend le lien
   // avec le patrimoine (v.capital, dérivé, jamais saisi en dur) explicite
-  // plutôt que de le laisser implicite via l'axe.
-  const showViager = stateIndex >= 5;
-  const viagerEntering = animate && stateIndex === 5;
+  // plutôt que de le laisser implicite via l'axe. Dernier état, à part
+  // du diagramme de levier (bleu état 5, doré état 6, annotation état
+  // 7) : une conclusion propre, pas accrochée au dernier temps du
+  // graphe.
+  const showViager = stateIndex >= 7;
+  const viagerEntering = animate && stateIndex === 7;
   const viagerHtml = showViager
     ? `
       <div class="scpi-financement__viager${viagerEntering ? " is-entering" : ""}"${viagerEntering ? " data-reveal" : ""} style="left:${AXIS_END_CQW + 1.5}cqw">
