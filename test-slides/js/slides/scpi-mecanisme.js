@@ -114,7 +114,7 @@ function boxHtml({ left, top, width, height, cls, icon, titre, texte, extra, ent
 }
 
 function flowLabelHtml(left, top, width, texte, accent, entering) {
-  const cls = "scpi-mecanisme__flow" + (accent ? " scpi-mecanisme__flow--or" : "") + (entering ? " is-entering" : "");
+  const cls = "scpi-mecanisme__flow" + (accent ? ` scpi-mecanisme__flow--${accent}` : "") + (entering ? " is-entering" : "");
   return `<div class="${cls}"${entering ? " data-reveal" : ""} style="left:${left}cqw;top:${top}cqw;width:${width}cqw">${escapeHtml(texte)}</div>`;
 }
 
@@ -175,6 +175,12 @@ const SOUSCRIPTION_ICON_HEIGHT_CQW = 3.125;
 const INVEST_SCPI_ARROW_Y_CQW = 206 / CQW_PX;
 const SOUSCRIPTION_ICON_TOP_CQW =
   (BOX_TOP_CQW + INVEST_SCPI_ARROW_Y_CQW) / 2 - SOUSCRIPTION_ICON_HEIGHT_CQW / 2;
+
+// Écart pictogramme <-> flèche répercuté à l'identique de l'autre côté
+// (flèche <-> texte) : même valeur des deux côtés de la flèche, pas
+// deux espacements choisis indépendamment.
+const SOUSCRIPTION_GAP_CQW = INVEST_SCPI_ARROW_Y_CQW - (SOUSCRIPTION_ICON_TOP_CQW + SOUSCRIPTION_ICON_HEIGHT_CQW);
+const SOUSCRIPTION_TEXT_TOP_CQW = INVEST_SCPI_ARROW_Y_CQW + SOUSCRIPTION_GAP_CQW;
 
 // Distance standard entre l'extrémité d'une flèche et le bord de la
 // case qu'elle touche — mesurée à l'origine sur l'écart case
@@ -306,13 +312,13 @@ export function render(slide, opts = {}) {
     ? `<div class="scpi-mecanisme__flow-icon${souscriptionEntering ? " is-entering" : ""}"${souscriptionEntering ? " data-reveal" : ""} style="left:${SOUSCRIPTION_LEFT_CQW}cqw;width:${FLOW_LABEL_WIDTH_CQW}cqw;top:${SOUSCRIPTION_ICON_TOP_CQW}cqw"><img src="assets/icons/souscription%20de%20part.png" alt="" style="height:${SOUSCRIPTION_ICON_HEIGHT_CQW}cqw" /></div>`
     : "";
   const souscriptionTextFlow = showSouscriptionLabel
-    ? flowLabelHtml(SOUSCRIPTION_LEFT_CQW, 17.03125, FLOW_LABEL_WIDTH_CQW, "Souscription de part", false, souscriptionEntering)
+    ? flowLabelHtml(SOUSCRIPTION_LEFT_CQW, SOUSCRIPTION_TEXT_TOP_CQW, FLOW_LABEL_WIDTH_CQW, "Souscription de part", "noir", souscriptionEntering)
     : "";
-  const coproFlow = showCopro ? flowLabelHtml(21.25, 13.59375, 11.015625, "Copropriétaire", false, coproEntering) : "";
+  const coproFlow = showCopro ? flowLabelHtml(21.25, 13.59375, 11.015625, "Copropriétaire", null, coproEntering) : "";
   const distributionFlow = showDistribution
-    ? flowLabelHtml(21.25, 19.84375, 11.015625, "Distribution de revenus", true, distributionEntering)
+    ? flowLabelHtml(21.25, 19.84375, 11.015625, "Distribution de revenus", "or", distributionEntering)
     : "";
-  const gestionFlow = showGestion ? flowLabelHtml(58.046875, 16.71875, 11.015625, "Gestion clé en main", false, gestionEntering) : "";
+  const gestionFlow = showGestion ? flowLabelHtml(58.046875, 16.71875, 11.015625, "Gestion clé en main", null, gestionEntering) : "";
 
   // Chaque extrémité de flèche s'arrête à ARROW_GAP_PX du bord de la
   // case qu'elle touche — jamais à l'intérieur, jamais flottant à une

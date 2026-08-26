@@ -2092,6 +2092,13 @@
   color: var(--or);
 }
 
+/* Encre pleine (pas l'opacité .6 par défaut) : "Souscription de part"
+   se lit sous le pictogramme du client, pas comme les autres repères
+   discrets du schéma. */
+.scpi-mecanisme__flow--noir {
+  color: rgb(var(--chap-ink-rgb));
+}
+
 /* ---------- Gabarit "Les atouts" (chapitre SCPI) ---------- */
 
 .atouts {
