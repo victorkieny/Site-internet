@@ -94,10 +94,15 @@ function objectifsHtml(objectifs, { visible, entering }) {
 
 // Révélation progressive cumulative en (5 + N supports) états : état 1 =
 // titre seul (arrivée sur la slide, jamais animée — voir js/reveal.js) ;
-// état 2 = + objectifs ; états 3..N+2 = une classe d'actif à la fois
-// (segment de barre qui déroule de gauche à droite + colonne de
-// registre, au clic, au rythme du présentateur) ; les 3 derniers états =
-// les 3 KPI un par un. Objectifs et enveloppes restent dans le flux dès
+// états 2..N+1 = une classe d'actif à la fois (segment de barre qui
+// déroule de gauche à droite + colonne de registre, au clic, au rythme
+// du présentateur) ; état N+2 = + objectifs — APRÈS le diagramme en
+// longueur (pas avant, comme dans une version antérieure) : le constat
+// chiffré précède la liste d'objectifs qu'il justifie, plutôt que
+// l'inverse ; les 3 derniers états = les 3 KPI un par un (leur point de
+// départ, N+3, ne change pas : objectifs et classes d'actif occupent
+// toujours le même nombre total d'états avant eux, seul l'ordre entre
+// les deux s'inverse). Objectifs et enveloppes restent dans le flux dès
 // l'état 1 (juste invisibles, voir --invisible) et la grille de KPI
 // garde toujours ses 5 emplacements (3 KPI + 2 repères) : pas de
 // recalcul de mise en page quand un bloc apparaît.
@@ -110,20 +115,27 @@ export function render(slide, opts = {}) {
   const stateIndex = Math.max(opts.stateIndex ?? 0, 0);
   const animate = !!opts.animate;
 
-  const showObjectifs = stateIndex >= 1;
-  const objectifsEntering = animate && stateIndex === 1;
+  // Objectifs après le diagramme en longueur (état N+2, stateIndex
+  // shares.length+1) — plus avant lui : le constat chiffré (les classes
+  // d'actif) précède la liste d'objectifs qu'il justifie.
+  const showObjectifs = stateIndex >= shares.length + 1;
+  const objectifsEntering = animate && stateIndex === shares.length + 1;
 
-  // Une classe d'actif à la fois, états 3..N+2 (stateIndex 2..N+1).
-  // entering se recalcule via stateIndex === i + 2, pas via "i est le
+  // Une classe d'actif à la fois, états 2..N+1 (stateIndex 1..N).
+  // entering se recalcule via stateIndex === i + 1, pas via "i est le
   // dernier actif visible" : ce dernier reste vrai à tous les états
-  // suivants une fois visibleAssetCount saturé à shares.length (les 3
-  // états de KPI, ensuite) et faisait donc rejouer l'entrée du dernier
-  // actif (le PEA) à chaque clic sur un KPI — bug remonté.
-  const visibleAssetCount = Math.min(Math.max(stateIndex - 1, 0), shares.length);
+  // suivants une fois visibleAssetCount saturé à shares.length (objectifs
+  // puis les 3 états de KPI, ensuite) et faisait donc rejouer l'entrée du
+  // dernier actif (le PEA) à chaque clic suivant — bug remonté.
+  const visibleAssetCount = Math.min(Math.max(stateIndex, 0), shares.length);
   const showEnveloppes = visibleAssetCount >= 1;
   const enveloppesCls = "constat__enveloppes" + (!showEnveloppes ? " constat__enveloppes--invisible" : "");
 
-  // Les 3 KPI viennent après objectifs et toutes les classes d'actif.
+  // Les 3 KPI viennent après toutes les classes d'actif ET les
+  // objectifs — leur point de départ (shares.length + 1) ne change pas
+  // par rapport à l'ordre précédent : objectifs et classes d'actif
+  // occupent toujours le même nombre total d'états avant eux (1 +
+  // shares.length), seul l'ordre entre les deux s'est inversé.
   const visibleKpiCount = Math.min(Math.max(stateIndex - 1 - shares.length, 0), kpis.length);
 
   return `
@@ -146,13 +158,13 @@ export function render(slide, opts = {}) {
       <div class="${enveloppesCls}">
         <div class="constat__bar">
           ${shares
-            .map((s, i) => barSegmentHtml(s, { visible: i < visibleAssetCount, entering: animate && stateIndex === i + 2 }))
+            .map((s, i) => barSegmentHtml(s, { visible: i < visibleAssetCount, entering: animate && stateIndex === i + 1 }))
             .join("")}
         </div>
 
         <div class="constat__registre" style="grid-template-columns:repeat(${shares.length},1fr);--registre-gap:${registreGap}">
           ${shares
-            .map((s, i) => supportHtml(s, { visible: i < visibleAssetCount, entering: animate && stateIndex === i + 2 }))
+            .map((s, i) => supportHtml(s, { visible: i < visibleAssetCount, entering: animate && stateIndex === i + 1 }))
             .join("")}
         </div>
       </div>
