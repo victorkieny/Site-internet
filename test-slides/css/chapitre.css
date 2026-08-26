@@ -1968,13 +1968,19 @@
   padding-top: 0;
 }
 
-/* padding-bottom : espace entre les deux icônes du bas et le bord
-   inférieur de la case — sans lui, .scpi-mecanisme__actifs (margin-
-   top:auto, voir plus bas) vient se plaquer contre le bord bas de la
-   case, seul l'espace au-dessus du registre d'icônes grandit. */
+/* Titre + registre d'icônes centrés comme un seul bloc (justify-
+   content:center) plutôt que titre en haut / icônes plaquées en bas
+   (ex margin-top:auto sur .scpi-mecanisme__actifs) : la case a grandi
+   (voir BOX_TOP_SHIFT_CQW dans scpi-mecanisme.js, pour loger le
+   pictogramme "Souscription de part" au-dessus de la flèche) sans que
+   son contenu propre en ait besoin — centrer le bloc répartit l'espace
+   en trop en haut ET en bas plutôt que de l'empiler entre le titre et
+   les icônes. */
 .scpi-mecanisme__box--vehicule {
   border-top: 0.15625cqw solid var(--or);
-  padding-bottom: 1.09375cqw;
+  justify-content: center;
+  padding-top: 0;
+  padding-bottom: 0;
 }
 
 /* Case centrale : titre centré plutôt qu'aligné à gauche comme les deux
@@ -2032,7 +2038,6 @@
    scpi-mecanisme.js) et permet des pictogrammes bien plus grands, plus
    lisibles au premier coup d'œil que serrés sur une rangée. */
 .scpi-mecanisme__actifs {
-  margin-top: auto;
   padding: 0.859375cqw 0.9375cqw 0;
   display: grid;
   grid-template-columns: repeat(2, max-content);
@@ -2097,6 +2102,64 @@
    discrets du schéma. */
 .scpi-mecanisme__flow--noir {
   color: rgb(var(--chap-ink-rgb));
+}
+
+/* Investisseur seul (états 1-2, voir scpi-mecanisme.js) : pas de case,
+   juste le pictogramme, à la même position/largeur que l'ancienne case
+   "L'investisseur" (les flèches s'y raccrochent sans changement). */
+.scpi-mecanisme__solo {
+  position: absolute;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.scpi-mecanisme__solo .chap-icon {
+  width: 5cqw;
+  height: 5cqw;
+}
+
+/* Cercle des associés (état 3+, voir scpi-mecanisme.js) : remplace
+   définitivement le pictogramme seul, dans le même emplacement. Cadre
+   circulaire plutôt que la case rectangulaire des autres intervenants —
+   il représente un collectif, pas un intervenant unique. */
+.scpi-mecanisme__cercle {
+  position: absolute;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625cqw;
+}
+
+.scpi-mecanisme__cercle-ring {
+  position: relative;
+  flex: none;
+  border-radius: 50%;
+  border: 0.078125cqw solid rgba(var(--chap-ink-rgb), 0.22);
+}
+
+/* Positionnées via transform (calc(-50% + dx/dy), voir
+   scpi-mecanisme.js) — dx/dy calculés sur un anneau, jamais saisis à la
+   main un par un. */
+.scpi-mecanisme__cercle-personne {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+}
+
+.scpi-mecanisme__cercle-personne .chap-icon {
+  width: 1.6cqw;
+  height: 1.6cqw;
+}
+
+.scpi-mecanisme__cercle-titre {
+  font-family: var(--font-serif-chapitre);
+  font-weight: 400;
+  font-size: 1.71875cqw;
+  line-height: 1;
 }
 
 /* ---------- Gabarit "Les atouts" (chapitre SCPI) ---------- */

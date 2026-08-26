@@ -403,7 +403,7 @@
       ],
       "titre": "Comment ça marche ?",
       "actifs": ["Bureaux", "Commerces", "Santé", "Hôtellerie"],
-      "states": [{}, {}, {}, {}, {}, {}]
+      "states": [{}, {}, {}, {}, {}, {}, {}]
     },
     {
       "id": "scpi-atouts",
