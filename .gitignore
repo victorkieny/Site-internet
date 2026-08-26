@@ -1,7 +1,6 @@
 .claude/
 .DS_Store
 
-# Copié depuis test-slides/data/clients/<nom>.json au lancement (voir
-# "test-slides/Lancer la présentation.command") — jamais la source, ne
-# pas versionner.
-test-slides/data/deck.json
+# Extrait vers son propre dépôt (github.com/victorkieny/Prez-R2) — plus
+# une copie de travail ici.
+test-slides/
