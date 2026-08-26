@@ -38,9 +38,29 @@ export const renderers = {
   "cloture-detail": { render: clotureDetail.render },
 };
 
+// client/date/chapitres ne sont plus répétés sur chaque slide de
+// data/deck.json (source de désynchronisation si on en oubliait un en
+// mettant à jour le client ou la date) : définis une seule fois dans
+// meta, injectés ici sur chaque slide au chargement — renderChapRail
+// (voir js/slides/_chapitre.js, appelé par la plupart des gabarits) les
+// lit ensuite comme avant, sur slide.client/slide.chapitres, sans rien
+// changer côté gabarits. chapitreActif reste propre à chaque slide (1,
+// 2 ou 3), lui ne vient pas de meta. "cover" seule n'en reçoit pas :
+// elle ne les a jamais eus (ni renderChapRail ni son propre
+// cover__meta ne les consomment pour elle avant ce refactor) — lui en
+// injecter ferait apparaître une ligne "client · date" qui n'existait
+// pas.
 export async function loadDeck() {
   const res = await fetch("data/deck.json");
-  return res.json();
+  const deck = await res.json();
+  const { client, date, chapitres } = deck.meta || {};
+  deck.slides.forEach((slide) => {
+    if (slide.type === "cover") return;
+    slide.client = client;
+    slide.date = date;
+    slide.chapitres = chapitres;
+  });
+  return deck;
 }
 
 // ---------- Révélation progressive (états internes d'une slide) ----------
