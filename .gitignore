@@ -1,2 +1,7 @@
 .claude/
 .DS_Store
+
+# Copié depuis test-slides/data/clients/<nom>.json au lancement (voir
+# "test-slides/Lancer la présentation.command") — jamais la source, ne
+# pas versionner.
+test-slides/data/deck.json
