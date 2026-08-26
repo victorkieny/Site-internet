@@ -160,6 +160,13 @@ export const ICONS = {
   "placement-sur-mesure": '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/>',
   "gestion-cle-en-main":
     '<circle cx="8" cy="8.5" r="3.3"/><line x1="10.3" y1="10.8" x2="20.5" y2="21"/><line x1="15.8" y1="16.3" x2="18.3" y2="13.8"/><line x1="18" y1="18.5" x2="20.5" y2="16"/>',
+  // Presse-papier + coches — la souscription de parts ("Comment ça
+  // marche") : redessinée dans le style trait du reste du registre
+  // (référence client fournie en PNG plein, assets/icons/souscription
+  // de part.png, non réutilisable telle quelle — voir charte CLAUDE.md
+  // sur le remplissage plein), pas un import de bibliothèque d'icônes.
+  souscription:
+    '<rect x="5" y="4" width="14" height="18" rx="1.6"/><rect x="9" y="2" width="6" height="3" rx="1"/><path d="M7.3 10.6 L8.7 12 L11 9.4"/><line x1="12.3" y1="10.6" x2="16" y2="10.6"/><path d="M7.3 15.6 L8.7 17 L11 14.4"/><line x1="12.3" y1="15.6" x2="16" y2="15.6"/>',
 };
 
 export function iconSvg(name, color, size = 38) {

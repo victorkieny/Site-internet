@@ -2070,6 +2070,21 @@
   color: rgba(var(--chap-ink-rgb), 0.6);
 }
 
+/* Pictogramme au-dessus de la flèche investisseur<->SCPI (état
+   transitoire "Souscription de part", voir scpi-mecanisme.js) — même
+   largeur que .scpi-mecanisme__flow pour rester centré sur la flèche
+   qu'il annote. */
+.scpi-mecanisme__flow-icon {
+  position: absolute;
+  display: flex;
+  justify-content: center;
+}
+
+.scpi-mecanisme__flow-icon .chap-icon {
+  width: 1.875cqw;
+  height: 1.875cqw;
+}
+
 .scpi-mecanisme__flow--or {
   color: var(--or);
 }

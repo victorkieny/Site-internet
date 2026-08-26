@@ -2,18 +2,25 @@ import { escapeHtml } from "../editable.js";
 import { renderChapRail, iconSvg } from "./_chapitre.js";
 
 // Gabarit "Comment ça marche" (chapitre SCPI, import Claude Design
-// "Gabarits chapitre SCPI") — révélation progressive cumulative à 5
+// "Gabarits chapitre SCPI") — révélation progressive cumulative à 6
 // états (opts.stateIndex direct, même mécanisme que "Les atouts") :
 // état 1 = l'investisseur ET la SCPI ensemble (le couple associé/
-// véhicule, socle du schéma) ; état 2 = + la flèche "copropriétaire"
-// (souscription de parts) ; état 3 = + la flèche "distribution de
-// revenus" ; état 4 = +
-// la société de gestion (et sa flèche "gestion clé en main") ; état 5 =
-// + l'AMF (et ses deux liaisons pointillées). Chaque flux n'apparaît
-// qu'entre deux cases déjà affichées — jamais une flèche vers une case
-// encore invisible. Géométrie reprise telle quelle du handoff (px à
-// 1280 de large, convertis en cqw — voir chapitre.css en tête de
-// fichier), pas réinventée.
+// véhicule, socle du schéma) ; état 2 = la flèche investisseur<->SCPI
+// apparaît, portée par le pictogramme + libellé "Souscription de part"
+// — état PRÉALABLE et transitoire, pas cumulatif comme le reste
+// (voir showSouscriptionLabel) ; état 3 = ce même pictogramme et ce
+// même libellé cèdent la place à "Copropriétaire" sur la même flèche
+// (déjà affichée, elle ne rejoue pas son entrée) — la séquence réelle
+// (on souscrit des parts, on DEVIENT ainsi copropriétaire) sans garder
+// deux libellés permanents sur un même lien ; état 4 = + la flèche
+// "distribution de revenus" ; état 5 = + la société de gestion (et sa
+// flèche "gestion clé en main") ; état 6 = + l'AMF (et ses deux
+// liaisons pointillées). Chaque flux n'apparaît qu'entre deux cases
+// déjà affichées — jamais une flèche vers une case encore invisible.
+// Géométrie reprise telle quelle du handoff (px à 1280 de large,
+// convertis en cqw — voir chapitre.css en tête de fichier), pas
+// réinventée, sauf la hauteur des cases (voir BOX_TOP_SHIFT_CQW) pour
+// loger le nouveau pictogramme "Souscription de part".
 
 // Pictogrammes fournis tels quels par le client (Claude Design,
 // assets/icons/{bureau,commerce,hotel,sante}.svg) — viewBox, paths/
@@ -130,6 +137,20 @@ const SCPI_WIDTH = 16.5625;
 const GESTION_LEFT = 69.0625;
 const STAGE_CENTER = 45.15625; // milieu de la scène (90.3125cqw de large) — axe de la case SCPI et de la case AMF
 
+// Cases relevées de BOX_TOP_SHIFT_CQW par rapport au handoff d'origine
+// (top 13.125cqw / hauteur 12.1875cqw pour investisseur et gestion,
+// 16.25cqw pour SCPI) : libère de la place au-dessus de la flèche
+// investisseur<->SCPI pour le pictogramme "Souscription de part" (état
+// 2, transitoire — voir plus bas) sans déplacer ni la flèche elle-même
+// ni les repères "Gestion clé en main"/"Distribution de revenus"
+// (toujours à 246/286px), et sans bouger le bas des cases (top diminue,
+// hauteur augmente d'autant : top+hauteur, donc le bas, ne change pas).
+const BOX_TOP_SHIFT_CQW = 2.5;
+const BOX_TOP_CQW = 13.125 - BOX_TOP_SHIFT_CQW;
+const CENTER_BOX_HEIGHT_CQW = 12.1875 + BOX_TOP_SHIFT_CQW;
+const SCPI_HEIGHT_CQW = 16.25 + BOX_TOP_SHIFT_CQW;
+const BOX_TOP_PX = BOX_TOP_CQW * CQW_PX;
+
 // Distance standard entre l'extrémité d'une flèche et le bord de la
 // case qu'elle touche — mesurée à l'origine sur l'écart case
 // "L'investisseur" <-> flèches (16px), puis appliquée à CHAQUE
@@ -140,7 +161,7 @@ const STAGE_CENTER = 45.15625; // milieu de la scène (90.3125cqw de large) — 
 const ARROW_GAP_PX = 1.25 * CQW_PX;
 
 export function render(slide, opts = {}) {
-  const stateIndex = Math.min(Math.max(opts.stateIndex ?? 0, 0), 4);
+  const stateIndex = Math.min(Math.max(opts.stateIndex ?? 0, 0), 5);
   const animate = !!opts.animate;
 
   // Un pictogramme par classe d'actifs plutôt qu'une puce de texte —
@@ -162,22 +183,35 @@ export function render(slide, opts = {}) {
     })
     .join("");
 
-  const showSouscription = stateIndex >= 1;
-  const showDistribution = stateIndex >= 2;
-  const showGestion = stateIndex >= 3;
-  const showAmf = stateIndex >= 4;
+  // État 2 (index 1) : la flèche investisseur<->SCPI apparaît, portée
+  // par le pictogramme "Souscription de part" et son libellé — un état
+  // PRÉALABLE et transitoire (showSouscriptionLabel n'est vrai qu'à
+  // cet état précis, pas cumulatif comme le reste du schéma) : à l'état
+  // 3, ce même pictogramme et ce même libellé cèdent la place au
+  // libellé "Copropriétaire" d'origine, sur la même flèche (déjà
+  // affichée, elle ne rejoue pas son entrée). Représente la séquence
+  // réelle (on souscrit des parts, on DEVIENT ainsi copropriétaire) sans
+  // garder deux libellés permanents sur le même lien.
+  const showInvestScpiArrow = stateIndex >= 1;
+  const investScpiArrowEntering = animate && stateIndex === 1;
+  const showSouscriptionLabel = stateIndex === 1;
+  const showCopro = stateIndex >= 2;
+  const showDistribution = stateIndex >= 3;
+  const showGestion = stateIndex >= 4;
+  const showAmf = stateIndex >= 5;
 
   const socleEntering = animate && stateIndex === 0;
   const souscriptionEntering = animate && stateIndex === 1;
-  const distributionEntering = animate && stateIndex === 2;
-  const gestionEntering = animate && stateIndex === 3;
-  const amfEntering = animate && stateIndex === 4;
+  const coproEntering = animate && stateIndex === 2;
+  const distributionEntering = animate && stateIndex === 3;
+  const gestionEntering = animate && stateIndex === 4;
+  const amfEntering = animate && stateIndex === 5;
 
   const investisseurBox = boxHtml({
     left: INVESTISSEUR_LEFT,
-    top: 13.125,
+    top: BOX_TOP_CQW,
     width: INVESTISSEUR_WIDTH,
-    height: 12.1875,
+    height: CENTER_BOX_HEIGHT_CQW,
     cls: "scpi-mecanisme__box--center",
     icon: "groupe",
     titre: "L'investisseur",
@@ -186,9 +220,9 @@ export function render(slide, opts = {}) {
 
   const scpiBox = boxHtml({
     left: SCPI_LEFT,
-    top: 13.125,
+    top: BOX_TOP_CQW,
     width: SCPI_WIDTH,
-    height: 16.25,
+    height: SCPI_HEIGHT_CQW,
     cls: "scpi-mecanisme__box--vehicule",
     titre: "SCPI",
     extra: `<div class="scpi-mecanisme__actifs">${actifsHtml}</div>`,
@@ -198,9 +232,9 @@ export function render(slide, opts = {}) {
   const gestionBox = showGestion
     ? boxHtml({
         left: GESTION_LEFT,
-        top: 13.125,
+        top: BOX_TOP_CQW,
         width: 21.25,
-        height: 12.1875,
+        height: CENTER_BOX_HEIGHT_CQW,
         cls: "scpi-mecanisme__box--center",
         icon: "cle",
         titre: "La société de gestion",
@@ -233,9 +267,23 @@ export function render(slide, opts = {}) {
     ? `<span class="scpi-mecanisme__amf-note${amfEntering ? " is-entering" : ""}"${amfEntering ? " data-reveal" : ""} style="left:46.25cqw;top:6.5625cqw">Agrément et contrôle</span>`
     : "";
 
-  const souscriptionFlow = showSouscription
-    ? flowLabelHtml(21.25, 13.59375, 11.015625, "Copropriétaire", false, souscriptionEntering)
+  // Pictogramme + libellé "Souscription de part" : au-dessus de la
+  // flèche investisseur<->SCPI, dans la place libérée par
+  // BOX_TOP_SHIFT_CQW — visible seulement à l'état transitoire (voir
+  // showSouscriptionLabel). Le libellé "Copropriétaire" d'origine
+  // (au-dessus de la flèche, même position qu'avant l'ajout de cet
+  // état) prend le relais dès l'état suivant, sur la même flèche.
+  const souscriptionIconHtml = showSouscriptionLabel
+    ? `<div class="scpi-mecanisme__flow-icon${souscriptionEntering ? " is-entering" : ""}"${souscriptionEntering ? " data-reveal" : ""} style="left:21.25cqw;width:11.015625cqw;top:12.5cqw">${iconSvg(
+        "souscription",
+        "rgba(var(--chap-ink-rgb),.65)",
+        24
+      )}</div>`
     : "";
+  const souscriptionTextFlow = showSouscriptionLabel
+    ? flowLabelHtml(21.25, 17.03125, 11.015625, "Souscription de part", false, souscriptionEntering)
+    : "";
+  const coproFlow = showCopro ? flowLabelHtml(21.25, 13.59375, 11.015625, "Copropriétaire", false, coproEntering) : "";
   const distributionFlow = showDistribution
     ? flowLabelHtml(21.25, 19.84375, 11.015625, "Distribution de revenus", true, distributionEntering)
     : "";
@@ -250,9 +298,9 @@ export function render(slide, opts = {}) {
   const scpiRightPx = (SCPI_LEFT + SCPI_WIDTH) * CQW_PX;
   const gestionLeftPx = GESTION_LEFT * CQW_PX;
 
-  const souscriptionArrow = showSouscription
+  const investScpiArrow = showInvestScpiArrow
     ? lineGroupHtml(
-        souscriptionEntering,
+        investScpiArrowEntering,
         `<line x1="${investisseurRightPx + ARROW_GAP_PX}" y1="206" x2="${scpiLeftPx - ARROW_GAP_PX}" y2="206" stroke="rgba(var(--chap-ink-rgb),.45)" stroke-width="1.2" marker-end="url(#scpi-ar-d)"/>`
       )
     : "";
@@ -274,8 +322,8 @@ export function render(slide, opts = {}) {
   const amfLines = showAmf
     ? lineGroupHtml(
         amfEntering,
-        `<path d="M578,72 V168" fill="none" stroke="rgba(var(--chap-ink-rgb),.34)" stroke-width="1" stroke-dasharray="2 5"/>
-         <path d="M578,112 H1020 V168" fill="none" stroke="rgba(var(--chap-ink-rgb),.34)" stroke-width="1" stroke-dasharray="2 5"/>`
+        `<path d="M578,72 V${BOX_TOP_PX}" fill="none" stroke="rgba(var(--chap-ink-rgb),.34)" stroke-width="1" stroke-dasharray="2 5"/>
+         <path d="M578,112 H1020 V${BOX_TOP_PX}" fill="none" stroke="rgba(var(--chap-ink-rgb),.34)" stroke-width="1" stroke-dasharray="2 5"/>`
       )
     : "";
 
@@ -294,7 +342,7 @@ export function render(slide, opts = {}) {
             <marker id="scpi-ar-g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="var(--or)"/></marker>
           </defs>
           ${amfLines}
-          ${souscriptionArrow}
+          ${investScpiArrow}
           ${distributionArrow}
           ${gestionArrow}
         </svg>
@@ -306,7 +354,9 @@ export function render(slide, opts = {}) {
         ${scpiBox}
         ${gestionBox}
 
-        ${souscriptionFlow}
+        ${souscriptionIconHtml}
+        ${souscriptionTextFlow}
+        ${coproFlow}
         ${distributionFlow}
         ${gestionFlow}
       </div>
