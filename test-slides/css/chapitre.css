@@ -2105,6 +2105,22 @@
   width: auto;
 }
 
+/* "Distribution de revenus" seul (voir maskColor/arrowAnnotationHtml
+   dans scpi-mecanisme.js) : le PNG sert de masque à un aplat de couleur
+   (background-color) plutôt que d'être affiché tel quel — seul moyen de
+   le teinter en doré sans refaire l'asset (fourni en noir, comme les
+   autres pictogrammes du schéma). Largeur/hauteur posées en style
+   inline (pas de largeur intrinsèque auto-déduite comme <img>). */
+.scpi-mecanisme__flow-icon-mask {
+  display: block;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+}
+
 .scpi-mecanisme__flow--or {
   color: var(--or);
 }
@@ -2183,12 +2199,13 @@
 }
 
 /* Celui du centre (voir CENTER_PERSON_SIZE_CQW dans scpi-mecanisme.js) :
-   plus grand que les silhouettes de l'anneau, pour montrer que
-   l'investisseur (seul jusqu'à l'état précédent) est désormais associé
-   sans se fondre dans le collectif qui l'entoure. */
+   même taille que le pictogramme seul des états 1-2 (5cqw), plus grand
+   que les silhouettes de l'anneau, pour montrer que l'investisseur (seul
+   jusqu'à l'état précédent) est désormais associé sans se fondre dans le
+   collectif qui l'entoure. */
 .scpi-mecanisme__cercle-personne--centre .chap-icon {
-  width: 3.2cqw;
-  height: 3.2cqw;
+  width: 5cqw;
+  height: 5cqw;
 }
 
 /* Largeur posée en style inline (= CIRCLE_D_CQW, voir

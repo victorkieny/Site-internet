@@ -156,6 +156,15 @@ const STAGE_CENTER = 45.15625; // milieu de la scène (90.3125cqw de large) — 
 // de cette case — plus grand que les pictogrammes 1.875cqw habituels du
 // box-head, il porte seul l'identification de la case (voir boxHtml).
 const GESTION_LOGO_HEIGHT_CQW = 4;
+// Mesurée sur le titre réellement rendu ("Société de gestion", ~14,3cqw
+// à 1.71875cqw de police + 3,125cqw de padding gauche/droite hérité de
+// .scpi-mecanisme__box, voir boxHtml) plutôt que recopiée de la largeur
+// de l'ancienne case "L'investisseur" (21,25cqw, bien trop large pour ce
+// contenu) : ne laisse plus qu'une légère respiration de chaque côté du
+// titre, au lieu du grand vide gauche/droite précédent. GESTION_LEFT ne
+// bouge pas (la flèche s'y raccroche par son bord gauche, indépendant de
+// la largeur de la case).
+const GESTION_WIDTH_CQW = 18.5;
 
 // Cases relevées de BOX_TOP_SHIFT_CQW par rapport au handoff d'origine
 // (top 13.125cqw / hauteur 12.1875cqw pour investisseur et gestion) :
@@ -188,6 +197,16 @@ const BOX_TOP_PX = BOX_TOP_CQW * CQW_PX;
 // chaque flèche.
 const FLOW_LABEL_WIDTH_CQW = 11.015625;
 const ICON_HEIGHT_CQW = 3.125;
+// "Distribution de revenus" seul à sa propre taille (voir
+// distributionHtml) : plus grand que les trois autres pictogrammes de
+// flèche, pour égaler visuellement copropriétaire.png (dont le cadrage
+// interne le remplit davantage que revenus.png à hauteur de case
+// identique). Rendu en masque CSS (pas <img>) pour le teinter en doré
+// — voir arrowAnnotationHtml — donc pas de largeur intrinsèque
+// auto-déduite : DISTRIBUTION_ICON_ASPECT (largeur/hauteur du PNG
+// source, 160×196) la fournit explicitement.
+const DISTRIBUTION_ICON_HEIGHT_CQW = 3.35;
+const DISTRIBUTION_ICON_ASPECT = 160 / 196;
 const GAP_CQW = 1.171875;
 const INVEST_SCPI_ARROW_CENTER_CQW = (INVESTISSEUR_LEFT + INVESTISSEUR_WIDTH + SCPI_LEFT) / 2;
 const GESTION_ARROW_CENTER_CQW = (SCPI_LEFT + SCPI_WIDTH + GESTION_LEFT) / 2;
@@ -198,7 +217,12 @@ const GESTION_ARROW_CENTER_CQW = (SCPI_LEFT + SCPI_WIDTH + GESTION_LEFT) / 2;
 // distribution partagent le même couloir x, l'une au-dessus de
 // l'autre) : voir arrowAnnotationHtml plus bas pour le calcul des
 // positions à partir de ces trois valeurs.
-const INVEST_SCPI_ARROW_Y_PX = 185;
+// Relevée (était 185) pour laisser la place au pictogramme "Distribution
+// de revenus" agrandi (voir DISTRIBUTION_ICON_HEIGHT_CQW), qui empiète
+// depuis le bas dans le même couloir x que le texte "Copropriétaire" /
+// "Souscription de part" sous cette flèche — sans ce relèvement les deux
+// se chevauchaient déjà de justesse à l'ancienne taille du pictogramme.
+const INVEST_SCPI_ARROW_Y_PX = 155;
 const DISTRIBUTION_ARROW_Y_PX = 275;
 const GESTION_ARROW_Y_PX = 246;
 
@@ -208,15 +232,23 @@ const GESTION_ARROW_Y_PX = 246;
 // une seule fonction pour les quatre flèches du schéma plutôt que des
 // positions saisies séparément à chaque appel (bug de désynchronisation
 // déjà rencontré ailleurs dans ce fichier).
-function arrowAnnotationHtml({ png, arrowYPx, centerXCqw, text, textColorClass, entering }) {
+// maskColor + iconAspect (optionnels) : rendent le pictogramme via un
+// masque CSS teinté plutôt qu'un <img> brut — seul moyen de recolorer un
+// PNG client en aplat (voir "revenus.png"/DISTRIBUTION_ICON_HEIGHT_CQW)
+// sans en refaire l'asset. Un masque n'a pas de largeur intrinsèque
+// auto-déduite comme <img> (height:auto), d'où iconAspect (largeur/
+// hauteur du PNG source) fourni explicitement par l'appelant.
+function arrowAnnotationHtml({ png, arrowYPx, centerXCqw, text, textColorClass, entering, iconHeightCqw = ICON_HEIGHT_CQW, maskColor, iconAspect = 1 }) {
   const arrowYCqw = arrowYPx / CQW_PX;
   const leftCqw = centerXCqw - FLOW_LABEL_WIDTH_CQW / 2;
-  const iconTopCqw = arrowYCqw - GAP_CQW - ICON_HEIGHT_CQW;
+  const iconTopCqw = arrowYCqw - GAP_CQW - iconHeightCqw;
   const textTopCqw = arrowYCqw + GAP_CQW;
+  const src = png ? `assets/icons/${encodeURIComponent(png)}` : "";
+  const iconInner = maskColor
+    ? `<span class="scpi-mecanisme__flow-icon-mask" style="width:${iconHeightCqw * iconAspect}cqw;height:${iconHeightCqw}cqw;background-color:${maskColor};-webkit-mask-image:url('${src}');mask-image:url('${src}')"></span>`
+    : `<img src="${src}" alt="" style="height:${iconHeightCqw}cqw" />`;
   const iconHtml = png
-    ? `<div class="scpi-mecanisme__flow-icon${entering ? " is-entering" : ""}"${entering ? " data-reveal" : ""} style="left:${leftCqw}cqw;width:${FLOW_LABEL_WIDTH_CQW}cqw;top:${iconTopCqw}cqw"><img src="assets/icons/${encodeURIComponent(
-        png
-      )}" alt="" style="height:${ICON_HEIGHT_CQW}cqw" /></div>`
+    ? `<div class="scpi-mecanisme__flow-icon${entering ? " is-entering" : ""}"${entering ? " data-reveal" : ""} style="left:${leftCqw}cqw;width:${FLOW_LABEL_WIDTH_CQW}cqw;top:${iconTopCqw}cqw">${iconInner}</div>`
     : "";
   const textHtml = flowLabelHtml(leftCqw, textTopCqw, FLOW_LABEL_WIDTH_CQW, text, textColorClass, entering);
   return iconHtml + textHtml;
@@ -238,9 +270,11 @@ const CIRCLE_PERSON_RING_RADIUS_CQW = CIRCLE_D_CQW / 2 - CIRCLE_PERSON_SIZE_CQW 
 // reste visible au centre de l'anneau, plus grand que les silhouettes
 // des autres associés réparties sur le cercle : il ne devient pas un
 // point du cercle parmi d'autres, il EST le centre, pour montrer qu'il
-// en fait désormais partie sans se fondre dans le collectif.
-const CENTER_PERSON_SIZE_CQW = 3.2;
+// en fait désormais partie sans se fondre dans le collectif. Même
+// taille que le pictogramme seul des états 1-2 (SOLO_ICON_SIZE_CQW) —
+// c'est le même personnage, il ne rétrécit pas en devenant associé.
 const SOLO_ICON_SIZE_CQW = 5;
+const CENTER_PERSON_SIZE_CQW = SOLO_ICON_SIZE_CQW;
 
 // États 1-2 : le pictogramme seul n'est plus centré sur la hauteur de
 // l'ancienne case "L'investisseur" (BOX_TOP_CQW/CENTER_BOX_HEIGHT_CQW,
@@ -253,7 +287,7 @@ function investisseurSoloHtml(entering) {
   const topCqw = INVEST_SCPI_ARROW_Y_PX / CQW_PX - SOLO_ICON_SIZE_CQW / 2;
   return `
     <div class="${cls}"${entering ? " data-reveal" : ""} style="left:${INVESTISSEUR_LEFT}cqw;top:${topCqw}cqw;width:${INVESTISSEUR_WIDTH}cqw;height:${SOLO_ICON_SIZE_CQW}cqw">
-      ${iconSvg("personne", "rgba(var(--chap-ink-rgb),.65)")}
+      ${iconSvg("personne", "rgb(var(--chap-ink-rgb))")}
     </div>
   `;
 }
@@ -366,7 +400,7 @@ export function render(slide, opts = {}) {
     ? boxHtml({
         left: GESTION_LEFT,
         top: BOX_TOP_CQW,
-        width: 21.25,
+        width: GESTION_WIDTH_CQW,
         height: SCPI_HEIGHT_CQW,
         cls: "scpi-mecanisme__box--center",
         pngIcon: "société de gestion.png",
@@ -434,6 +468,9 @@ export function render(slide, opts = {}) {
         text: "Distribution de revenus",
         textColorClass: "or",
         entering: distributionEntering,
+        iconHeightCqw: DISTRIBUTION_ICON_HEIGHT_CQW,
+        iconAspect: DISTRIBUTION_ICON_ASPECT,
+        maskColor: "var(--or)",
       })
     : "";
   const gestionHtml = showGestion
