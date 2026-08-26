@@ -2607,7 +2607,7 @@
    height, text-align:right pour rester lisible malgré le retour. */
 .scpi-financement__levier-axis-label--desc {
   white-space: normal;
-  width: 15.625cqw;
+  width: 17cqw;
   font-size: 0.9375cqw;
   line-height: 1.3;
   text-align: right;
@@ -2641,7 +2641,12 @@
 
 /* height posée en style inline (LEVIER_BAR_MAX_CQW) — voir la remarque
    sur .scpi-financement__levier-axis ci-dessus. */
+/* position:relative : ancre .scpi-financement__levier-bar-marker (ligne
+   pointillée), dont le "bottom" doit rester relatif à cette hauteur
+   FIXE (LEVIER_BAR_MAX_CQW) plutôt qu'à celle, animée, de la colonne
+   elle-même — voir markerHtml dans scpi-financement.js. */
 .scpi-financement__levier-bar-wrap {
+  position: relative;
   display: flex;
   align-items: flex-end;
 }
@@ -2658,11 +2663,31 @@
 }
 
 /* Même bleu que "Sans financement" (scpi-financement__levier-bar--
-   effort) : les deux représentent le même effort d'épargne réel — seul
-   l'écart doré au sommet (scpi-financement__levier-bar-gap) est propre
-   à cette colonne, l'effet de levier. */
+   effort) EN DESSOUS de la ligne pointillée (effort d'épargne réel,
+   voir .scpi-financement__levier-bar-marker) : les deux représentent le
+   même effort d'épargne réel jusque-là. Au-dessus, c'est toujours du
+   gain — simple réinvestissement des loyers ou effet de levier propre —
+   recouvert en doré par .scpi-financement__levier-bar-gap. */
 .scpi-financement__levier-bar--patrimoine {
   background: var(--bleu);
+}
+
+/* Démarcation effort réel / patrimoine reconstitué, DANS les deux
+   colonnes (voir markerHtml) — même style que .cuve__verse-line
+   ailleurs dans ce fichier (dashed papier, l'unique traitement qui
+   reste lisible aussi bien sur fond bleu que doré). bottom posé en
+   style inline (effortBarH, une seule fois pour les deux colonnes :
+   même effort réel des deux côtés). */
+.scpi-financement__levier-bar-marker {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  /* Deux fois plus épais et bien plus opaque que .cuve__verse-line :
+     ici la ligne traverse un aplat saturé (bleu, ou la jonction
+     bleu/or) sur toute sa largeur, pas un fond clair — la finesse
+     d'origine y devenait invisible (vérifié à l'écran). */
+  border-top: 0.15625cqw dashed rgba(var(--papier-rgb), 0.85);
 }
 
 /* Montant au-dessus de la colonne (40 500 € / 85 000 €) : bottom:100%
