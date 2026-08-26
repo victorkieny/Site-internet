@@ -776,10 +776,13 @@
 
 /* Titre court introduisant le diagramme : sans-serif, poids marqué mais
    plus petit que .epargne-dormante__title — juste assez de présence pour
-   annoncer la chronologie sans concurrencer le titre principal. Porte
-   margin-top:auto (déplacé depuis .epargne-dormante__grid ci-dessous) :
-   c'est lui qui absorbe l'espace disponible, la grille ne garde qu'un
-   petit écart fixe puisqu'elle le suit directement. */
+   annoncer la chronologie sans concurrencer le titre principal.
+   margin-top:auto ET .epargne-dormante__grid margin-top:auto (voir plus
+   bas) : dans un conteneur flex en colonne, deux marges auto sur le même
+   axe se partagent l'espace disponible À ÉGALITÉ (comportement standard
+   flexbox) — l'écart titre→sous-titre et l'écart sous-titre→premier
+   montant restent donc identiques quelle que soit la hauteur de la
+   scène, sans valeur recopiée à la main des deux côtés. */
 .epargne-dormante__diagram-intro {
   margin: auto auto 0;
   max-width: 50cqw;
@@ -791,7 +794,7 @@
 }
 
 .epargne-dormante__grid {
-  margin-top: 1.71875cqw;
+  margin-top: auto;
   width: 100%;
   display: grid;
   column-gap: 2.65625cqw;
