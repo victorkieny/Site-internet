@@ -29,17 +29,19 @@ function stepperItemHtml(atout, active) {
   `;
 }
 
-// Un état par puce, toutes atouts confondus : {atoutIndex, visibleCount}
-// où visibleCount va de 1 (premier tiret de cet atout, qui bascule
-// aussi le stepper dessus) au nombre total de puces de l'atout. Dérivé
-// de slide.atouts à chaque rendu — jamais une liste d'états saisie en
-// dur dans deck.json, qui n'a qu'à porter le bon NOMBRE d'entrées
-// (voir "states" dans deck.json, une par puce au total).
+// Un état par puce PLUS un état d'arrivée sans puce, toutes atouts
+// confondus : {atoutIndex, visibleCount} où visibleCount va de 0
+// (bascule du stepper + titre de l'atout, aucun tiret encore affiché —
+// le premier tiret attend son propre clic, comme tous les autres) au
+// nombre total de puces de l'atout. Dérivé de slide.atouts à chaque
+// rendu — jamais une liste d'états saisie en dur dans deck.json, qui
+// n'a qu'à porter le bon NOMBRE d'entrées (voir "states" dans
+// deck.json : (nb de puces + 1) par atout).
 function buildStates(atouts) {
   const states = [];
   atouts.forEach((a, atoutIndex) => {
-    const n = Math.max((a.bullets || []).length, 1);
-    for (let visibleCount = 1; visibleCount <= n; visibleCount++) {
+    const n = (a.bullets || []).length;
+    for (let visibleCount = 0; visibleCount <= n; visibleCount++) {
       states.push({ atoutIndex, visibleCount });
     }
   });
@@ -56,12 +58,13 @@ export function render(slide, opts = {}) {
   const visibleCount = current.visibleCount;
   const atout = atouts[activeIndex] || {};
 
-  // Premier tiret de cet atout (visibleCount===1) : le panneau entier
-  // (titre doré + liste) rentre avec un fondu — c'est le changement
-  // d'atout. Puces suivantes (visibleCount>1, même atout) : seule LA
-  // puce qui vient d'apparaître a sa propre entrée, le reste du panneau
-  // reste en place (pas de refondu à chaque tiret).
-  const atoutEntering = animate && visibleCount === 1;
+  // Arrivée sur cet atout (visibleCount===0, aucun tiret encore
+  // affiché) : le panneau entier (titre doré + liste) rentre avec un
+  // fondu — c'est le changement d'atout. États suivants (visibleCount>0,
+  // même atout) : seule LA puce qui vient d'apparaître a sa propre
+  // entrée, le reste du panneau reste en place (pas de refondu à chaque
+  // tiret).
+  const atoutEntering = animate && visibleCount === 0;
 
   const stepper = atouts.map((a, i) => stepperItemHtml(a, i === activeIndex)).join("");
 
