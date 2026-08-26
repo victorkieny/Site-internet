@@ -349,7 +349,7 @@ export function render(slide, opts = {}) {
   const levierHtml = showLevier
     ? `
       <div class="scpi-financement__levier${levierEntering ? " is-entering" : ""}"${levierEntering ? " data-reveal" : ""} style="left:${LEVIER_LEFT}cqw">
-        <span class="scpi-financement__levier-title">À effort d'épargne équivalent (${v.effM})</span>
+        <span class="scpi-financement__levier-title">À effort d'épargne équivalent (${v.effM}) :</span>
         <div class="scpi-financement__levier-row">
           <div class="scpi-financement__levier-axis" style="height:${LEVIER_BAR_MAX_CQW}cqw">
             ${goldAxisLabel}
@@ -450,7 +450,7 @@ export function render(slide, opts = {}) {
         ${viagerHtml}
       </div>
 
-      <p class="scpi-financement__footnote">Hypothèses · taux de distribution SCPI ${escapeHtml(v.td)}/an hors revalorisation · taux de financement ${escapeHtml(v.tf)} assurance incluse · montants moyens sur les ${v.duree} premières années · données brutes de fiscalité et de prélèvements sociaux.</p>
+      <p class="scpi-financement__footnote">Hypothèses · taux de distribution SCPI ${escapeHtml(v.td)}/an hors revalorisation · taux de financement ${escapeHtml(v.tf)} assurance incluse · montants moyens sur les ${v.duree} premières années · données brutes de fiscalité et de prélèvements sociaux · fiscalité avant réinvestissement prise en compte (TMI 30 % + PS 17,2 %).</p>
     </div>
   `;
 }

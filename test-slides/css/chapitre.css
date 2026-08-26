@@ -2609,7 +2609,7 @@
   right: 0.625cqw;
   transform: translateY(50%);
   font-weight: 700;
-  font-size: 0.96875cqw;
+  font-size: 1.09375cqw;
   letter-spacing: 0.04em;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
@@ -2620,11 +2620,16 @@
    plus le montant lui-même — désormais affiché au-dessus de sa colonne,
    voir .scpi-financement__levier-bar-value) peuvent revenir à la ligne
    plutôt que forcer une seule ligne très longue : max-width + line-
-   height, text-align:right pour rester lisible malgré le retour. */
+   height, text-align:right pour rester lisible malgré le retour. Largeur
+   (width) à revérifier si cette taille de police change encore : déjà
+   au plus juste pour que "Patrimoine immobilier constitué" (le plus
+   long des deux segments coupés par le <br> manuel, voir scpi-
+   financement.js) tienne sur une seule ligne à cette taille.
+   */
 .scpi-financement__levier-axis-label--desc {
   white-space: normal;
-  width: 17cqw;
-  font-size: 0.9375cqw;
+  width: 20cqw;
+  font-size: 1.0625cqw;
   line-height: 1.3;
   text-align: right;
 }
@@ -2798,7 +2803,7 @@
 
 .scpi-financement__levier-kicker {
   font-weight: 700;
-  font-size: 0.7421875cqw;
+  font-size: 0.9375cqw;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   white-space: nowrap;
