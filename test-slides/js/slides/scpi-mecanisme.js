@@ -230,7 +230,7 @@ function arrowAnnotationHtml({ png, arrowYPx, centerXCqw, text, textColorClass, 
 // intervenants : elle représente un collectif d'associés, pas un
 // intervenant unique. Même position/largeur que l'ancienne case
 // "L'investisseur" (les flèches s'y raccrochent sans changement).
-const CIRCLE_D_CQW = 9.5;
+const CIRCLE_D_CQW = 12.5;
 const CIRCLE_PERSON_SIZE_CQW = 1.6;
 const CIRCLE_PERSON_COUNT = 5;
 const CIRCLE_PERSON_RING_RADIUS_CQW = CIRCLE_D_CQW / 2 - CIRCLE_PERSON_SIZE_CQW / 2 - 0.3;
@@ -239,13 +239,20 @@ const CIRCLE_PERSON_RING_RADIUS_CQW = CIRCLE_D_CQW / 2 - CIRCLE_PERSON_SIZE_CQW 
 // des autres associés réparties sur le cercle : il ne devient pas un
 // point du cercle parmi d'autres, il EST le centre, pour montrer qu'il
 // en fait désormais partie sans se fondre dans le collectif.
-const CENTER_PERSON_SIZE_CQW = 2.4;
+const CENTER_PERSON_SIZE_CQW = 3.2;
 const SOLO_ICON_SIZE_CQW = 5;
 
+// États 1-2 : le pictogramme seul n'est plus centré sur la hauteur de
+// l'ancienne case "L'investisseur" (BOX_TOP_CQW/CENTER_BOX_HEIGHT_CQW,
+// pensée pour une case, pas pour lui) mais sur l'ordonnée réelle de la
+// flèche investisseur<->SCPI (INVEST_SCPI_ARROW_Y_PX) qu'il porte à
+// l'état 2 — la flèche doit traverser le pictogramme en son centre, pas
+// plus bas.
 function investisseurSoloHtml(entering) {
   const cls = "scpi-mecanisme__solo" + (entering ? " is-entering" : "");
+  const topCqw = INVEST_SCPI_ARROW_Y_PX / CQW_PX - SOLO_ICON_SIZE_CQW / 2;
   return `
-    <div class="${cls}"${entering ? " data-reveal" : ""} style="left:${INVESTISSEUR_LEFT}cqw;top:${BOX_TOP_CQW}cqw;width:${INVESTISSEUR_WIDTH}cqw;height:${CENTER_BOX_HEIGHT_CQW}cqw">
+    <div class="${cls}"${entering ? " data-reveal" : ""} style="left:${INVESTISSEUR_LEFT}cqw;top:${topCqw}cqw;width:${INVESTISSEUR_WIDTH}cqw;height:${SOLO_ICON_SIZE_CQW}cqw">
       ${iconSvg("personne", "rgba(var(--chap-ink-rgb),.65)")}
     </div>
   `;
@@ -272,7 +279,7 @@ function associeCercleHtml(entering) {
   return `
     <div class="${cls}"${entering ? " data-reveal" : ""} style="left:${INVESTISSEUR_LEFT}cqw;top:${BOX_TOP_CQW}cqw;width:${INVESTISSEUR_WIDTH}cqw;height:${CENTER_BOX_HEIGHT_CQW}cqw">
       <span class="scpi-mecanisme__cercle-ring" style="width:${CIRCLE_D_CQW}cqw;height:${CIRCLE_D_CQW}cqw">${ringPersons}${centerPerson}</span>
-      <span class="scpi-mecanisme__cercle-titre">Associé</span>
+      <span class="scpi-mecanisme__cercle-titre" style="width:${CIRCLE_D_CQW}cqw">Associé</span>
     </div>
   `;
 }

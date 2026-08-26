@@ -2117,8 +2117,11 @@
 }
 
 /* Investisseur seul (états 1-2, voir scpi-mecanisme.js) : pas de case,
-   juste le pictogramme, à la même position/largeur que l'ancienne case
-   "L'investisseur" (les flèches s'y raccrochent sans changement).
+   juste le pictogramme, à la même largeur que l'ancienne case
+   "L'investisseur" (les flèches s'y raccrochent sans changement) mais
+   sa propre hauteur (top calculé depuis INVEST_SCPI_ARROW_Y_PX côté JS,
+   pas depuis la hauteur de l'ancienne case) : centré sur l'ordonnée
+   réelle de la flèche, pas sur le milieu d'une case qui n'existe plus.
    justify-content:flex-end (pas center) : sans bordure de case pour
    ancrer l'œil, le pictogramme doit lui-même se rapprocher de la
    flèche — flush contre le bord droit de cette zone, à la même
@@ -2142,9 +2145,12 @@
    circulaire plutôt que la case rectangulaire des autres intervenants —
    il représente un collectif, pas un intervenant unique.
    align-items:flex-end (pas center) : même logique que .scpi-
-   mecanisme__solo, pour que l'anneau (et le titre "Associé" sous lui)
-   restent collés au bord droit de la zone, à égale distance de la
-   flèche que la case SCPI. */
+   mecanisme__solo, pour que l'anneau reste collé au bord droit de la
+   zone, à égale distance de la flèche que la case SCPI. Le titre
+   "Associé" a la même largeur que l'anneau (voir CIRCLE_D_CQW côté JS)
+   et se centre DEDANS (text-align:center) : même bord droit que
+   l'anneau, mais texte centré sur son milieu à lui, pas sur celui de
+   toute la zone. */
 .scpi-mecanisme__cercle {
   position: absolute;
   box-sizing: border-box;
@@ -2181,15 +2187,19 @@
    l'investisseur (seul jusqu'à l'état précédent) est désormais associé
    sans se fondre dans le collectif qui l'entoure. */
 .scpi-mecanisme__cercle-personne--centre .chap-icon {
-  width: 2.4cqw;
-  height: 2.4cqw;
+  width: 3.2cqw;
+  height: 3.2cqw;
 }
 
+/* Largeur posée en style inline (= CIRCLE_D_CQW, voir
+   associeCercleHtml) — text-align:center y centre "Associé" sur le
+   milieu de l'anneau, pas sur celui de toute la zone. */
 .scpi-mecanisme__cercle-titre {
   font-family: var(--font-serif-chapitre);
   font-weight: 400;
   font-size: 1.71875cqw;
   line-height: 1;
+  text-align: center;
 }
 
 /* ---------- Gabarit "Les atouts" (chapitre SCPI) ---------- */
