@@ -446,8 +446,14 @@ export function render(slide, opts = {}) {
       })
     : "";
 
+  // Pictogramme client (assets/icons/agrément.png, déjà détouré — pas de
+  // retrait de fond à faire dessus, contrairement à société de
+  // gestion.png) accolé au repère, pas dans la case AMF elle-même : il
+  // annote la LIAISON (agrément + contrôle), pas l'autorité.
   const amfNote = showAmf
-    ? `<span class="scpi-mecanisme__amf-note${amfEntering ? " is-entering" : ""}"${amfEntering ? " data-reveal" : ""} style="left:46.25cqw;top:6.5625cqw">Agrément et contrôle</span>`
+    ? `<span class="scpi-mecanisme__amf-note${amfEntering ? " is-entering" : ""}"${amfEntering ? " data-reveal" : ""} style="left:46.25cqw;top:6.5625cqw"><img class="scpi-mecanisme__amf-note-icon" src="assets/icons/${encodeURIComponent(
+        "agrément.png"
+      )}" alt="" />Agrément et contrôle</span>`
     : "";
 
   // Pictogrammes fournis tels quels par le client (assets/icons/*.png,

@@ -2033,12 +2033,21 @@
 
 .scpi-mecanisme__amf-note {
   position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 0.46875cqw;
   font-weight: 700;
   font-size: 0.7421875cqw;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   white-space: nowrap;
   color: rgb(var(--chap-ink-rgb));
+}
+
+.scpi-mecanisme__amf-note-icon {
+  flex: none;
+  width: auto;
+  height: 1.875cqw;
 }
 
 /* Un pictogramme par classe d'actifs (bureaux/commerces/santé/
