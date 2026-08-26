@@ -103,12 +103,24 @@ function actifIconSvg(key) {
   return `<svg class="chap-icon" viewBox="${icon.viewBox}" fill="none" stroke="rgba(var(--chap-ink-rgb),.65)" stroke-width="${icon.strokeWidth}" stroke-linecap="round" stroke-linejoin="round">${icon.markup}</svg>`;
 }
 
-function boxHtml({ left, top, width, height, cls, icon, titre, texte, extra, entering }) {
+// pngIcon (fourni tel quel par le client, assets/icons/*.png — même
+// registre que les pictogrammes de flèche, voir arrowAnnotationHtml)
+// remplace icon (SVG trait fin de _chapitre.js) quand la case porte son
+// propre logo plutôt qu'une icône de repère à côté du titre : le logo
+// se place alors AU-DESSUS du titre (tête empilée verticalement,
+// .scpi-mecanisme__box-head--stacked) au lieu d'à sa gauche.
+function boxHtml({ left, top, width, height, cls, icon, pngIcon, pngHeight, titre, texte, extra, entering }) {
   const boxCls = "scpi-mecanisme__box" + (cls ? " " + cls : "") + (entering ? " is-entering" : "");
+  const headCls = "scpi-mecanisme__box-head" + (pngIcon ? " scpi-mecanisme__box-head--stacked" : "");
+  const headIcon = pngIcon
+    ? `<img class="scpi-mecanisme__box-png" src="assets/icons/${encodeURIComponent(pngIcon)}" alt="" style="height:${pngHeight}cqw" />`
+    : icon
+    ? iconSvg(icon, "rgba(var(--chap-ink-rgb),.65)")
+    : "";
   return `
     <div class="${boxCls}"${entering ? " data-reveal" : ""} style="left:${left}cqw;top:${top}cqw;width:${width}cqw;height:${height}cqw">
-      <span class="scpi-mecanisme__box-head">
-        ${icon ? iconSvg(icon, "rgba(var(--chap-ink-rgb),.65)") : ""}
+      <span class="${headCls}">
+        ${headIcon}
         <span class="scpi-mecanisme__box-titre">${escapeHtml(titre)}</span>
       </span>
       ${texte ? `<p class="scpi-mecanisme__box-texte">${escapeHtml(texte)}</p>` : ""}
@@ -140,17 +152,28 @@ const SCPI_LEFT = 36.875;
 const SCPI_WIDTH = 16.5625;
 const GESTION_LEFT = 69.0625;
 const STAGE_CENTER = 45.15625; // milieu de la scène (90.3125cqw de large) — axe de la case SCPI et de la case AMF
+// Logo client (assets/icons/société de gestion.png) au-dessus du titre
+// de cette case — plus grand que les pictogrammes 1.875cqw habituels du
+// box-head, il porte seul l'identification de la case (voir boxHtml).
+const GESTION_LOGO_HEIGHT_CQW = 4;
 
 // Cases relevées de BOX_TOP_SHIFT_CQW par rapport au handoff d'origine
-// (top 13.125cqw / hauteur 12.1875cqw pour investisseur et gestion,
-// 16.25cqw pour SCPI) : libère de la place au-dessus des flèches
-// investisseur<->SCPI et SCPI<->gestion pour un pictogramme par flèche
-// (voir plus bas) sans bouger le bas des cases (top diminue, hauteur
-// augmente d'autant : top+hauteur, donc le bas, ne change pas).
+// (top 13.125cqw / hauteur 12.1875cqw pour investisseur et gestion) :
+// libère de la place au-dessus des flèches investisseur<->SCPI et
+// SCPI<->gestion pour un pictogramme par flèche (voir plus bas) sans
+// bouger le bas des cases (top diminue, hauteur augmente d'autant :
+// top+hauteur, donc le bas, ne change pas).
 const BOX_TOP_SHIFT_CQW = 3.5;
 const BOX_TOP_CQW = 13.125 - BOX_TOP_SHIFT_CQW;
 const CENTER_BOX_HEIGHT_CQW = 12.1875 + BOX_TOP_SHIFT_CQW;
-const SCPI_HEIGHT_CQW = 16.25 + BOX_TOP_SHIFT_CQW;
+// Ajustée au contenu (titre + registre d'icônes, voir .scpi-mecanisme__
+// box--vehicule en CSS, justify-content:center sans padding vertical) —
+// pas héritée du handoff (16.25cqw + BOX_TOP_SHIFT_CQW) qui laissait un
+// grand vide au-dessus du titre et sous les icônes, la case n'ayant
+// jamais eu besoin de cette hauteur. Ne touche pas à l'écart interne
+// titre<->icônes (gap de .scpi-mecanisme__box + padding-top de .scpi-
+// mecanisme__actifs), seulement au surplus au-dessus/en dessous du bloc.
+const SCPI_HEIGHT_CQW = 13.75;
 const BOX_TOP_PX = BOX_TOP_CQW * CQW_PX;
 
 // Un pictogramme + libellé par flèche (voir arrowAnnotationHtml) :
@@ -211,6 +234,12 @@ const CIRCLE_D_CQW = 9.5;
 const CIRCLE_PERSON_SIZE_CQW = 1.6;
 const CIRCLE_PERSON_COUNT = 5;
 const CIRCLE_PERSON_RING_RADIUS_CQW = CIRCLE_D_CQW / 2 - CIRCLE_PERSON_SIZE_CQW / 2 - 0.3;
+// Le pictogramme de l'investisseur (celui qui était seul aux états 1-2)
+// reste visible au centre de l'anneau, plus grand que les silhouettes
+// des autres associés réparties sur le cercle : il ne devient pas un
+// point du cercle parmi d'autres, il EST le centre, pour montrer qu'il
+// en fait désormais partie sans se fondre dans le collectif.
+const CENTER_PERSON_SIZE_CQW = 2.4;
 const SOLO_ICON_SIZE_CQW = 5;
 
 function investisseurSoloHtml(entering) {
@@ -223,7 +252,7 @@ function investisseurSoloHtml(entering) {
 }
 
 function associeCercleHtml(entering) {
-  const persons = Array.from({ length: CIRCLE_PERSON_COUNT }, (_, i) => {
+  const ringPersons = Array.from({ length: CIRCLE_PERSON_COUNT }, (_, i) => {
     const angle = (2 * Math.PI * i) / CIRCLE_PERSON_COUNT - Math.PI / 2;
     const dx = CIRCLE_PERSON_RING_RADIUS_CQW * Math.cos(angle);
     const dy = CIRCLE_PERSON_RING_RADIUS_CQW * Math.sin(angle);
@@ -232,10 +261,17 @@ function associeCercleHtml(entering) {
       "rgba(var(--chap-ink-rgb),.65)"
     )}</span>`;
   }).join("");
+  // Le sien (voir CENTER_PERSON_SIZE_CQW) : dx/dy nuls, il n'est pas sur
+  // l'anneau comme les autres mais bien au centre du cercle qu'ils
+  // forment.
+  const centerPerson = `<span class="scpi-mecanisme__cercle-personne scpi-mecanisme__cercle-personne--centre" style="transform:translate(-50%, -50%)">${iconSvg(
+    "personne",
+    "rgba(var(--chap-ink-rgb),.65)"
+  )}</span>`;
   const cls = "scpi-mecanisme__cercle" + (entering ? " is-entering" : "");
   return `
     <div class="${cls}"${entering ? " data-reveal" : ""} style="left:${INVESTISSEUR_LEFT}cqw;top:${BOX_TOP_CQW}cqw;width:${INVESTISSEUR_WIDTH}cqw;height:${CENTER_BOX_HEIGHT_CQW}cqw">
-      <span class="scpi-mecanisme__cercle-ring" style="width:${CIRCLE_D_CQW}cqw;height:${CIRCLE_D_CQW}cqw">${persons}</span>
+      <span class="scpi-mecanisme__cercle-ring" style="width:${CIRCLE_D_CQW}cqw;height:${CIRCLE_D_CQW}cqw">${ringPersons}${centerPerson}</span>
       <span class="scpi-mecanisme__cercle-titre">Associé</span>
     </div>
   `;
@@ -319,8 +355,9 @@ export function render(slide, opts = {}) {
         width: 21.25,
         height: CENTER_BOX_HEIGHT_CQW,
         cls: "scpi-mecanisme__box--center",
-        icon: "cle",
-        titre: "La société de gestion",
+        pngIcon: "société de gestion.png",
+        pngHeight: GESTION_LOGO_HEIGHT_CQW,
+        titre: "Société de gestion",
         entering: gestionEntering,
       })
     : "";

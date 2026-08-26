@@ -2003,6 +2003,18 @@
   height: 1.875cqw;
 }
 
+/* Case à logo client (ex. "Société de gestion", voir pngIcon dans
+   boxHtml) : le logo surmonte le titre au lieu de le côtoyer — même
+   display:flex/gap que .scpi-mecanisme__box-head, juste l'axe changé
+   (align-items:center y centre alors horizontalement, pas verticalement). */
+.scpi-mecanisme__box-head--stacked {
+  flex-direction: column;
+}
+
+.scpi-mecanisme__box-png {
+  width: auto;
+}
+
 .scpi-mecanisme__box-titre {
   font-family: var(--font-serif-chapitre);
   font-weight: 400;
@@ -2106,13 +2118,18 @@
 
 /* Investisseur seul (états 1-2, voir scpi-mecanisme.js) : pas de case,
    juste le pictogramme, à la même position/largeur que l'ancienne case
-   "L'investisseur" (les flèches s'y raccrochent sans changement). */
+   "L'investisseur" (les flèches s'y raccrochent sans changement).
+   justify-content:flex-end (pas center) : sans bordure de case pour
+   ancrer l'œil, le pictogramme doit lui-même se rapprocher de la
+   flèche — flush contre le bord droit de cette zone, à la même
+   distance de la flèche que la case SCPI (dont le bord touche déjà
+   ARROW_GAP_PX plus loin, voir scpi-mecanisme.js). */
 .scpi-mecanisme__solo {
   position: absolute;
   box-sizing: border-box;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-end;
 }
 
 .scpi-mecanisme__solo .chap-icon {
@@ -2123,13 +2140,17 @@
 /* Cercle des associés (état 3+, voir scpi-mecanisme.js) : remplace
    définitivement le pictogramme seul, dans le même emplacement. Cadre
    circulaire plutôt que la case rectangulaire des autres intervenants —
-   il représente un collectif, pas un intervenant unique. */
+   il représente un collectif, pas un intervenant unique.
+   align-items:flex-end (pas center) : même logique que .scpi-
+   mecanisme__solo, pour que l'anneau (et le titre "Associé" sous lui)
+   restent collés au bord droit de la zone, à égale distance de la
+   flèche que la case SCPI. */
 .scpi-mecanisme__cercle {
   position: absolute;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
   gap: 0.625cqw;
 }
@@ -2153,6 +2174,15 @@
 .scpi-mecanisme__cercle-personne .chap-icon {
   width: 1.6cqw;
   height: 1.6cqw;
+}
+
+/* Celui du centre (voir CENTER_PERSON_SIZE_CQW dans scpi-mecanisme.js) :
+   plus grand que les silhouettes de l'anneau, pour montrer que
+   l'investisseur (seul jusqu'à l'état précédent) est désormais associé
+   sans se fondre dans le collectif qui l'entoure. */
+.scpi-mecanisme__cercle-personne--centre .chap-icon {
+  width: 2.4cqw;
+  height: 2.4cqw;
 }
 
 .scpi-mecanisme__cercle-titre {
