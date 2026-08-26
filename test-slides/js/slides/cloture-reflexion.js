@@ -70,7 +70,7 @@ export function render(slide, opts = {}) {
       <div class="cloture__intro">
         <h1 class="chap-title cloture__title">${escapeHtml(slide.titre)}</h1>
         <span class="cloture__rule"></span>
-        <p class="cloture__budget">${escapeHtml(slide.budget)}</p>
+        <div class="cloture__budget">${(slide.budget || []).map((line) => `<p class="cloture__budget-line">${escapeHtml(line)}</p>`).join("")}</div>
       </div>
 
       <div class="cloture-d__list">

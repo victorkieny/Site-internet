@@ -3040,11 +3040,19 @@
   display: block;
 }
 
+/* Conteneur des deux lignes (voir .cloture__budget-line) — une par
+   fait budgétaire (épargne mensuelle / investissement initial) plutôt
+   qu'une seule phrase à rallonge, chacune sur SA ligne (pas un
+   retour à la ligne automatique dont dépendrait la coupure). */
 .cloture__budget {
   margin: 1.09375cqw auto 0;
   max-width: 88cqw;
+}
+
+.cloture__budget-line {
+  margin: 0;
   font-weight: 450;
-  font-size: 1.2cqw;
+  font-size: 1.5625cqw;
   line-height: 1.5;
   text-align: center;
   white-space: nowrap;
