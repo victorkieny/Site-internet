@@ -2080,8 +2080,8 @@
   justify-content: center;
 }
 
-.scpi-mecanisme__flow-icon .chap-icon {
-  width: 1.875cqw;
+.scpi-mecanisme__flow-icon img {
+  width: auto;
   height: 1.875cqw;
 }
 

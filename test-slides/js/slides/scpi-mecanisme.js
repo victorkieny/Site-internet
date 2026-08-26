@@ -273,12 +273,12 @@ export function render(slide, opts = {}) {
   // showSouscriptionLabel). Le libellé "Copropriétaire" d'origine
   // (au-dessus de la flèche, même position qu'avant l'ajout de cet
   // état) prend le relais dès l'état suivant, sur la même flèche.
+  // Pictogramme fourni tel quel par le client (assets/icons/souscription
+  // de part.png, PNG plein) — repris sans retouche, à la demande
+  // explicite du client, malgré l'écart avec le reste du registre trait
+  // fin de ce fichier (voir CLAUDE.md sur le remplissage plein).
   const souscriptionIconHtml = showSouscriptionLabel
-    ? `<div class="scpi-mecanisme__flow-icon${souscriptionEntering ? " is-entering" : ""}"${souscriptionEntering ? " data-reveal" : ""} style="left:21.25cqw;width:11.015625cqw;top:12.5cqw">${iconSvg(
-        "souscription",
-        "rgba(var(--chap-ink-rgb),.65)",
-        24
-      )}</div>`
+    ? `<div class="scpi-mecanisme__flow-icon${souscriptionEntering ? " is-entering" : ""}"${souscriptionEntering ? " data-reveal" : ""} style="left:21.25cqw;width:11.015625cqw;top:12.5cqw"><img src="assets/icons/souscription%20de%20part.png" alt="" /></div>`
     : "";
   const souscriptionTextFlow = showSouscriptionLabel
     ? flowLabelHtml(21.25, 17.03125, 11.015625, "Souscription de part", false, souscriptionEntering)
