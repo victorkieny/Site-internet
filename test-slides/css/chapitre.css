@@ -2080,9 +2080,12 @@
   justify-content: center;
 }
 
+/* Hauteur posée en style inline (SOUSCRIPTION_ICON_HEIGHT_CQW, voir
+   scpi-mecanisme.js) — le "top" du pictogramme en dérive pour rester
+   centré entre le haut des cases et la flèche, jamais désynchronisé si
+   la taille change. */
 .scpi-mecanisme__flow-icon img {
   width: auto;
-  height: 1.875cqw;
 }
 
 .scpi-mecanisme__flow--or {

@@ -151,6 +151,31 @@ const CENTER_BOX_HEIGHT_CQW = 12.1875 + BOX_TOP_SHIFT_CQW;
 const SCPI_HEIGHT_CQW = 16.25 + BOX_TOP_SHIFT_CQW;
 const BOX_TOP_PX = BOX_TOP_CQW * CQW_PX;
 
+// Pictogramme + libellé "Souscription de part" centrés sur le MILIEU
+// RÉEL de la flèche investisseur<->SCPI (milieu du vide entre les deux
+// cases — ARROW_GAP_PX est symétrique aux deux extrémités, il s'annule
+// dans ce calcul), pas sur flowLabelHtml(21.25, ..., FLOW_LABEL_WIDTH)
+// comme "Copropriétaire" juste en dessous : ce left, hérité tel quel du
+// handoff, ne centre déjà pas exactement "Copropriétaire" sur sa flèche
+// (~30px d'écart, imperceptible sur du texte seul) — un écart qui
+// devient très visible avec un pictogramme. Ne change que les deux
+// nouveaux éléments transitoires, pas le reste de la géométrie reprise
+// du handoff.
+const FLOW_LABEL_WIDTH_CQW = 11.015625;
+const INVEST_SCPI_ARROW_CENTER_CQW = (INVESTISSEUR_LEFT + INVESTISSEUR_WIDTH + SCPI_LEFT) / 2;
+const SOUSCRIPTION_LEFT_CQW = INVEST_SCPI_ARROW_CENTER_CQW - FLOW_LABEL_WIDTH_CQW / 2;
+
+// Hauteur du pictogramme posée ici (pas dans chapitre.css) et son "top"
+// dérivé d'elle : centré verticalement entre le haut des cases
+// (BOX_TOP_CQW) et la flèche qu'il annote (206px, voir plus bas) —
+// une seule source de vérité, jamais désynchronisée si la taille change
+// à nouveau (bug déjà rencontré ailleurs dans ce fichier avec le gap
+// levier de scpi-financement.js).
+const SOUSCRIPTION_ICON_HEIGHT_CQW = 3.125;
+const INVEST_SCPI_ARROW_Y_CQW = 206 / CQW_PX;
+const SOUSCRIPTION_ICON_TOP_CQW =
+  (BOX_TOP_CQW + INVEST_SCPI_ARROW_Y_CQW) / 2 - SOUSCRIPTION_ICON_HEIGHT_CQW / 2;
+
 // Distance standard entre l'extrémité d'une flèche et le bord de la
 // case qu'elle touche — mesurée à l'origine sur l'écart case
 // "L'investisseur" <-> flèches (16px), puis appliquée à CHAQUE
@@ -278,10 +303,10 @@ export function render(slide, opts = {}) {
   // explicite du client, malgré l'écart avec le reste du registre trait
   // fin de ce fichier (voir CLAUDE.md sur le remplissage plein).
   const souscriptionIconHtml = showSouscriptionLabel
-    ? `<div class="scpi-mecanisme__flow-icon${souscriptionEntering ? " is-entering" : ""}"${souscriptionEntering ? " data-reveal" : ""} style="left:21.25cqw;width:11.015625cqw;top:12.5cqw"><img src="assets/icons/souscription%20de%20part.png" alt="" /></div>`
+    ? `<div class="scpi-mecanisme__flow-icon${souscriptionEntering ? " is-entering" : ""}"${souscriptionEntering ? " data-reveal" : ""} style="left:${SOUSCRIPTION_LEFT_CQW}cqw;width:${FLOW_LABEL_WIDTH_CQW}cqw;top:${SOUSCRIPTION_ICON_TOP_CQW}cqw"><img src="assets/icons/souscription%20de%20part.png" alt="" style="height:${SOUSCRIPTION_ICON_HEIGHT_CQW}cqw" /></div>`
     : "";
   const souscriptionTextFlow = showSouscriptionLabel
-    ? flowLabelHtml(21.25, 17.03125, 11.015625, "Souscription de part", false, souscriptionEntering)
+    ? flowLabelHtml(SOUSCRIPTION_LEFT_CQW, 17.03125, FLOW_LABEL_WIDTH_CQW, "Souscription de part", false, souscriptionEntering)
     : "";
   const coproFlow = showCopro ? flowLabelHtml(21.25, 13.59375, 11.015625, "Copropriétaire", false, coproEntering) : "";
   const distributionFlow = showDistribution
