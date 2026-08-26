@@ -73,7 +73,7 @@ const ACTIF_ICONS_RAW = {
     strokeWidth: 3,
     markup: `
       <rect x="22" y="6" width="32" height="12"></rect>
-      <text x="38" y="15" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="7" font-weight="700" fill="rgba(var(--chap-ink-rgb),.65)" stroke="none">HOTEL</text>
+      <text x="38" y="15" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="7" font-weight="700" fill="rgb(var(--chap-ink-rgb))" stroke="none">HOTEL</text>
       <rect x="14" y="18" width="48" height="66"></rect>
       <rect x="21" y="28" width="8" height="11"></rect><rect x="34" y="28" width="8" height="11"></rect><rect x="47" y="28" width="8" height="11"></rect>
       <rect x="21" y="46" width="8" height="11"></rect><rect x="34" y="46" width="8" height="11"></rect><rect x="47" y="46" width="8" height="11"></rect>
@@ -100,7 +100,7 @@ const ACTIF_ICONS_RAW = {
 function actifIconSvg(key) {
   const icon = ACTIF_ICONS_RAW[key];
   if (!icon) return "";
-  return `<svg class="chap-icon" viewBox="${icon.viewBox}" fill="none" stroke="rgba(var(--chap-ink-rgb),.65)" stroke-width="${icon.strokeWidth}" stroke-linecap="round" stroke-linejoin="round">${icon.markup}</svg>`;
+  return `<svg class="chap-icon" viewBox="${icon.viewBox}" fill="none" stroke="rgb(var(--chap-ink-rgb))" stroke-width="${icon.strokeWidth}" stroke-linecap="round" stroke-linejoin="round">${icon.markup}</svg>`;
 }
 
 // pngIcon (fourni tel quel par le client, assets/icons/*.png — même
@@ -232,7 +232,7 @@ function arrowAnnotationHtml({ png, arrowYPx, centerXCqw, text, textColorClass, 
 // "L'investisseur" (les flèches s'y raccrochent sans changement).
 const CIRCLE_D_CQW = 12.5;
 const CIRCLE_PERSON_SIZE_CQW = 1.6;
-const CIRCLE_PERSON_COUNT = 5;
+const CIRCLE_PERSON_COUNT = 8;
 const CIRCLE_PERSON_RING_RADIUS_CQW = CIRCLE_D_CQW / 2 - CIRCLE_PERSON_SIZE_CQW / 2 - 0.3;
 // Le pictogramme de l'investisseur (celui qui était seul aux états 1-2)
 // reste visible au centre de l'anneau, plus grand que les silhouettes
@@ -270,10 +270,12 @@ function associeCercleHtml(entering) {
   }).join("");
   // Le sien (voir CENTER_PERSON_SIZE_CQW) : dx/dy nuls, il n'est pas sur
   // l'anneau comme les autres mais bien au centre du cercle qu'ils
-  // forment.
+  // forment. Encre pleine (pas l'opacité .65 des autres associés) :
+  // c'est LUI qu'on suit depuis le début du schéma, il doit rester le
+  // point le plus lisible du cercle.
   const centerPerson = `<span class="scpi-mecanisme__cercle-personne scpi-mecanisme__cercle-personne--centre" style="transform:translate(-50%, -50%)">${iconSvg(
     "personne",
-    "rgba(var(--chap-ink-rgb),.65)"
+    "rgb(var(--chap-ink-rgb))"
   )}</span>`;
   const cls = "scpi-mecanisme__cercle" + (entering ? " is-entering" : "");
   return `
@@ -355,12 +357,17 @@ export function render(slide, opts = {}) {
     entering: socleEntering,
   });
 
+  // Même hauteur que la case SCPI (SCPI_HEIGHT_CQW), pas
+  // CENTER_BOX_HEIGHT_CQW (celle de l'ancienne case "L'investisseur",
+  // bien plus haute que son propre contenu logo+titre) : les deux cases
+  // "conteneur" du schéma restent visuellement alignées, sans le grand
+  // vide qu'une hauteur héritée de l'investisseur y aurait laissé.
   const gestionBox = showGestion
     ? boxHtml({
         left: GESTION_LEFT,
         top: BOX_TOP_CQW,
         width: 21.25,
-        height: CENTER_BOX_HEIGHT_CQW,
+        height: SCPI_HEIGHT_CQW,
         cls: "scpi-mecanisme__box--center",
         pngIcon: "société de gestion.png",
         pngHeight: GESTION_LOGO_HEIGHT_CQW,
@@ -415,7 +422,7 @@ export function render(slide, opts = {}) {
         arrowYPx: INVEST_SCPI_ARROW_Y_PX,
         centerXCqw: INVEST_SCPI_ARROW_CENTER_CQW,
         text: "Copropriétaire",
-        textColorClass: null,
+        textColorClass: "noir",
         entering: coproEntering,
       })
     : "";
@@ -435,7 +442,7 @@ export function render(slide, opts = {}) {
         arrowYPx: GESTION_ARROW_Y_PX,
         centerXCqw: GESTION_ARROW_CENTER_CQW,
         text: "Gestion clé en main",
-        textColorClass: null,
+        textColorClass: "noir",
         entering: gestionEntering,
       })
     : "";
@@ -452,7 +459,7 @@ export function render(slide, opts = {}) {
   const investScpiArrow = showInvestScpiArrow
     ? lineGroupHtml(
         investScpiArrowEntering,
-        `<line x1="${investisseurRightPx + ARROW_GAP_PX}" y1="${INVEST_SCPI_ARROW_Y_PX}" x2="${scpiLeftPx - ARROW_GAP_PX}" y2="${INVEST_SCPI_ARROW_Y_PX}" stroke="rgba(var(--chap-ink-rgb),.45)" stroke-width="1.2" marker-end="url(#scpi-ar-d)"/>`
+        `<line x1="${investisseurRightPx + ARROW_GAP_PX}" y1="${INVEST_SCPI_ARROW_Y_PX}" x2="${scpiLeftPx - ARROW_GAP_PX}" y2="${INVEST_SCPI_ARROW_Y_PX}" stroke="rgb(var(--chap-ink-rgb))" stroke-width="1.2" marker-end="url(#scpi-ar-d)"/>`
       )
     : "";
 
@@ -466,7 +473,7 @@ export function render(slide, opts = {}) {
   const gestionArrow = showGestion
     ? lineGroupHtml(
         gestionEntering,
-        `<line x1="${gestionLeftPx - ARROW_GAP_PX}" y1="${GESTION_ARROW_Y_PX}" x2="${scpiRightPx + ARROW_GAP_PX}" y2="${GESTION_ARROW_Y_PX}" stroke="rgba(var(--chap-ink-rgb),.45)" stroke-width="1.2" marker-end="url(#scpi-ar-d)"/>`
+        `<line x1="${gestionLeftPx - ARROW_GAP_PX}" y1="${GESTION_ARROW_Y_PX}" x2="${scpiRightPx + ARROW_GAP_PX}" y2="${GESTION_ARROW_Y_PX}" stroke="rgb(var(--chap-ink-rgb))" stroke-width="1.2" marker-end="url(#scpi-ar-d)"/>`
       )
     : "";
 
@@ -489,7 +496,7 @@ export function render(slide, opts = {}) {
       <div class="scpi-mecanisme__stage">
         <svg class="scpi-mecanisme__lines" viewBox="0 0 1156 392" preserveAspectRatio="none" aria-hidden="true">
           <defs>
-            <marker id="scpi-ar-d" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="rgba(var(--chap-ink-rgb),.6)"/></marker>
+            <marker id="scpi-ar-d" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="rgb(var(--chap-ink-rgb))"/></marker>
             <marker id="scpi-ar-g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="var(--or)"/></marker>
           </defs>
           ${amfLines}
