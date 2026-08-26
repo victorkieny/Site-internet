@@ -230,40 +230,62 @@ export function render(slide, opts = {}) {
   const patrimoineBarH = LEVIER_BAR_MAX_CQW;
   // Hauteur réelle des colonnes bleues : basée sur le patrimoine
   // reconstitué avec réinvestissement des loyers (v.patrimoineReinvestiRaw),
-  // pas la simple somme de l'effort versé. effortBarH reste calculée à
-  // part : elle sert désormais aussi de démarcation visuelle DANS les
-  // colonnes elles-mêmes (voir markerHtml et le bleu/or de la colonne
-  // "Avec financement" plus bas), plus seulement à positionner le repère
-  // "Effort d'épargne réel" sur l'axe.
+  // pas la simple somme de l'effort versé. effortBarH sert de démarcation
+  // visuelle DANS les colonnes elles-mêmes (voir markerHtml et le
+  // bleu/or de la colonne "Avec financement" plus bas), plus seulement à
+  // positionner le repère "Effort d'épargne réel" sur l'axe.
   const effortBarH = LEVIER_BAR_MAX_CQW * (v.effortTotalRaw / v.capitalRaw);
   const reinvestiBarH = LEVIER_BAR_MAX_CQW * (v.patrimoineReinvestiRaw / v.capitalRaw);
 
-  // État 6 (index 5) : le montant final et sa légende ("... par effet de
-  // levier") apparaissent — état 5 (index 4) ne montre que les deux
-  // colonnes à hauteur "patrimoine reconstitué avec réinvestissement",
-  // pour raconter le mécanisme en plusieurs temps plutôt que de tout
-  // montrer d'un coup. La colonne "avec financement" grandit donc elle
-  // aussi en deux temps : 0 → reinvestiBarH à l'état 5, puis reinvestiBarH
-  // → patrimoineBarH à l'état 6. État 7 (index 6) : l'annotation "Effet
-  // de levier" (flèche + montant + %) apparaît à son tour, une fois le
-  // montant final déjà en place — un repère de plus, pas ce qui fait
-  // apparaître le rectangle doré (voir gapHtml : lui apparaît dès l'état
-  // 5, pas l'état 6, voir plus bas).
-  const showGold = stateIndex >= 5;
-  const goldEntering = animate && stateIndex === 5;
-  const showAnnotation = stateIndex >= 6;
-  const annotationEntering = animate && stateIndex === 6;
+  // Trois temps, un par colonne puis l'écart entre les deux — pas un
+  // double mouvement simultané, pour que chaque clic raconte UNE seule
+  // idée : état 5 (index 4) : les deux colonnes n'apparaissent qu'à
+  // hauteur de l'effort d'épargne réel (effortBarH) — même repère que la
+  // ligne pointillée (markerHtml), aucune des deux ne dépasse encore, le
+  // "même effort des deux côtés" est donc littéralement la même hauteur.
+  // État 6 (index 5) : SEULE "Sans financement" grandit, jusqu'au
+  // patrimoine reconstitué par réinvestissement (reinvestiBarH,
+  // 57 695 €) — son montant n'apparaît qu'à cet instant, pas avant (il
+  // n'aurait pas eu de sens tant que la colonne ne l'atteignait pas).
+  // État 7 (index 6) : SEULE "Avec financement" grandit à son tour,
+  // jusqu'au patrimoine total (patrimoineBarH, 85 000 €) en UN seul
+  // mouvement (pas deux) — gain de réinvestissement et effet de levier
+  // se lisent ensemble, comme un seul saut au-delà de l'effort réel
+  // (voir gapHtml plus bas, qui ne grandit donc plus qu'à cet état).
+  // L'annotation "Effet de levier" apparaît au même instant (même
+  // déclencheur, showGold/goldEntering) : un repère de plus une fois le
+  // montant final en place, pas ce qui fait apparaître le rectangle doré.
+  const showLeftGrown = stateIndex >= 5;
+  const leftGrowEntering = animate && stateIndex === 5;
+  const showGold = stateIndex >= 6;
+  const goldEntering = animate && stateIndex === 6;
+
+  let effortBarAttrs, effortBarStyle;
+  if (levierEntering) {
+    effortBarAttrs = ` data-reveal data-reveal-height="${effortBarH}cqw"`;
+    effortBarStyle = `height:0cqw`;
+  } else if (leftGrowEntering) {
+    effortBarAttrs = ` data-reveal data-reveal-height="${reinvestiBarH}cqw"`;
+    effortBarStyle = `height:${effortBarH}cqw`;
+  } else {
+    effortBarAttrs = "";
+    effortBarStyle = `height:${showLeftGrown ? reinvestiBarH : effortBarH}cqw`;
+  }
+
+  const leftValue = showLeftGrown
+    ? `<span class="scpi-financement__levier-bar-value${leftGrowEntering ? " is-entering" : ""}"${leftGrowEntering ? " data-reveal" : ""}>${v.patrimoineReinvesti}</span>`
+    : "";
 
   let patrimoineBarAttrs, patrimoineBarStyle;
   if (levierEntering) {
-    patrimoineBarAttrs = ` data-reveal data-reveal-height="${reinvestiBarH}cqw"`;
+    patrimoineBarAttrs = ` data-reveal data-reveal-height="${effortBarH}cqw"`;
     patrimoineBarStyle = `height:0cqw`;
   } else if (goldEntering) {
     patrimoineBarAttrs = ` data-reveal data-reveal-height="${patrimoineBarH}cqw"`;
-    patrimoineBarStyle = `height:${reinvestiBarH}cqw`;
+    patrimoineBarStyle = `height:${effortBarH}cqw`;
   } else {
     patrimoineBarAttrs = "";
-    patrimoineBarStyle = `height:${showGold ? patrimoineBarH : reinvestiBarH}cqw`;
+    patrimoineBarStyle = `height:${showGold ? patrimoineBarH : effortBarH}cqw`;
   }
 
   const goldAxisLabel = showGold
@@ -274,6 +296,8 @@ export function render(slide, opts = {}) {
     ? `<span class="scpi-financement__levier-bar-value${goldEntering ? " is-entering" : ""}"${goldEntering ? " data-reveal" : ""}>${v.capital}</span>`
     : "";
 
+  const showAnnotation = showGold;
+  const annotationEntering = goldEntering;
   const annotationHtml = showAnnotation
     ? `
       <div class="scpi-financement__levier-annotation${annotationEntering ? " is-entering" : ""}"${annotationEntering ? " data-reveal" : ""}>
@@ -291,33 +315,21 @@ export function render(slide, opts = {}) {
     `
     : "";
 
-  // Écart doré de la colonne "Avec financement" : plus seulement l'effet
-  // de levier proprement dit (reinvestiBarH → patrimoineBarH, ajouté à
-  // l'état 6) mais TOUT ce qui dépasse l'effort d'épargne réel
-  // (effortBarH) — y compris le gain de simple réinvestissement des
-  // loyers, déjà présent dès l'état 5 (reinvestiBarH). Le bleu de cette
-  // colonne s'arrête donc à effortBarH — même repère que la ligne
-  // pointillée (markerHtml) — au lieu de reinvestiBarH : au-delà de
-  // cette ligne, tout ce qui apparaît dans les états suivants est doré.
-  // .scpi-financement__levier-bar-gap (top:0, hauteur posée en style
-  // inline) occupe toujours le HAUT de la colonne quelle que soit sa
-  // hauteur totale courante — le bleu du fond de la colonne (background
-  // de .scpi-financement__levier-bar--patrimoine) reste visible en
-  // dessous, jusqu'à effortBarH.
-  const goldGapReinvestiH = reinvestiBarH - effortBarH;
+  // Écart doré de la colonne "Avec financement" : tout ce qui dépasse
+  // l'effort d'épargne réel (effortBarH) une fois cette colonne montée à
+  // patrimoineBarH, en un seul mouvement (voir patrimoineBarAttrs/Style
+  // ci-dessus, qui grandit désormais directement de effortBarH à
+  // patrimoineBarH à l'état 7, plus en deux temps). N'existe donc plus
+  // qu'à partir de cet état — avant, cette colonne est identique à
+  // "Sans financement" à effortBarH, entièrement bleue (background de
+  // .scpi-financement__levier-bar--patrimoine). .scpi-financement__
+  // levier-bar-gap (top:0, hauteur posée en style inline) occupe le HAUT
+  // de la colonne, le bleu du fond reste visible en dessous jusqu'à
+  // effortBarH.
   const goldGapFinalH = patrimoineBarH - effortBarH;
-  let gapAttrs, gapStyle;
-  if (levierEntering) {
-    gapAttrs = ` data-reveal data-reveal-height="${goldGapReinvestiH}cqw"`;
-    gapStyle = `height:0cqw`;
-  } else if (goldEntering) {
-    gapAttrs = ` data-reveal data-reveal-height="${goldGapFinalH}cqw"`;
-    gapStyle = `height:${goldGapReinvestiH}cqw`;
-  } else {
-    gapAttrs = "";
-    gapStyle = `height:${showGold ? goldGapFinalH : goldGapReinvestiH}cqw`;
-  }
-  const gapHtml = showLevier
+  const gapAttrs = goldEntering ? ` data-reveal data-reveal-height="${goldGapFinalH}cqw"` : "";
+  const gapStyle = `height:${goldEntering ? 0 : goldGapFinalH}cqw`;
+  const gapHtml = showGold
     ? `
       <div class="scpi-financement__levier-bar-gap"${gapAttrs} style="${gapStyle}">
         ${annotationHtml}
@@ -348,8 +360,8 @@ export function render(slide, opts = {}) {
           <div class="scpi-financement__levier-diagram">
             <div class="scpi-financement__levier-col">
               <div class="scpi-financement__levier-bar-wrap" style="height:${LEVIER_BAR_MAX_CQW}cqw">
-                <div class="scpi-financement__levier-bar scpi-financement__levier-bar--effort"${levierEntering ? ` data-reveal data-reveal-height="${reinvestiBarH}cqw"` : ""} style="height:${levierEntering ? 0 : reinvestiBarH}cqw">
-                  <span class="scpi-financement__levier-bar-value">${v.patrimoineReinvesti}</span>
+                <div class="scpi-financement__levier-bar scpi-financement__levier-bar--effort"${effortBarAttrs} style="${effortBarStyle}">
+                  ${leftValue}
                 </div>
                 ${markerHtml}
               </div>
