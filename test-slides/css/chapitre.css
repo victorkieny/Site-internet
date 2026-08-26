@@ -2038,7 +2038,7 @@
   letter-spacing: 0.16em;
   text-transform: uppercase;
   white-space: nowrap;
-  color: rgba(var(--chap-ink-rgb), 0.45);
+  color: rgb(var(--chap-ink-rgb));
 }
 
 /* Un pictogramme par classe d'actifs (bureaux/commerces/santé/

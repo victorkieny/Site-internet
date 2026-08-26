@@ -2,7 +2,7 @@ import { escapeHtml } from "../editable.js";
 import { renderChapRail, iconSvg } from "./_chapitre.js";
 
 // Gabarit "Comment ça marche" (chapitre SCPI, import Claude Design
-// "Gabarits chapitre SCPI") — révélation progressive cumulative à 7
+// "Gabarits chapitre SCPI") — révélation progressive cumulative à 6
 // états (opts.stateIndex direct, même mécanisme que "Les atouts") :
 // état 1 = un seul investisseur (pictogramme seul, pas encore dans une
 // case) ET la SCPI ; état 2 = la flèche investisseur<->SCPI apparaît,
@@ -11,16 +11,17 @@ import { renderChapRail, iconSvg } from "./_chapitre.js";
 // showSouscriptionLabel), l'investisseur n'est toujours pas dans une
 // case ; état 3 = l'investisseur rejoint le cercle des associés
 // (plusieurs silhouettes réparties en cercle) qui remplace
-// définitivement le pictogramme seul, le titre "Associé" apparaît ;
-// état 4 = ce même pictogramme + libellé "Souscription de part"
-// cèdent la place à "Copropriétaire" sur la même flèche (déjà
-// affichée, elle ne rejoue pas son entrée) — la séquence réelle (on
-// souscrit des parts, on DEVIENT ainsi copropriétaire) sans garder
-// deux libellés permanents sur un même lien ; état 5 = + la flèche
-// "distribution de revenus" ; état 6 = + la société de gestion (et sa
-// flèche "gestion clé en main") ; état 7 = + l'AMF (et ses deux
-// liaisons pointillées). Chaque flux n'apparaît qu'entre deux cases
-// déjà affichées — jamais une flèche vers une case encore invisible.
+// définitivement le pictogramme seul, le titre "Associé" apparaît, ET
+// ce même pictogramme + libellé "Souscription de part" cèdent la place
+// à "Copropriétaire" sur la même flèche (déjà affichée, elle ne rejoue
+// pas son entrée) — les DEUX EN MÊME TEMPS (un seul clic, pas deux
+// états séparés comme dans une version antérieure) : rejoindre le
+// cercle des associés ET devenir copropriétaire sont la même bascule,
+// pas deux moments distincts ; état 4 = + la flèche "distribution de
+// revenus" ; état 5 = + la société de gestion (et sa flèche "gestion
+// clé en main") ; état 6 = + l'AMF (et ses deux liaisons pointillées).
+// Chaque flux n'apparaît qu'entre deux cases déjà affichées — jamais
+// une flèche vers une case encore invisible.
 // Géométrie reprise telle quelle du handoff (px à 1280 de large,
 // convertis en cqw — voir chapitre.css en tête de fichier), pas
 // réinventée, sauf la hauteur des cases (voir BOX_TOP_SHIFT_CQW) pour
@@ -342,7 +343,7 @@ function associeCercleHtml(entering) {
 const ARROW_GAP_PX = 1.25 * CQW_PX;
 
 export function render(slide, opts = {}) {
-  const stateIndex = Math.min(Math.max(opts.stateIndex ?? 0, 0), 6);
+  const stateIndex = Math.min(Math.max(opts.stateIndex ?? 0, 0), 5);
   const animate = !!opts.animate;
 
   // Un pictogramme par classe d'actifs plutôt qu'une puce de texte —
@@ -367,28 +368,30 @@ export function render(slide, opts = {}) {
   // État 2 (index 1) : la flèche investisseur<->SCPI apparaît, portée
   // par le pictogramme "Souscription de part" et son libellé — un état
   // PRÉALABLE et transitoire (showSouscriptionLabel n'est vrai qu'à cet
-  // état précis, pas cumulatif comme le reste du schéma) : à l'état 4,
+  // état précis, pas cumulatif comme le reste du schéma) : à l'état 3,
   // ce même pictogramme et ce même libellé cèdent la place au libellé
   // "Copropriétaire" d'origine, sur la même flèche (déjà affichée, elle
-  // ne rejoue pas son entrée). État 3 : l'investisseur (pictogramme
-  // seul jusque-là, jamais dans une case) rejoint le cercle des
-  // associés, qui remplace définitivement ce pictogramme.
+  // ne rejoue pas son entrée) — EN MÊME TEMPS que l'investisseur
+  // (pictogramme seul jusque-là, jamais dans une case) rejoint le
+  // cercle des associés, qui remplace définitivement ce pictogramme :
+  // showAssocie et showCopro partagent désormais le même seuil (un seul
+  // clic, pas deux états séparés).
   const showInvestScpiArrow = stateIndex >= 1;
   const investScpiArrowEntering = animate && stateIndex === 1;
   const showSouscriptionLabel = stateIndex === 1;
   const showAssocie = stateIndex >= 2;
-  const showCopro = stateIndex >= 3;
-  const showDistribution = stateIndex >= 4;
-  const showGestion = stateIndex >= 5;
-  const showAmf = stateIndex >= 6;
+  const showCopro = stateIndex >= 2;
+  const showDistribution = stateIndex >= 3;
+  const showGestion = stateIndex >= 4;
+  const showAmf = stateIndex >= 5;
 
   const socleEntering = animate && stateIndex === 0;
   const souscriptionEntering = animate && stateIndex === 1;
   const associeEntering = animate && stateIndex === 2;
-  const coproEntering = animate && stateIndex === 3;
-  const distributionEntering = animate && stateIndex === 4;
-  const gestionEntering = animate && stateIndex === 5;
-  const amfEntering = animate && stateIndex === 6;
+  const coproEntering = animate && stateIndex === 2;
+  const distributionEntering = animate && stateIndex === 3;
+  const gestionEntering = animate && stateIndex === 4;
+  const amfEntering = animate && stateIndex === 5;
 
   const investisseurSlot = showAssocie ? associeCercleHtml(associeEntering) : investisseurSoloHtml(socleEntering);
 
@@ -423,7 +426,7 @@ export function render(slide, opts = {}) {
     : "";
 
   // Largeur réduite au strict nécessaire pour "Autorité des marchés
-  // financiers" (plus long que "L'AMF" + pictogramme) — l'ancienne
+  // financiers" (plus long que "AMF" + pictogramme) — l'ancienne
   // largeur (23,4375cqw) laissait ~21px de vide après le texte. Centrée
   // sur le même axe que la case SCPI (45,15625cqw, milieu de la scène),
   // pas sur une valeur saisie à part qui s'en désynchroniserait si la
@@ -437,7 +440,7 @@ export function render(slide, opts = {}) {
         height: 5.625,
         cls: "scpi-mecanisme__box--amf",
         icon: "bouclier",
-        titre: "L'AMF",
+        titre: "AMF",
         texte: "Autorité des marchés financiers",
         entering: amfEntering,
       })
@@ -529,8 +532,8 @@ export function render(slide, opts = {}) {
   const amfLines = showAmf
     ? lineGroupHtml(
         amfEntering,
-        `<path d="M578,72 V${BOX_TOP_PX}" fill="none" stroke="rgba(var(--chap-ink-rgb),.34)" stroke-width="1" stroke-dasharray="2 5"/>
-         <path d="M578,112 H1020 V${BOX_TOP_PX}" fill="none" stroke="rgba(var(--chap-ink-rgb),.34)" stroke-width="1" stroke-dasharray="2 5"/>`
+        `<path d="M578,72 V${BOX_TOP_PX}" fill="none" stroke="rgb(var(--chap-ink-rgb))" stroke-width="1" stroke-dasharray="2 5"/>
+         <path d="M578,112 H1020 V${BOX_TOP_PX}" fill="none" stroke="rgb(var(--chap-ink-rgb))" stroke-width="1" stroke-dasharray="2 5"/>`
       )
     : "";
 
