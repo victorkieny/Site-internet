@@ -173,7 +173,14 @@ const GESTION_WIDTH_CQW = 18.5;
 // bouger le bas des cases (top diminue, hauteur augmente d'autant :
 // top+hauteur, donc le bas, ne change pas).
 const BOX_TOP_SHIFT_CQW = 3.5;
-const BOX_TOP_CQW = 13.125 - BOX_TOP_SHIFT_CQW;
+// Abaisse les 3 cases du socle (associé/cercle, SCPI, société de
+// gestion) — et, avec elles, les flèches et pictogrammes de flèche, qui
+// se règlent tous sur BOX_TOP_CQW ou sur les constantes *_ARROW_Y_PX
+// (décalées d'autant plus bas via ARROW_ROW_LOWER_CQW * CQW_PX, voir
+// plus bas) — pour dégager plus d'espace entre elles et la case AMF
+// au-dessus (qui ne bouge pas, top:0).
+const ARROW_ROW_LOWER_CQW = 3;
+const BOX_TOP_CQW = 13.125 - BOX_TOP_SHIFT_CQW + ARROW_ROW_LOWER_CQW;
 const CENTER_BOX_HEIGHT_CQW = 12.1875 + BOX_TOP_SHIFT_CQW;
 // Ajustée au contenu (titre + registre d'icônes, voir .scpi-mecanisme__
 // box--vehicule en CSS, justify-content:center sans padding vertical) —
@@ -222,9 +229,14 @@ const GESTION_ARROW_CENTER_CQW = (SCPI_LEFT + SCPI_WIDTH + GESTION_LEFT) / 2;
 // depuis le bas dans le même couloir x que le texte "Copropriétaire" /
 // "Souscription de part" sous cette flèche — sans ce relèvement les deux
 // se chevauchaient déjà de justesse à l'ancienne taille du pictogramme.
-const INVEST_SCPI_ARROW_Y_PX = 155;
-const DISTRIBUTION_ARROW_Y_PX = 275;
-const GESTION_ARROW_Y_PX = 246;
+// + ARROW_ROW_LOWER_CQW converti en px : les trois flèches suivent
+// l'abaissement des cases (BOX_TOP_CQW), sinon elles resteraient à leur
+// ancienne hauteur pendant que les cases (et les pictogrammes qui s'y
+// centrent, voir investisseurSoloHtml) descendent sous elles.
+const ARROW_ROW_LOWER_PX = ARROW_ROW_LOWER_CQW * CQW_PX;
+const INVEST_SCPI_ARROW_Y_PX = 155 + ARROW_ROW_LOWER_PX;
+const DISTRIBUTION_ARROW_Y_PX = 275 + ARROW_ROW_LOWER_PX;
+const GESTION_ARROW_Y_PX = 246 + ARROW_ROW_LOWER_PX;
 
 // Pictogramme + libellé centrés sur une flèche horizontale : pictogramme
 // à GAP_CQW au-dessus, texte à GAP_CQW en dessous, tous deux centrés sur
