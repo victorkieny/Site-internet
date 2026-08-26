@@ -57,7 +57,7 @@ function treeHtml(entering) {
 function beneficiaireHtml(montant) {
   return `
     <div class="transmission__branch">
-      ${iconSvg("enfant", "var(--or)", 34)}
+      ${iconSvg("enfant", "var(--or)", 40)}
       <span class="transmission__branch-montant">${euro.format(montant)}</span>
     </div>
   `;

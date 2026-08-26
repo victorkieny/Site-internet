@@ -1810,12 +1810,14 @@
 }
 
 /* 4e branche ("...", voir etcBranchHtml en JS) : un espaceur muet de la
-   même hauteur que l'icône des branches chiffrées, pour que le "..."
-   s'aligne avec les montants à côté plutôt que de remonter en haut de
-   la colonne (il n'a pas d'icône au-dessus, contrairement aux autres). */
+   même hauteur que l'icône des branches chiffrées (voir le 40 passé à
+   iconSvg("enfant", ...) dans transmission.js — à resynchroniser si
+   cette taille change), pour que le "..." s'aligne avec les montants à
+   côté plutôt que de remonter en haut de la colonne (il n'a pas d'icône
+   au-dessus, contrairement aux autres). */
 .transmission__branch-etc-spacer {
   display: block;
-  height: 34px;
+  height: 40px;
 }
 
 .transmission__branch-etc {
@@ -1835,12 +1837,14 @@
 .transmission__branch-montant {
   /* Chaque colonne (flex:1, sans gap — nécessaire pour rester alignée
      avec les x fixes de l'arbre SVG, voir treeHtml) ne fait qu'un
-     tiers de la largeur de .transmission__branches : à une taille plus
-     grande, le texte remplit toute la colonne et les 3 montants se
-     touchent, sans respiration entre eux (bug remonté). */
+     tiers de la largeur de .transmission__branches : à une taille
+     trop grande, le texte remplit toute la colonne et les 3 montants
+     se touchent, sans respiration entre eux (bug déjà remonté une
+     fois — vérifié à l'écran après ce nouvel agrandissement,
+     toujours de la place). */
   font-family: var(--font-serif-chapitre);
   font-weight: 400;
-  font-size: 1.25cqw;
+  font-size: 1.45cqw;
   letter-spacing: -0.03em;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
@@ -1867,7 +1871,7 @@
 .transmission__section-title {
   display: block;
   font-weight: 700;
-  font-size: 0.9375cqw;
+  font-size: 1.09375cqw;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: rgba(var(--chap-ink-rgb), 1);
