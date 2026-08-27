@@ -158,22 +158,39 @@ function renderNumberField(field, values, fieldRefreshers, options = {}) {
   span.textContent = typeof field.label === "function" ? field.label(values) : field.label;
   label.append(span);
 
+  // Curseur à valeurs discrètes (ex. tranches de TMI) : le curseur se déplace
+  // par index dans `field.steps` plutôt que par pas régulier, pour n'autoriser
+  // que ces valeurs précises tout en gardant l'interaction "glisser".
+  const steps = field.steps || null;
+  const closestStepIndex = (value) => {
+    let closest = 0;
+    let closestDiff = Infinity;
+    steps.forEach((step, i) => {
+      const diff = Math.abs(step - value);
+      if (diff < closestDiff) {
+        closestDiff = diff;
+        closest = i;
+      }
+    });
+    return closest;
+  };
+
   const control = document.createElement("div");
   control.className = "tool-input-wrap";
   const input = document.createElement("input");
   input.type = "text";
   input.inputMode = "decimal";
-  input.min = field.min;
-  input.max = field.max;
+  input.min = steps ? steps[0] : field.min;
+  input.max = steps ? steps[steps.length - 1] : field.max;
   input.step = field.step;
   input.value = formatInputNumber(values[field.key]);
   const range = document.createElement("input");
   range.className = mini ? "tool-range tool-range-mini" : "tool-range";
   range.type = "range";
-  range.min = field.min;
-  range.max = field.max;
-  range.step = field.step;
-  range.value = values[field.key];
+  range.min = steps ? 0 : field.min;
+  range.max = steps ? steps.length - 1 : field.max;
+  range.step = steps ? 1 : field.step;
+  range.value = steps ? closestStepIndex(values[field.key]) : values[field.key];
   updateRangeProgress(range);
 
   const note = field.note ? document.createElement("small") : null;
@@ -198,17 +215,29 @@ function renderNumberField(field, values, fieldRefreshers, options = {}) {
     const previousValue = values[field.key];
     values[field.key] = parseInputNumber(input.value);
     onValueChange?.(field.key, previousValue, values[field.key]);
-    range.value = values[field.key];
+    if (steps) {
+      range.value = closestStepIndex(values[field.key]);
+    } else {
+      range.value = values[field.key];
+    }
     updateRangeProgress(range);
     refreshDependentFields();
     updatePresets();
   });
   input.addEventListener("blur", () => {
+    // En saisie libre, la valeur tapée est ramenée à la tranche autorisée la
+    // plus proche une fois la saisie terminée (pas à chaque frappe, pour ne
+    // pas gêner la frappe d'un nombre à deux chiffres comme "45").
+    if (steps) {
+      values[field.key] = steps[closestStepIndex(values[field.key])];
+      range.value = closestStepIndex(values[field.key]);
+      updateRangeProgress(range);
+    }
     input.value = formatInputNumber(values[field.key]);
   });
   range.addEventListener("input", () => {
     const previousValue = values[field.key];
-    values[field.key] = Number(range.value || 0);
+    values[field.key] = steps ? steps[Number(range.value || 0)] : Number(range.value || 0);
     onValueChange?.(field.key, previousValue, values[field.key]);
     input.value = formatInputNumber(values[field.key]);
     updateRangeProgress(range);
@@ -290,7 +319,7 @@ function renderLineChart(rows, config) {
     `;
     return;
   }
-  const { series, areas = [], tooltipExtras = [], totals = [], marker = null, ariaLabel = "Graphique de projection" } = config;
+  const { series, areas = [], tooltipExtras = [], totals = [], marker = null, ariaLabel = "Graphique de projection", zeroBaseline = true } = config;
   // Par défaut, une puce de légende par ligne tracée — sauf si l'appelant
   // fournit sa propre liste (ex. une aire sans ligne tracée, comme "gains",
   // qui a quand même besoin d'une puce de légende).
@@ -301,7 +330,15 @@ function renderLineChart(rows, config) {
   const pad = { top: 28, right: 36, bottom: 54, left: 128 };
 
   const allValues = series.flatMap((s) => s.values);
-  const min = Math.min(0, ...allValues);
+  // zeroBaseline: true (par défaut) part de 0 — pertinent pour une
+  // accumulation depuis rien (versements). zeroBaseline: false cadre l'axe
+  // sur la fourchette réelle des valeurs (+ une marge de 8 %) — utile pour
+  // comparer des courbes qui évoluent toutes loin de 0 (ex. un capital
+  // déjà investi), où un axe à 0 écraserait leur écart réel dans une
+  // grande zone vide sous elles.
+  const rawMin = Math.min(...allValues);
+  const rawSpan = Math.max(...allValues) - rawMin;
+  const min = zeroBaseline ? Math.min(0, ...allValues) : rawMin - rawSpan * 0.08;
   const rawMax = Math.max(0, ...allValues, min + 1);
   // Avec un repère vertical, sa légende texte se place au-dessus du
   // graphique : on réserve un peu de marge en tête pour qu'elle ne
