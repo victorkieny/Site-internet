@@ -2496,6 +2496,13 @@ body.resources-modal-open {
     linear-gradient(112deg, #38424a 0%, #423f3a 55%, #6b5636 100%);
 }
 
+.simulator-choice-per {
+  background:
+    radial-gradient(circle at 6% 4%, rgba(140, 181, 210, 0.18), transparent 38%),
+    radial-gradient(circle at 94% 92%, rgba(210, 169, 101, 0.22), transparent 42%),
+    linear-gradient(112deg, #2f3f4a 0%, #3c3a35 52%, #6d5230 100%);
+}
+
 .simulator-choice-featured::before {
   content: "";
   position: absolute;
@@ -3036,6 +3043,7 @@ body.resources-modal-open {
 .tool-pie-card,
 .tool-fiscal-card,
 .tool-compare-card,
+.mini-bar-card,
 .tool-params {
   border: 1px solid rgba(43, 37, 30, 0.1);
   border-radius: 22px;
@@ -3126,6 +3134,21 @@ body.resources-modal-open {
 }
 
 .compare-race-bar-av {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0)),
+    linear-gradient(90deg, #b99761, #dfcba8);
+}
+
+/* Mêmes dégradés que -livret/-av ci-dessus, sous un nom générique
+   réutilisable par n'importe quelle page à comparaison avant/après
+   (Gain fiscal PER : revenu imposable avant vs après versement). */
+.compare-race-bar-before {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0)),
+    linear-gradient(90deg, #6f8ba7, #9eb2c4);
+}
+
+.compare-race-bar-after {
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0)),
     linear-gradient(90deg, #b99761, #dfcba8);
@@ -6099,16 +6122,68 @@ body[data-mode="scpi"] #chart-panel .chart-tooltip-gains strong {
   margin: 0;
 }
 
-.tool-body[data-mode="per"] .tool-field > span {
-  overflow: hidden;
-  font-size: 0.86rem;
-  text-overflow: ellipsis;
+/* Champs identiques à Assurance Vie / SCPI (même léger surlignage d'espacement/
+   bordure que leurs curseurs, valeur numérique en serif plutôt que dans le
+   sans-serif générique) — mêmes valeurs reprises à l'identique. Pas
+   d'overflow:hidden sur le span (contrairement à ces deux pages) : le
+   libellé porte ici parfois une bulle d'info (.tool-info-bubble, positionnée
+   en absolu à l'intérieur de ce span) qui serait sinon rognée par le clip ;
+   les libellés de cette page restent volontairement courts pour ne pas en
+   avoir besoin par ailleurs. */
+.tool-body[data-mode="per"] .tool-field,
+.tool-body[data-mode="per"] .tool-field:hover,
+.tool-body[data-mode="per"] .tool-field:focus-within {
+  gap: 7px 12px;
+  padding: 15px 2px 17px;
+  border-bottom: 1px solid rgba(43, 37, 30, 0.075);
 }
 
+/* La règle ci-dessus (plus spécifique que .tool-field:last-child générique,
+   cf. styles.css plus haut) réaffichait une bordure sur le dernier champ
+   ("Situation familiale") — supprimée ici explicitement. */
+.tool-body[data-mode="per"] .tool-field:last-child {
+  border-bottom: 0;
+}
+
+.tool-body[data-mode="per"] .tool-field > span {
+  color: rgba(43, 37, 30, 0.68);
+  font-size: 0.86rem;
+  font-weight: 540;
+}
+
+.tool-body[data-mode="per"] .tool-input-wrap,
+.tool-body[data-mode="per"] .tool-input-wrap:focus-within {
+  min-width: 100px;
+  min-height: 29px;
+  padding: 0;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.tool-body[data-mode="per"] .tool-input-wrap input {
+  width: 78px;
+  min-height: 29px;
+  color: rgba(43, 37, 30, 0.9);
+  font-family: var(--serif);
+  font-size: 1.16rem;
+  font-weight: 500;
+  letter-spacing: -0.025em;
+}
+
+.tool-body[data-mode="per"] .tool-input-wrap small {
+  padding-left: 6px;
+  color: rgba(43, 37, 30, 0.5);
+  font-size: 0.7rem;
+}
+
+/* Pas de border-bottom ici : cette note est imbriquée dans le .tool-field
+   "Versement PER annuel" (via field.note), qui a déjà sa propre bordure de
+   séparation en bas — en ajouter une ici doublait le trait. */
 .tool-body[data-mode="per"] .tool-field-note {
-  margin: -8px 2px 10px;
-  padding: 0 0 12px;
-  border-bottom: 1px solid rgba(43, 37, 30, 0.065);
+  margin: -8px 2px 0;
 }
 
 .tool-body[data-mode="per"] .tool-presets {
@@ -6162,6 +6237,403 @@ body[data-mode="scpi"] #chart-panel .chart-tooltip-gains strong {
   font-weight: 480;
   line-height: 1.35;
   white-space: pre-line;
+}
+
+/* Mention légale/disclaimer en pied d'une page simulateur (générique, pas
+   liée à une seule page — cf. Gain fiscal PER). */
+.tool-page-note {
+  margin: 4px 4px 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+  text-align: center;
+}
+
+/* Paire de mini-graphiques en barres (cf. renderMiniBarChart, gain-fiscal-per.html) :
+   deux cartes côte à côte, chacune un avant/après en barres verticales —
+   même code couleur bleu/doré que .compare-race-bar-before/-after sur cette
+   page. Générique (pas de sélecteur data-mode), réutilisable ailleurs. */
+.mini-bar-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.mini-bar-card {
+  display: grid;
+  gap: 14px;
+  padding: 22px clamp(16px, 2vw, 22px);
+}
+
+.mini-bar-title {
+  margin: 0;
+  color: var(--muted);
+  font-family: var(--sans);
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+/* Le reset générique `svg { fill: none; stroke: currentColor; }` (pensé
+   pour les icônes-traits du site, cf. tout en haut de ce fichier) hérite
+   sinon jusque dans les barres et le texte de ce graphique, dessinant un
+   contour et un texte "au trait" au lieu de formes pleines — fill/stroke
+   remis à zéro ici puis réaffectés explicitement ci-dessous, comme le fait
+   déjà .chart-grid text/.chart-axis text pour le graphique en ligne. */
+.mini-bar-chart {
+  display: block;
+  width: 100%;
+  height: auto;
+  padding: 10px 6px 4px;
+  border-radius: 18px;
+  background:
+    linear-gradient(180deg, rgba(255, 253, 250, 0.4), rgba(255, 253, 250, 0.14)),
+    radial-gradient(circle at 50% 0%, rgba(199, 174, 137, 0.12), transparent 42%);
+  fill: none;
+  stroke: none;
+}
+
+.mini-bar-grid line {
+  fill: none;
+  stroke: rgba(43, 37, 30, 0.08);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+}
+
+.mini-bar-grid line.mini-bar-baseline {
+  stroke: rgba(43, 37, 30, 0.16);
+  stroke-dasharray: none;
+}
+
+.mini-bar-grid text {
+  fill: var(--muted);
+  stroke: none;
+  font-family: var(--sans);
+  font-size: 10.5px;
+  font-weight: 400;
+  text-anchor: end;
+}
+
+.mini-bar-x-label {
+  fill: var(--muted);
+  stroke: none;
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 400;
+  text-anchor: middle;
+}
+
+.mini-bar-before {
+  fill: rgba(91, 119, 146, 0.88);
+  stroke: none;
+}
+
+.mini-bar-after {
+  fill: rgba(185, 151, 97, 0.92);
+  stroke: none;
+}
+
+@media (max-width: 640px) {
+  .mini-bar-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Bulle d'info générique (cf. renderInfoTooltip, shared.js) : un repère "i"
+   discret à côté d'un libellé, qui affiche `text` au survol OU au clic/focus
+   (:focus-within couvre le clic — le bouton se focus au clic). Même langage
+   que .chart-tooltip (carte flottante) plutôt qu'un encart plat. Positionnée
+   en absolu sous l'icône plutôt que centrée dessus, pour ne jamais déborder
+   à gauche d'un panneau de curseurs étroit (.tool-params, 320-360px). */
+.tool-info {
+  position: relative;
+  display: inline-flex;
+  margin-left: 5px;
+  vertical-align: middle;
+}
+
+.tool-info-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  padding: 0;
+  border: 1px solid rgba(43, 37, 30, 0.26);
+  border-radius: 50%;
+  background: none;
+  color: rgba(43, 37, 30, 0.45);
+  cursor: help;
+  transition: color 160ms ease, border-color 160ms ease, background 160ms ease;
+}
+
+.tool-info-trigger:hover,
+.tool-info-trigger:focus-visible {
+  border-color: rgba(43, 37, 30, 0.42);
+  background: rgba(43, 37, 30, 0.05);
+  color: rgba(43, 37, 30, 0.78);
+  outline: none;
+}
+
+.tool-info-trigger span {
+  font-family: var(--serif);
+  font-size: 10px;
+  font-style: italic;
+  font-weight: 600;
+  line-height: 1;
+  transform: translateY(-0.5px);
+}
+
+.tool-info-bubble {
+  position: absolute;
+  z-index: 6;
+  top: calc(100% + 12px);
+  left: -12px;
+  width: max-content;
+  max-width: 200px;
+  padding: 11px 13px;
+  border: 1px solid rgba(43, 37, 30, 0.12);
+  border-radius: 14px;
+  background: rgba(255, 253, 250, 0.97);
+  box-shadow: 0 18px 34px rgba(43, 37, 30, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px) saturate(1.08);
+  color: rgba(43, 37, 30, 0.72);
+  font-size: 0.76rem;
+  font-weight: 460;
+  line-height: 1.45;
+  white-space: pre-line;
+  text-align: left;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-4px);
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.tool-info-bubble::before {
+  content: "";
+  position: absolute;
+  top: -5px;
+  left: 13px;
+  width: 9px;
+  height: 9px;
+  border-top: 1px solid rgba(43, 37, 30, 0.12);
+  border-left: 1px solid rgba(43, 37, 30, 0.12);
+  border-radius: 2px 0 0 0;
+  background: rgba(255, 253, 250, 0.97);
+  transform: rotate(45deg);
+}
+
+.tool-info:hover .tool-info-bubble,
+.tool-info:focus-within .tool-info-bubble {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* Gain fiscal PER — même langage éditorial que les autres simulateurs
+   (titres serif façon pierre2coups/comparateur, cf. ces mêmes règles plus
+   bas), avec ses propres couleurs de colonnes pour le tableau de
+   scénarios (5 colonnes : versement / revenu imposable / impôt / gain /
+   TMI — ne correspond à aucun des schémas de couleur génériques déjà en
+   place). */
+body[data-mode="per"] .tool-params-title,
+body[data-mode="per"] .tool-summary-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 32px;
+  padding: 0 2px 16px;
+  border-bottom: 1px solid rgba(43, 37, 30, 0.075);
+}
+
+body[data-mode="per"] .tool-params-title h2,
+body[data-mode="per"] .tool-summary-title h2,
+body[data-mode="per"] .tool-table-card .tool-card-title h2,
+body[data-mode="per"] .tool-compare-card .tool-card-title h2 {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: clamp(1.42rem, 1.8vw, 1.68rem);
+  font-weight: 400;
+  line-height: 0.96;
+  transform: scaleX(1.06);
+  transform-origin: left center;
+}
+
+body[data-mode="per"] .tool-table-wrap th:first-child,
+body[data-mode="per"] .tool-table-wrap td:first-child {
+  width: 34%;
+  text-align: left;
+}
+
+body[data-mode="per"] .tool-table-wrap th:nth-child(2),
+body[data-mode="per"] .tool-table-wrap td:nth-child(2),
+body[data-mode="per"] .tool-table-wrap th:nth-child(3),
+body[data-mode="per"] .tool-table-wrap td:nth-child(3) {
+  width: auto;
+  color: inherit;
+}
+
+body[data-mode="per"] .tool-table-wrap th:nth-child(4),
+body[data-mode="per"] .tool-table-wrap td:nth-child(4) {
+  width: auto;
+  color: #2f6b52;
+  font-weight: 600;
+}
+
+body[data-mode="per"] .tool-table-wrap th:nth-child(5),
+body[data-mode="per"] .tool-table-wrap td:nth-child(5) {
+  width: 12%;
+}
+
+/* Hypothèses figées façon .about-portrait-rail (cf. plus haut) : la colonne
+   de droite (résultats + tableau) est bien plus haute que le panneau de
+   curseurs. .tool-overview a align-items: stretch par défaut (réutilisé tel
+   quel par d'autres pages) — ici on repasse à align-items: start, sinon la
+   grille CSS étire .tool-params (et, en cascade, chaque champ à l'intérieur)
+   sur toute la hauteur de la colonne de droite, avec de grands vides entre
+   les curseurs. En start, .tool-params retrouve sa hauteur naturelle et a de
+   la marge pour "flotter" avant de se figer (position: sticky) — même piège
+   déjà documenté sur .about-portrait-rail : un élément sticky doit être plus
+   petit que son bloc englobant pour avoir où se figer. */
+body[data-mode="per"] .tool-overview {
+  align-items: start;
+}
+
+/* Pas de grand cadre derrière Hypothèses/Gain fiscal/Revenu imposable/
+   Exemples chiffrés : chacune de ces cases garde son propre fond (cf. la
+   règle partagée .tool-result-card, .tool-table-card, .tool-compare-card,
+   .tool-params plus haut), posé directement sur le fond de la page plutôt
+   que dans un rectangle englobant. Demandé par Victor. */
+body[data-mode="per"] .tool-overview {
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  /* 16px partout : entre les deux colonnes, entre Gain fiscal/Revenu
+     imposable (.tool-summary), et entre les blocs de .tool-secondary-column
+     (Revenu imposable / mini-graphiques / tableau) — un seul rythme uniforme
+     sur toute la page, demandé par Victor. */
+  gap: 16px;
+}
+
+body[data-mode="per"] .tool-params {
+  position: sticky;
+  top: clamp(16px, 3vw, 28px);
+}
+
+body[data-mode="per"] .tool-summary,
+body[data-mode="per"] .tool-secondary-column {
+  gap: 16px;
+}
+
+/* Bandeau "Gain fiscal" moins haut que le gabarit générique (min-height
+   204px, pensé pour deux panneaux côte à côte ailleurs) — ici un seul
+   panneau (tool-hero-single), pas besoin d'autant de hauteur. */
+body[data-mode="per"] .tool-hero-panel {
+  min-height: 0;
+  padding: 22px clamp(28px, 3vw, 38px);
+}
+
+/* Curseurs identiques à Assurance Vie / SCPI (pastille fine verticale,
+   piste 7px, anneau doré au survol) — ces deux pages partagent exactement
+   la même recette (cf. body[data-mode="av"]/[data-mode="scpi"] .tool-range
+   plus bas) ; valeurs reprises à l'identique pour une vraie homogénéité
+   entre les trois simulateurs, plutôt que le curseur générique par défaut.
+   (Une première tentative avait repris une variante de curseur "SCPI" plus
+   ancienne, laissée dans la feuille de style mais remplacée depuis sur la
+   page réelle par celle-ci — d'où l'écart signalé par Victor.) */
+body[data-mode="per"] .tool-range {
+  height: 22px;
+  margin-top: 1px;
+}
+
+body[data-mode="per"] .tool-range::-webkit-slider-runnable-track {
+  height: 7px;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    rgba(91, 119, 146, 0.9) 0%,
+    rgba(185, 151, 97, 0.92) var(--range-progress),
+    rgba(43, 37, 30, 0.085) var(--range-progress),
+    rgba(43, 37, 30, 0.085) 100%
+  );
+  box-shadow: inset 0 1px 2px rgba(43, 37, 30, 0.08);
+}
+
+body[data-mode="per"] .tool-range::-webkit-slider-thumb {
+  width: 4px;
+  height: 17px;
+  margin-top: -5px;
+  border: 0;
+  border-radius: 999px;
+  background: #fff7e8;
+  box-shadow:
+    0 0 0 1px rgba(164, 124, 68, 0.72),
+    0 4px 10px rgba(43, 37, 30, 0.2);
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+body[data-mode="per"] .tool-range:hover::-webkit-slider-thumb,
+body[data-mode="per"] .tool-range:focus-visible::-webkit-slider-thumb {
+  transform: scaleY(1.12);
+  box-shadow:
+    0 0 0 1px rgba(164, 124, 68, 0.9),
+    0 5px 12px rgba(43, 37, 30, 0.22),
+    0 0 0 4px rgba(185, 151, 97, 0.08);
+}
+
+body[data-mode="per"] .tool-range::-moz-range-track {
+  height: 7px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(43, 37, 30, 0.085);
+  box-shadow: inset 0 1px 2px rgba(43, 37, 30, 0.08);
+}
+
+body[data-mode="per"] .tool-range::-moz-range-progress {
+  height: 7px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(91, 119, 146, 0.9), rgba(185, 151, 97, 0.92));
+}
+
+body[data-mode="per"] .tool-range::-moz-range-thumb {
+  width: 4px;
+  height: 17px;
+  border: 0;
+  border-radius: 999px;
+  background: #fff7e8;
+  box-shadow:
+    0 0 0 1px rgba(164, 124, 68, 0.72),
+    0 4px 10px rgba(43, 37, 30, 0.2);
+}
+
+/* En dessous de 980px, .tool-overview repasse en une colonne empilée (cf.
+   @media (max-width: 980px) plus bas, règle partagée) : .tool-params devient
+   le premier bloc de la pile plutôt qu'une colonne à part, où le figer
+   couvrirait le contenu qui suit au lieu de l'accompagner. */
+@media (max-width: 980px) {
+  body[data-mode="per"] .tool-params {
+    position: static;
+  }
+}
+
+/* "Rattrapage années précédentes" a un libellé long : son icône d'info
+   tombe loin à droite dans la rangée, et .tool-info-bubble par défaut
+   (ouverte vers la droite, cf. plus haut) débordait alors du panneau
+   .tool-params (320-360px) sur la case voisine. Ouverte vers la gauche ici
+   uniquement — assez de place de ce côté sur ce champ précis — plutôt que
+   de changer le comportement par défaut, correct pour les autres champs
+   (ex. "Revenu net annuel", icône proche du bord gauche). */
+body[data-mode="per"] [data-field="rattrapage"] .tool-info-bubble {
+  left: auto;
+  right: -12px;
+}
+
+body[data-mode="per"] [data-field="rattrapage"] .tool-info-bubble::before {
+  left: auto;
+  right: 13px;
 }
 
 /* Assurance Vie — même langage éditorial que la SCPI, sans toucher au fond de page */
@@ -9577,6 +10049,19 @@ body[data-mode="pierre2coups"] .tool-table-card {
 .table-row-highlight td {
   background: rgba(199, 174, 137, 0.14);
   font-weight: 650;
+}
+
+/* Étiquette "Optimal" dans la première colonne d'un tableau de scénarios
+   (Gain fiscal PER : versement qui fait basculer le foyer dans la
+   tranche inférieure) — même vert que .comparateur-result-verdict. */
+.table-badge-optimal {
+  margin-left: 6px;
+  color: #2f6b52;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 /* Survol (comparateur de contrats uniquement, cf. renderTableSynthese) :

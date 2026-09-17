@@ -141,12 +141,35 @@ function updateRangeProgress(range) {
   range.style.setProperty("--range-progress", `${Math.max(0, Math.min(100, progress))}%`);
 }
 
+// Bulle d'info générique : un petit bouton "i" qui affiche `text` au survol
+// ou au clic/focus (:hover/:focus-within, cf. styles.css). Appelable seule
+// (ex. à côté d'un titre de carte) ou via `field.info` sur renderNumberField.
+function renderInfoTooltip(text) {
+  const wrap = document.createElement("span");
+  wrap.className = "tool-info";
+
+  const trigger = document.createElement("button");
+  trigger.type = "button";
+  trigger.className = "tool-info-trigger";
+  trigger.setAttribute("aria-label", text);
+  trigger.innerHTML = '<span aria-hidden="true">i</span>';
+
+  const bubble = document.createElement("span");
+  bubble.className = "tool-info-bubble";
+  bubble.setAttribute("aria-hidden", "true");
+  bubble.textContent = text;
+
+  wrap.append(trigger, bubble);
+  return wrap;
+}
+
 // Rendu générique d'un champ "curseur + champ texte" lié (avec presets
 // optionnels). values/fieldRefreshers sont fournis par l'appelant (portée
 // partagée avec les autres champs du même formulaire). onValueChange et
 // onCommit sont les points d'extension par lesquels l'appelant branche sa
 // propre logique métier (ex. déclencher un nouveau rendu) sans que ce
-// rendu générique ait besoin de la connaître.
+// rendu générique ait besoin de la connaître. field.info (optionnel) ajoute
+// une bulle d'info à côté du libellé plutôt qu'une note toujours visible.
 function renderNumberField(field, values, fieldRefreshers, options = {}) {
   const { mini = false, onValueChange, onCommit } = options;
 
@@ -156,6 +179,9 @@ function renderNumberField(field, values, fieldRefreshers, options = {}) {
 
   const span = document.createElement("span");
   span.textContent = typeof field.label === "function" ? field.label(values) : field.label;
+  if (field.info) {
+    span.append(renderInfoTooltip(typeof field.info === "function" ? field.info(values) : field.info));
+  }
   label.append(span);
 
   // Curseur à valeurs discrètes (ex. tranches de TMI) : le curseur se déplace
@@ -200,6 +226,9 @@ function renderNumberField(field, values, fieldRefreshers, options = {}) {
   };
   const refreshField = () => {
     span.textContent = typeof field.label === "function" ? field.label(values) : field.label;
+    if (field.info) {
+      span.append(renderInfoTooltip(typeof field.info === "function" ? field.info(values) : field.info));
+    }
     updateNote();
   };
   fieldRefreshers.push(refreshField);

@@ -1,0 +1,605 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>PER | Simulateur</title>
+    <link rel="icon" href="../favicon.ico" sizes="any">
+    <link rel="icon" href="../assets/favicon-96x96.png" type="image/png" sizes="96x96">
+    <link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+    <link rel="stylesheet" href="../styles.css">
+  </head>
+  <body class="tool-body">
+    <main class="tool-page" aria-labelledby="tool-page-title">
+      <nav class="main-nav" aria-label="Navigation principale">
+        <input type="checkbox" id="nav-toggle" class="nav-toggle-checkbox" aria-label="Menu de navigation">
+        <label for="nav-toggle" class="main-nav-scrim" aria-hidden="true"></label>
+        <div class="main-nav-panel">
+          <a href="../index.html">Accueil</a>
+          <a href="../simulateurs.html" aria-current="page">Simulateurs</a>
+          <a href="../ressources.html">Ressources</a>
+          <a href="../a-propos.html">À propos</a>
+          <a class="nav-cta" href="../rdv.html">
+            Prendre RDV
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M5 12h14"></path>
+              <path d="m13 6 6 6-6 6"></path>
+            </svg>
+          </a>
+        </div>
+        <label for="nav-toggle" class="nav-toggle" aria-hidden="true">
+          <svg class="nav-toggle-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 7h16"></path>
+            <path d="M4 12h16"></path>
+            <path d="M4 17h16"></path>
+          </svg>
+        </label>
+      </nav>
+      <nav class="tool-nav" aria-label="Navigation du simulateur">
+        <h1 id="tool-page-title">PER</h1>
+      </nav>
+
+      <section class="tool-layout">
+        <section class="tool-overview" aria-label="Synthèse et hypothèses">
+          <aside class="tool-params" aria-label="Hypothèses">
+            <div class="tool-params-title">
+              <h2><button type="button" id="zero-fields" class="tool-zero-fields" aria-label="Hypothèses — mettre le versement PER à zéro" title="Mettre le versement PER à zéro">Hypothèses</button></h2>
+              <button type="button" id="reset-fields" class="tool-reset">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 1 2.64 6.36"></path><path d="M3 21v-6h6"></path></svg>
+                Réinitialiser
+              </button>
+            </div>
+            <div id="fields" class="tool-fields"></div>
+          </aside>
+
+          <div class="tool-secondary-column">
+            <div class="tool-summary" id="summary"></div>
+
+            <div class="mini-bar-row" id="bar-charts"></div>
+
+            <div class="tool-table-card" id="table-panel">
+              <div class="tool-card-title">
+                <h2>Exemples chiffrés</h2>
+              </div>
+              <div class="tool-table-wrap">
+                <table id="projection-table"></table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <p class="tool-page-note">Calcul indicatif : barème IR 2026, hors décote et contributions exceptionnelles.</p>
+      </section>
+    </main>
+
+    <script src="shared.js"></script>
+    <script>
+      // ---------------------------------------------------------------
+      // Calcul : gain fiscal (IR) obtenu grâce à la déduction d'un
+      // versement PER — barème IR 2025/2026, abattement forfaitaire de
+      // 10 % puis plafond de déduction PER, quotient familial (parts).
+      // Logique reprise et adaptée du moteur fiscal d'un simulateur PER
+      // tiers (open source), reconstruite ici en JS vanilla.
+      // ---------------------------------------------------------------
+
+      const TRANCHES_IR = [
+        { min: 0, max: 11600, taux: 0 },
+        { min: 11600, max: 29580, taux: 0.11 },
+        { min: 29580, max: 84578, taux: 0.30 },
+        { min: 84578, max: 169156, taux: 0.41 },
+        { min: 169156, max: Infinity, taux: 0.45 }
+      ];
+
+      const ABATTEMENT_TAUX = 0.10;
+      const ABATTEMENT_MIN = 504;
+      const ABATTEMENT_MAX = 14426;
+
+      // PASS de l'année N-1 (2025), utilisé pour le plafond de versement PER
+      // déductible de 2026 : plafond = 10 % des revenus pro N-1 nets de
+      // cotisations sociales, retenus dans la limite de 8×PASS N-1 (plafond
+      // "plancher" forfaitaire de 10 % du PASS si ce calcul est inférieur).
+      const PASS_N1 = 47100;
+      const PER_PLAFOND_TAUX = 0.10;
+      const PER_PLAFOND_MIN = Math.round(PASS_N1 * PER_PLAFOND_TAUX);
+      const PER_PLAFOND_MAX = Math.round(PASS_N1 * 8 * PER_PLAFOND_TAUX);
+
+      function computeAbattement(revenuNet) {
+        const brut = revenuNet * ABATTEMENT_TAUX;
+        return Math.min(Math.max(brut, ABATTEMENT_MIN), ABATTEMENT_MAX);
+      }
+
+      function computeRevenuImposable(revenuNet) {
+        return Math.max(0, revenuNet - computeAbattement(revenuNet));
+      }
+
+      // Base = revenuNet tel quel (revenu net de cotisations sociales, avant
+      // l'abattement forfaitaire de 10 % qui lui n'intervient que pour le
+      // calcul de l'IR) — pas computeRevenuImposable, qui a déjà retiré cet
+      // abattement et sous-évaluait donc le plafond réel.
+      function computePlafondPER(revenuNet) {
+        return Math.round(Math.min(Math.max(PER_PLAFOND_MIN, revenuNet * PER_PLAFOND_TAUX), PER_PLAFOND_MAX));
+      }
+
+      // Plafond de l'année en cours + rattrapage des plafonds non utilisés
+      // des 3 années précédentes (montant saisi librement par l'utilisateur,
+      // le simulateur ne connaissant pas les revenus/versements passés).
+      function computePlafondDisponible(revenuNet, rattrapage) {
+        return computePlafondPER(revenuNet) + Math.max(0, rattrapage || 0);
+      }
+
+      function computeIRFromImposable(revenuImposable, parts) {
+        const quotient = revenuImposable / parts;
+        let impotParPart = 0;
+        let tmi = 0;
+
+        for (const tranche of TRANCHES_IR) {
+          if (quotient <= tranche.min) break;
+          const base = Math.min(quotient, tranche.max) - tranche.min;
+          impotParPart += base * tranche.taux;
+          tmi = tranche.taux;
+        }
+
+        return { impot: Math.round(impotParPart * parts), tmi };
+      }
+
+      function computeIR(revenuNet, parts) {
+        const abattement = computeAbattement(revenuNet);
+        const revenuImposable = Math.max(0, revenuNet - abattement);
+        const { impot, tmi } = computeIRFromImposable(revenuImposable, parts);
+        return { impot, tmi, revenuImposable: Math.round(revenuImposable), abattement: Math.round(abattement) };
+      }
+
+      // Le versement PER effectivement déductible est toujours plafonné au
+      // plafond légal, quelle que soit la valeur saisie/glissée — garantit un
+      // résultat fiscalement correct même dans le cas limite où le curseur
+      // "Versement PER" n'a pas encore été recadré après un changement de
+      // revenu (cf. renderFields, qui ne recadre son maximum qu'aux rendus
+      // complets, pas à chaque frappe sur le curseur "Revenu net").
+      function versementDeductible(values) {
+        const plafond = computePlafondDisponible(values.revenuNet, values.rattrapage);
+        return Math.min(Math.max(0, values.versementPER), plafond);
+      }
+
+      function computeIRWithPER(revenuNet, versementDeduit, parts) {
+        const avant = computeIR(revenuNet, parts);
+        const revenuImposableApres = Math.max(0, avant.revenuImposable - versementDeduit);
+        const { impot, tmi } = computeIRFromImposable(revenuImposableApres, parts);
+        const apres = { impot, tmi, revenuImposable: Math.round(revenuImposableApres), abattement: avant.abattement };
+        return { avant, apres, gain: avant.impot - apres.impot };
+      }
+
+      // Versement nécessaire pour faire basculer le foyer dans la tranche
+      // immédiatement inférieure — null si déjà en tranche à 11 % (ou 0 %),
+      // ou si le versement nécessaire dépasse le plafond déductible.
+      function computeOptimalVersement(revenuNet, parts, plafondTotal) {
+        const avant = computeIR(revenuNet, parts);
+        if (avant.tmi <= 0.11) return null;
+
+        const quotientAvant = avant.revenuImposable / parts;
+        let targetMax = 0;
+        for (const tranche of TRANCHES_IR) {
+          if (quotientAvant > tranche.min && quotientAvant <= tranche.max) {
+            targetMax = tranche.min;
+            break;
+          }
+        }
+        if (targetMax === 0) return null;
+
+        const versement = Math.ceil(avant.revenuImposable - targetMax * parts);
+        if (versement <= 0 || versement > plafondTotal) return null;
+        return versement;
+      }
+
+      // Lignes du tableau, dans cet ordre précis (demandé par Victor) :
+      // 0 € — 100 €/mois — 200 €/mois — 300 €/mois — [changement de tranche,
+      // si atteignable entre 0 € et le plafond] — versement sélectionné dans
+      // les Hypothèses — plafond déductible max. Les trois premières sont
+      // exclues si elles dépassent le plafond (scénario non atteignable) ;
+      // les doublons de valeur ne sont pas répétés (la ligne déjà présente
+      // porte alors ce rôle sans être dupliquée).
+      function generateScenarios(revenuNet, versementPER, parts, rattrapage) {
+        const avant = computeIR(revenuNet, parts);
+        const plafondTotal = computePlafondDisponible(revenuNet, rattrapage);
+        const selected = Math.min(Math.max(0, versementPER), plafondTotal);
+        const optimal = computeOptimalVersement(revenuNet, parts, plafondTotal);
+
+        const ladder = [0, 1200, 2400, 3600].filter((v) => v <= plafondTotal);
+        if (optimal !== null && optimal > 0 && optimal <= plafondTotal) ladder.push(optimal);
+        const amounts = [...new Set(ladder)].sort((a, b) => a - b);
+
+        if (!amounts.includes(selected)) amounts.push(selected);
+        if (!amounts.includes(plafondTotal)) amounts.push(plafondTotal);
+
+        return amounts.map((v) => {
+          const revenuImposable = Math.max(0, avant.revenuImposable - v);
+          const { impot, tmi } = computeIRFromImposable(revenuImposable, parts);
+          return {
+            versement: v,
+            revenuImposable: Math.round(revenuImposable),
+            impot,
+            gain: avant.impot - impot,
+            tmi,
+            isOptimal: optimal !== null && v === optimal
+          };
+        });
+      }
+
+      // ---------------------------------------------------------------
+      // Données et hypothèses
+      // ---------------------------------------------------------------
+
+      const defaults = {
+        revenuNet: 40000,
+        versementPER: 4100,
+        rattrapage: 0,
+        parts: 1
+      };
+
+      const state = {
+        values: structuredClone(defaults)
+      };
+      document.body.dataset.mode = "per";
+
+      const PARTS_OPTIONS = [1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6];
+
+      // ---------------------------------------------------------------
+      // Rendu des champs
+      // ---------------------------------------------------------------
+
+      let outputsRenderFrame = 0;
+      function scheduleRenderOutputs() {
+        if (outputsRenderFrame) return;
+        outputsRenderFrame = requestAnimationFrame(() => {
+          outputsRenderFrame = 0;
+          renderOutputs();
+        });
+      }
+
+      function versementNote(values) {
+        const plafond = computePlafondDisponible(values.revenuNet, values.rattrapage);
+        let note = `Soit ${formatMoney(Math.round(values.versementPER / 12))}/mois\nPlafond déductible : ${formatMoney(plafond)}`;
+        if (values.rattrapage > 0) note += ` (dont ${formatMoney(values.rattrapage)} de rattrapage)`;
+        if (values.versementPER > plafond) note += ` — plafonné à ${formatMoney(plafond)} pour le calcul`;
+        return note;
+      }
+
+      function versementMensuelNote(values) {
+        return `Soit ${formatMoney(values.versementPER)}/an`;
+      }
+
+      // Le versement mensuel n'est qu'une autre vue du même versement annuel
+      // (state.values.versementPER reste l'unique source de vérité, utilisée
+      // partout ailleurs dans les calculs) — dérivé ici plutôt que stocké
+      // séparément, pour ne jamais désynchroniser les deux curseurs.
+      function handleVersementMensuelChange() {
+        state.values.versementPER = Math.round(state.values.versementMensuel * 12);
+      }
+
+      // Le plafond du curseur "Versement PER annuel" (et son équivalent
+      // mensuel) dépend du revenu net et du rattrapage — renderFields() ne
+      // les recalcule qu'aux rendus complets (init/reset), pas à chaque
+      // frappe/glissement sur "Revenu net annuel" ou "Rattrapage années
+      // précédentes" (qui ne déclenchent que scheduleRenderOutputs). Sans
+      // ceci, les curseurs restaient bloqués sur l'ancien plafond tant qu'on
+      // ne cliquait pas Réinitialiser. Rejoue donc à chaque renderOutputs() :
+      // max des deux curseurs/champs, valeurs et curseurs si le plafond a
+      // baissé sous la valeur courante, et notes — y compris la
+      // resynchronisation du champ mensuel sur le champ annuel (source de
+      // vérité), qu'un glissement ait eu lieu sur l'un ou sur l'autre.
+      function syncVersementFields() {
+        const plafond = computePlafondDisponible(state.values.revenuNet, state.values.rattrapage);
+
+        const wrap = document.querySelector('#fields [data-field="versementPER"]');
+        if (wrap) {
+          const range = wrap.querySelector(".tool-range");
+          const input = wrap.querySelector('input[type="text"]');
+          if (range) range.max = plafond;
+          if (input) input.max = plafond;
+          if (state.values.versementPER > plafond) {
+            state.values.versementPER = Math.round(plafond);
+          }
+          // Toujours réaffiché (pas seulement en cas de plafonnement) : le
+          // champ "Versement PER mensuel" peut avoir changé versementPER
+          // sans jamais toucher les éléments DOM de CE champ-ci.
+          if (input) input.value = formatInputNumber(state.values.versementPER);
+          if (range) {
+            range.value = state.values.versementPER;
+            updateRangeProgress(range);
+          }
+          const note = wrap.querySelector(".tool-field-note");
+          if (note) note.textContent = versementNote(state.values);
+        }
+
+        state.values.versementMensuel = Math.round(state.values.versementPER / 12);
+        const plafondMensuel = Math.max(Math.round(plafond / 12), 10);
+        const wrapMensuel = document.querySelector('#fields [data-field="versementMensuel"]');
+        if (wrapMensuel) {
+          const rangeM = wrapMensuel.querySelector(".tool-range");
+          const inputM = wrapMensuel.querySelector('input[type="text"]');
+          if (rangeM) rangeM.max = plafondMensuel;
+          if (inputM) inputM.max = plafondMensuel;
+          if (inputM) inputM.value = formatInputNumber(state.values.versementMensuel);
+          if (rangeM) {
+            rangeM.value = state.values.versementMensuel;
+            updateRangeProgress(rangeM);
+          }
+          const noteM = wrapMensuel.querySelector(".tool-field-note");
+          if (noteM) noteM.textContent = versementMensuelNote(state.values);
+        }
+      }
+
+      // Sélecteur de parts construit ici à la main (mêmes classes CSS que le
+      // reste du site, pas de générique partagé pour celui-ci).
+      function renderPartsField() {
+        const label = document.createElement("label");
+        label.className = "tool-field tool-select-field";
+
+        const span = document.createElement("span");
+        span.textContent = "Situation familiale";
+
+        const control = document.createElement("div");
+        control.className = "tool-select-wrap";
+        const select = document.createElement("select");
+        select.setAttribute("aria-label", span.textContent);
+        PARTS_OPTIONS.forEach((value) => {
+          const option = document.createElement("option");
+          option.value = value;
+          option.textContent = `${formatInputNumber(value)} ${value === 1 ? "part" : "parts"}`;
+          option.selected = state.values.parts === value;
+          select.append(option);
+        });
+        select.addEventListener("change", () => {
+          state.values.parts = Number(select.value);
+          renderOutputs();
+        });
+        control.append(select);
+        label.append(span, control);
+        return label;
+      }
+
+      function renderFields() {
+        const fields = document.querySelector("#fields");
+        const fieldRefreshers = [];
+        fields.innerHTML = "";
+        const plafondTotal = computePlafondDisponible(state.values.revenuNet, state.values.rattrapage);
+        state.values.versementPER = Math.min(state.values.versementPER, plafondTotal);
+        state.values.versementMensuel = Math.round(state.values.versementPER / 12);
+
+        fields.append(renderNumberField({
+          key: "revenuNet",
+          label: "Revenu net annuel",
+          min: 0,
+          max: 500000,
+          step: 500,
+          suffix: "€",
+          info: "Avant IR.\nUn abattement de 10 % est appliqué automatiquement (504 € mini, 14 426 € maxi)."
+        }, state.values, fieldRefreshers, {
+          onValueChange: () => scheduleRenderOutputs(),
+          onCommit: () => renderOutputs()
+        }));
+
+        fields.append(renderNumberField({
+          key: "versementPER",
+          label: "Versement PER annuel",
+          min: 0,
+          max: Math.max(plafondTotal, 100),
+          step: 100,
+          suffix: "€",
+          note: versementNote
+        }, state.values, fieldRefreshers, {
+          onValueChange: () => scheduleRenderOutputs(),
+          onCommit: () => renderOutputs()
+        }));
+
+        fields.append(renderNumberField({
+          key: "versementMensuel",
+          label: "Versement PER mensuel",
+          min: 0,
+          max: Math.max(Math.round(plafondTotal / 12), 10),
+          step: 10,
+          suffix: "€",
+          note: versementMensuelNote
+        }, state.values, fieldRefreshers, {
+          onValueChange: () => {
+            handleVersementMensuelChange();
+            scheduleRenderOutputs();
+          },
+          onCommit: () => {
+            handleVersementMensuelChange();
+            renderOutputs();
+          }
+        }));
+
+        fields.append(renderNumberField({
+          key: "rattrapage",
+          label: "Rattrapage années précédentes",
+          min: 0,
+          max: 90000,
+          step: 500,
+          suffix: "€",
+          info: "Montant total du plafond PER non utilisé sur les 3 années précédentes, à ajouter au plafond de l'année en cours."
+        }, state.values, fieldRefreshers, {
+          onValueChange: () => scheduleRenderOutputs(),
+          onCommit: () => renderOutputs()
+        }));
+
+        fields.append(renderPartsField());
+      }
+
+      // ---------------------------------------------------------------
+      // Rendu des résultats
+      // ---------------------------------------------------------------
+
+      const ICON_CHECK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>';
+
+      function renderSummary(resultat) {
+        const { avant, apres, gain } = resultat;
+        const summary = document.querySelector("#summary");
+        const trancheChanged = avant.tmi !== apres.tmi;
+
+        const trancheBanner = trancheChanged ? `
+          <div class="tool-status-banner is-ok" role="status">
+            <span class="tool-status-icon" aria-hidden="true">${ICON_CHECK}</span>
+            <div class="tool-status-copy">
+              <strong>Changement de tranche marginale d'imposition (TMI)</strong>
+              <span>Ce versement fait passer la tranche marginale d'imposition de ${Math.round(avant.tmi * 100)} % à ${Math.round(apres.tmi * 100)} %.</span>
+            </div>
+          </div>
+        ` : "";
+
+        summary.innerHTML = `
+          <article class="tool-result-card tool-result-editorial">
+            <div class="tool-summary-title">
+              <h2>Gain fiscal</h2>
+            </div>
+            <div class="tool-hero tool-hero-single">
+              <div class="tool-hero-panel tool-hero-panel-gold">
+                <span class="tool-hero-label">Économie d'impôt grâce au PER</span>
+                <strong class="tool-hero-amount">${formatMoney(gain)}</strong>
+              </div>
+            </div>
+            <div class="capital-metrics">
+              <span class="capital-metric-invested">
+                <small>Impôt estimé avant PER</small>
+                <strong>${formatMoney(avant.impot)}</strong>
+              </span>
+              <span class="capital-metric-interest">
+                <small>Impôt estimé après PER</small>
+                <strong>${formatMoney(apres.impot)}</strong>
+              </span>
+            </div>
+            ${trancheBanner}
+          </article>
+
+          <div class="tool-compare-card">
+            <div class="tool-card-title">
+              <h2>Revenu imposable</h2>
+            </div>
+            <div class="compare-race" aria-label="Comparaison du revenu imposable avant et après versement PER">
+              <div class="compare-race-row">
+                <div class="compare-race-head"><span>Avant PER</span><strong>${formatMoney(avant.revenuImposable)}</strong></div>
+                <div class="compare-race-track"><span class="compare-race-bar compare-race-bar-before" style="width:100%"></span></div>
+              </div>
+              <div class="compare-race-row">
+                <div class="compare-race-head"><span>Après PER</span><strong>${formatMoney(apres.revenuImposable)}</strong></div>
+                <div class="compare-race-track"><span class="compare-race-bar compare-race-bar-after" style="width:${avant.revenuImposable > 0 ? Math.max(2, (apres.revenuImposable / avant.revenuImposable) * 100) : 0}%"></span></div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      function renderScenarios() {
+        const scenarios = generateScenarios(state.values.revenuNet, state.values.versementPER, state.values.parts, state.values.rattrapage);
+        const headers = ["Versement PER", "Rev. imposable", "Impôt estimé", "Gain fiscal", "TMI"];
+        const mapper = (s) => [
+          `${formatMoney(s.versement)} <small>(${formatMoney(Math.round(s.versement / 12))}/mois)</small>`,
+          formatMoney(s.revenuImposable),
+          formatMoney(s.impot),
+          s.gain > 0 ? formatMoney(s.gain) : "–",
+          `${Math.round(s.tmi * 100)} %`
+        ];
+
+        renderTable(headers, mapper, scenarios, {
+          rowClassName: (s) => s.isOptimal ? "table-row-highlight" : ""
+        });
+      }
+
+      // Trace un rectangle à coins arrondis uniquement en haut (une barre qui
+      // "pousse" depuis l'axe 0 ne doit pas être arrondie côté axe).
+      function roundedTopBarPath(x, y, w, h, r) {
+        if (h <= 0) return "";
+        const radius = Math.min(r, h, w / 2);
+        return `M${x},${y + h} L${x},${y + radius} Q${x},${y} ${x + radius},${y} L${x + w - radius},${y} Q${x + w},${y} ${x + w},${y + radius} L${x + w},${y + h} Z`;
+      }
+
+      function formatThousands(value) {
+        return `${Math.round(value / 1000)}k`;
+      }
+
+      // Mini-graphique en barres avant/après (cf. .mini-bar-card, styles.css) :
+      // même code couleur bleu/doré que le reste de la page, graduations
+      // "nice" via niceValueTicks (shared.js, déjà utilisé par le graphique en
+      // ligne des autres simulateurs).
+      function renderMiniBarChart(title, avantValue, apresValue) {
+        const width = 300;
+        const height = 190;
+        const pad = { top: 12, right: 12, bottom: 26, left: 32 };
+        // niceValueTicks arrondit ses graduations à l'échelon "rond"
+        // inférieur ou égal à la valeur qu'on lui passe (cf. shared.js) — en
+        // le nourrissant avec `max` lui-même, la plus haute barre pouvait
+        // dépasser sa propre dernière graduation et sortir du viewBox (son
+        // coin arrondi, hors cadre, semblait alors coupé au carré). On lui
+        // donne donc une valeur avec marge (+15 %), puis on garantit avec
+        // Math.max que l'échelle finale ne descend jamais sous la vraie
+        // valeur max, même dans un cas limite.
+        const max = Math.max(avantValue, apresValue, 1);
+        const ticks = niceValueTicks(max * 1.15, 4);
+        const axisMax = Math.max(max, ticks.length ? ticks[ticks.length - 1] : max);
+        const y = (v) => height - pad.bottom - (v / axisMax) * (height - pad.top - pad.bottom);
+        const barWidth = 54;
+        const centerA = pad.left + (width - pad.left - pad.right) * 0.28;
+        const centerB = pad.left + (width - pad.left - pad.right) * 0.74;
+
+        const gridMarkup = ticks.map((t) => `
+          <line x1="${pad.left}" y1="${y(t)}" x2="${width - pad.right}" y2="${y(t)}"></line>
+          <text x="${pad.left - 8}" y="${y(t) + 4}">${formatThousands(t)}</text>
+        `).join("");
+
+        return `
+          <div class="mini-bar-card">
+            <h3 class="mini-bar-title">${title}</h3>
+            <svg viewBox="0 0 ${width} ${height}" class="mini-bar-chart" role="img" aria-label="${title} — avant et après versement PER">
+              <g class="mini-bar-grid">
+                ${gridMarkup}
+                <line class="mini-bar-baseline" x1="${pad.left}" y1="${y(0)}" x2="${width - pad.right}" y2="${y(0)}"></line>
+                <text x="${pad.left - 8}" y="${y(0) + 4}">0k</text>
+              </g>
+              <path class="mini-bar-before" d="${roundedTopBarPath(centerA - barWidth / 2, y(avantValue), barWidth, y(0) - y(avantValue), 8)}"></path>
+              <path class="mini-bar-after" d="${roundedTopBarPath(centerB - barWidth / 2, y(apresValue), barWidth, y(0) - y(apresValue), 8)}"></path>
+              <text class="mini-bar-x-label" x="${centerA}" y="${height - 8}">Avant PER</text>
+              <text class="mini-bar-x-label" x="${centerB}" y="${height - 8}">Après PER</text>
+            </svg>
+          </div>
+        `;
+      }
+
+      function renderBarCharts(resultat) {
+        const { avant, apres } = resultat;
+        document.querySelector("#bar-charts").innerHTML =
+          renderMiniBarChart("Impôt estimé", avant.impot, apres.impot) +
+          renderMiniBarChart("Revenu imposable", avant.revenuImposable, apres.revenuImposable);
+      }
+
+      function renderOutputs() {
+        syncVersementFields();
+        const versementDeduit = versementDeductible(state.values);
+        const resultat = computeIRWithPER(state.values.revenuNet, versementDeduit, state.values.parts);
+        renderSummary(resultat);
+        renderBarCharts(resultat);
+        renderScenarios();
+      }
+
+      function render() {
+        renderFields();
+        renderOutputs();
+      }
+
+      // ---------------------------------------------------------------
+      // Actions et navigation
+      // ---------------------------------------------------------------
+
+      document.querySelector("#zero-fields").addEventListener("click", () => {
+        state.values.versementPER = 0;
+        withHeightTransition(document.querySelector(".tool-params"), render);
+      });
+
+      document.querySelector("#reset-fields").addEventListener("click", () => {
+        state.values = structuredClone(defaults);
+        withHeightTransition(document.querySelector(".tool-params"), render);
+      });
+
+      render();
+    </script>
+  </body>
+</html>
