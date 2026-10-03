@@ -9936,10 +9936,10 @@ body[data-mode="comparateur"] .tool-table-wrap th {
 }
 
 /* .tool-layout est partagée avec projection.html (width: min(100%, 1120px))
-   — élargie ici (valeur propre à chaque page) pour laisser assez de place
-   aux cartes/graphique de ces mises en page plus chargées. */
-body[data-mode="pierre2coups"] .tool-layout,
-body[data-mode="comparateur"] .tool-layout {
+   — élargie ici (valeur propre à cette page) pour laisser assez de place
+   aux cartes/graphique de cette mise en page plus chargée. Le comparateur
+   de contrats reste sur la largeur de base (comme projection.html/SCPI). */
+body[data-mode="pierre2coups"] .tool-layout {
   width: min(100%, 1450px);
 }
 
