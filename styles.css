@@ -9960,7 +9960,20 @@ body[data-mode="pierre2coups"] .tool-detail {
   min-height: 0;
 }
 
+/* .tool-detail-panels reprend par défaut le même cadre (bordure/fond/ombre)
+   que .tool-chart-card/.tool-table-card qu'il contient : plein écran sous
+   .tool-overview (projection.html), les deux cadres sont assez éloignés
+   pour ne pas se voir. Ici, nichés dans la colonne étroite de
+   .tool-secondary-column, les deux bordures/ombres se chevauchent à
+   quelques pixels d'écart et lisent comme un rendu cassé (carte dans la
+   carte). On retire le cadre du conteneur intermédiaire : seul le panneau
+   actif (chart ou tableau) garde sa propre carte. */
 body[data-mode="pierre2coups"] .tool-detail-panels {
+  padding: 0;
+  border: none;
+  background: none;
+  box-shadow: none;
+  backdrop-filter: none;
   min-height: 0;
 }
 
@@ -9968,6 +9981,19 @@ body[data-mode="pierre2coups"] .tool-chart-card,
 body[data-mode="pierre2coups"] .tool-table-card {
   grid-template-rows: auto 1fr;
   min-height: 0;
+  min-width: 0;
+}
+
+/* .chart-canvas (aspect-ratio: 960/380, sans largeur explicite) blow-up
+   dans une piste de grille "auto" : à partir d'ici (colonne de droite plus
+   étroite que sur projection.html/comparateur-contrats.html), son calcul de
+   taille intrinsèque dépasse la largeur réellement disponible et pousse
+   .tool-chart-card hors de .tool-overview — d'où le bord de carte qui
+   débordait à droite. Une largeur explicite coupe court à l'ambiguïté. */
+body[data-mode="pierre2coups"] .line-chart,
+body[data-mode="pierre2coups"] .chart-canvas {
+  min-width: 0;
+  width: 100%;
 }
 
 /* Comparateur de contrats (simulateurs/comparateur-contrats.html) — deux
