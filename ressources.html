@@ -528,12 +528,12 @@
       (function () {
         var prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-        // Téléphone : la carte "de fond" se décale sur le CÔTÉ (au lieu de
-        // derrière, en diagonale, cf. valeurs desktop plus bas) — cohérent
-        // avec le balayage horizontal dédié à la bascule entre cartes sur ce
-        // format (cf. écouteurs touchmove plus bas), qui remplace le scroll
-        // vertical utilisé sur ordinateur. 900px : même palier que le reste
-        // du site pour "mobile".
+        // Sous 900px (même palier que le reste du site pour "mobile") : la
+        // carte "de fond", une fois enchaînée derrière la carte active (cf.
+        // openModal), se décale sur le CÔTÉ plutôt qu'en diagonale derrière
+        // (valeurs desktop plus bas) — cohérent avec le balayage horizontal
+        // qui bascule entre les deux cartes une fois une modale ouverte (cf.
+        // écouteurs touchmove plus bas).
         function isMobileNav() {
           return window.matchMedia("(max-width: 900px)").matches;
         }
@@ -553,11 +553,6 @@
         var lastTrigger = null;
         var habilitationsScrollTriggers = [];
         var habilitationsScrollCleanup = null;
-        // Repli "scroll réflexe" (cf. plus bas, près des écouteurs wheel/touch) :
-        // mémorise si chaque modale a déjà été montrée au moins une fois,
-        // qu'elle ait été ouverte par clic ou par scroll.
-        var partnersShown = false;
-        var habilitationsShown = false;
 
         if (!prefersReducedMotion && typeof gsap !== "undefined" && typeof ScrollTrigger !== "undefined") {
           gsap.registerPlugin(ScrollTrigger);
@@ -916,10 +911,10 @@
         // fond ou clic sur "×" ferment ; le focus part sur le "×" à
         // l'ouverture et revient sur le mot cliqué à la fermeture.
         // closeModal ne sert plus qu'aux VRAIES fermetures (X, Échap, clic
-        // sur le fond) : l'enchaînement partenaires → expertise (scroll
-        // réflexe ou clic direct pendant qu'une modale est ouverte) est géré
-        // en interne par openModal (cf. fondu enchaîné plus bas), plus par
-        // un aller-retour fermeture-instantanée-puis-ouverture — c'était ce
+        // sur le fond) : l'enchaînement partenaires → expertise (clic direct
+        // sur "expertise" pendant que "partenaires" est ouverte) est géré en
+        // interne par openModal (cf. fondu enchaîné plus bas), plus par un
+        // aller-retour fermeture-instantanée-puis-ouverture — c'était ce
         // couic qui rendait la transition brutale.
         function closeModal() {
           var backdrop = activeBackdrop;
@@ -932,13 +927,6 @@
           backgroundBackdrop = null;
           backdrop.setAttribute("aria-hidden", "true");
           document.body.classList.remove("resources-modal-open");
-
-          // Une vraie fermeture réinitialise la séquence "scroll réflexe" :
-          // sans ça, une fois les 2 cartes vues, plus aucun scroll ne
-          // rouvrait quoi que ce soit avant un rafraîchissement de la page.
-          partnersShown = false;
-          habilitationsShown = false;
-          habilitationsEdgeReachedAt = null;
 
           function finish() {
             backdrop.classList.remove("is-open", "is-stacked");
@@ -997,9 +985,8 @@
 
           // Carte-amorce d'origine de la carte active : cherchée à la
           // fermeture, pas mémorisée à l'ouverture — elle est toujours
-          // présente à l'écran (position fixed, jamais retirée du DOM) quel
-          // qu'ait été le déclencheur d'ouverture (teaser, mot doré, scroll
-          // réflexe), donc toujours valide comme point de "rangement".
+          // présente dans le flux de la page (jamais retirée du DOM), donc
+          // toujours valide comme point de "rangement".
           var activeId = backdrop.getAttribute("data-modal-id");
           var activeTeaser = document.querySelector('.resources-opening-teaser[data-modal="' + activeId + '"]');
           var activeOrigin = activeTeaser ? activeTeaser.getBoundingClientRect() : null;
@@ -1079,7 +1066,6 @@
               var partnersCard = partnersBackdrop.querySelector(".resources-modal-card");
               partnersBackdrop.classList.add("is-open");
               partnersBackdrop.removeAttribute("aria-hidden");
-              partnersShown = true;
               if (!prefersReducedMotion && typeof gsap !== "undefined") {
                 // "Partenaires" est ouverte en silence pour servir de fond à
                 // "expertise" (cf. commentaire ci-dessus) — mais reste une des
@@ -1095,9 +1081,6 @@
             }
           }
 
-          if (id === "partners") partnersShown = true;
-          if (id === "habilitations") habilitationsShown = true;
-
           lastTrigger = trigger || document.activeElement;
           var card = backdrop.querySelector(".resources-modal-card");
 
@@ -1106,12 +1089,7 @@
           // sont statiques dans l'écran d'accueil — ce test n'est qu'un
           // repli défensif). Sert seulement à choisir la branche d'animation
           // plus bas ; le calcul réel de position est fait par
-          // drawCardFromTeaser (cf. plus haut), au moment de l'animation, pas
-          // ici — avant, seul un clic direct sur la carte-amorce en
-          // bénéficiait ; désormais systématique quel que soit le
-          // déclencheur (clic sur la carte, ou scroll réflexe), pour
-          // qu'ouverture au clic et ouverture au scroll se ressemblent à
-          // l'identique.
+          // drawCardFromTeaser (cf. plus haut), au moment de l'animation.
           var hasTeaserOrigin = !!document.querySelector('.resources-opening-teaser[data-modal="' + id + '"]');
 
           // Neutralise tout fondu/déplacement encore en cours sur la cible
@@ -1211,9 +1189,7 @@
               );
             } else if (hasTeaserOrigin) {
               // Premier plan (pas d'enchaînement) : tirage depuis la
-              // carte-amorce de CETTE modale, quel que soit le déclencheur
-              // réel (clic sur la carte, ou scroll réflexe) — cf.
-              // drawCardFromTeaser.
+              // carte-amorce de CETTE modale — cf. drawCardFromTeaser.
               drawCardFromTeaser(card, id);
             } else {
               // Repli défensif si jamais la carte-amorce était absente du
@@ -1293,8 +1269,7 @@
         // Les mots "partenaires"/"expertise" dans la phrase d'accueil ne sont
         // plus des déclencheurs (retiré à la demande de Victor — trop de façons
         // différentes d'ouvrir une même carte). Restent : le clic sur une
-        // carte-amorce ci-dessous, le bouton "Explorer", et le scroll réflexe
-        // plus bas.
+        // carte-amorce ci-dessous, et le bouton "Explorer".
 
         // Cartes-amorce de l'écran d'ouverture (point d'entrée principal) :
         // de vrais <button>, donc Entrée/Espace les activent nativement au
@@ -1329,43 +1304,11 @@
           if (e.key === "Escape" && activeBackdrop) closeModal();
         });
 
-        // Repli "scroll réflexe" : un visiteur qui ne pense pas à cliquer
-        // sur "partenaires"/"expertise" mais scrolle par réflexe doit quand
-        // même accéder au contenu — la molette/le doigt vers le bas ouvre
-        // "partenaires" puis, au geste suivant, "expertise" ; vers le haut,
-        // symétriquement, ramène "partenaires" au premier plan (cf.
-        // bringToFront) si "expertise" est active. Volontairement PAS un
-        // pilotage de la position de scroll (cf. la mésaventure du
-        // scroll-jacking custom sur cette même page, abandonnée pour
-        // instabilité) : on se contente d'écouter le GESTE (wheel/touch,
-        // sans preventDefault, la page continue de défiler normalement si
-        // elle en a la place) comme un simple signal "suivant"/"précédent".
-        //
-        // Gating par modale active (et non par "le curseur est-il dans une
-        // carte", trop grossier) : le mur "partenaires" est purement
-        // décoratif (le marquee défile tout seul, rien à lire au scroll) —
-        // là, scroller depuis L'INTÉRIEUR de la carte doit aussi faire
-        // apparaître "expertise" par-dessus. "habilitations", à l'inverse, a
-        // un vrai contenu scrollable (grille de sceaux + trait animé piloté
-        // par le scroll interne de la carte, cf. setupHabilitationsScrollProgress) :
-        // là, un scroll vers le BAS ne doit jamais être intercepté (rien
-        // après, et la lecture ne doit jamais être coupée) — mais un scroll
-        // vers le HAUT, lui, doit pouvoir ramener "partenaires" devant.
+        // Verrou anti-rafale partagé par le changement de carte au balayage
+        // horizontal (cf. handleHorizontalSwipe plus bas) : un seul geste ne
+        // doit déclencher qu'une seule bascule, pas une par événement
+        // touchmove qu'il génère.
         var scrollIntentLocked = false;
-
-        // Un seul et même geste physique (swipe trackpad continu, molette
-        // qui s'emballe) déclenche des dizaines d'événements wheel d'affilée
-        // — sans ce délai, l'un de ces événements arrive PENDANT ce même
-        // geste avec scrollTop déjà au maximum, et la transition vers la
-        // carte suivante se déclenche dans la foulée : dérouler jusqu'en bas
-        // suffisait alors, à lui seul, à enchaîner sur "partenaires", sans
-        // geste distinct. habilitationsEdgeReachedAt mémorise l'instant où
-        // le bord (haut ou bas) a été atteint ; la transition n'est permise
-        // qu'après un court délai SANS que ce bord n'ait jamais été quitté —
-        // le temps que le geste en cours se termine et qu'un nouveau
-        // commence.
-        var habilitationsEdgeReachedAt = null;
-        var HABILITATIONS_EDGE_DELAY = 350;
 
         // La carte qui vient d'apparaître ne doit pas se retrouver déroulée
         // d'emblée par le MÊME geste physique qui l'a fait apparaître (un
@@ -1403,118 +1346,10 @@
           }, 400);
         }
 
-        function handleScrollIntent(deltaY) {
-          if (Math.abs(deltaY) <= 12 || scrollIntentLocked) return;
-
-          var activeId = activeBackdrop ? activeBackdrop.getAttribute("data-modal-id") : null;
-          var backgroundId = backgroundBackdrop ? backgroundBackdrop.getAttribute("data-modal-id") : null;
-
-          // "habilitations" a un vrai contenu scrollable (grille de sceaux +
-          // trait animé, cf. setupHabilitationsScrollProgress) : tant qu'il
-          // reste du contenu à lire dans la direction du geste, le scroll ne
-          // doit JAMAIS être intercepté. Seulement une fois arrivé à une
-          // extrémité (haut ou bas) de son contenu, un scroll supplémentaire
-          // dans le même sens redevient un signal de navigation — c'est ce
-          // qui permet la boucle infinie partenaires ⇄ expertise même
-          // depuis l'intérieur d'"habilitations". "partenaires" reste
-          // purement décorative (mur de noms qui défile tout seul) : là,
-          // n'importe quel scroll, dans n'importe quel sens, est un signal.
-          if (activeId === "habilitations") {
-            var habilitationsCard = activeBackdrop.querySelector(".resources-modal-card");
-            if (habilitationsCard) {
-              var atTop = habilitationsCard.scrollTop <= 4;
-              var atBottom = habilitationsCard.scrollTop + habilitationsCard.clientHeight >= habilitationsCard.scrollHeight - 4;
-              if ((deltaY < 0 && !atTop) || (deltaY > 0 && !atBottom)) {
-                // Pas encore au bord dans le sens du geste : on quitte (ou on
-                // n'a jamais atteint) le bord, le délai n'a plus lieu d'être.
-                habilitationsEdgeReachedAt = null;
-                return;
-              }
-              // Au bord : la transition n'est permise qu'après un délai
-              // écoulé DEPUIS le moment où ce bord a été atteint pour la
-              // première fois — jamais dans la foulée du même geste.
-              var now = Date.now();
-              if (habilitationsEdgeReachedAt === null) {
-                habilitationsEdgeReachedAt = now;
-                return;
-              }
-              if (now - habilitationsEdgeReachedAt < HABILITATIONS_EDGE_DELAY) return;
-            }
-          }
-
-          if (deltaY < 0) {
-            if (backgroundBackdrop) {
-              // Une carte est superposée derrière : scroll vers le haut =
-              // retour à cette carte de fond, comme d'habitude.
-              bringToFront(backgroundId);
-            } else if (activeId === "partners") {
-              // Cas précis demandé par Victor : "partenaires" seule à
-              // l'écran, aucune carte superposée derrière (jamais enchaîné
-              // sur "expertise" depuis cette ouverture) — le scroll vers le
-              // haut referme la carte, symétrique du scroll vers le bas qui
-              // l'a ouverte. closeModal() anime déjà le retour exact vers la
-              // carte-amorce d'origine (cf. son commentaire) : rien à ajouter
-              // côté animation, seulement à déclencher la fermeture ici.
-              // Ne s'applique QUE dans cet état : dès qu'"expertise" a été
-              // montrée une fois, backgroundBackdrop n'est plus jamais null
-              // tant qu'une carte reste ouverte (cf. bringToFront), donc ce
-              // cas ne peut plus se reproduire avant une vraie fermeture qui
-              // réinitialise partnersShown/habilitationsShown.
-              closeModal();
-            } else {
-              // Écran d'accueil (rien d'ouvert) : aucun signal à donner.
-              return;
-            }
-          } else if (activeId === "habilitations") {
-            // Déjà en bas d'"habilitations" (sinon retour anticipé plus
-            // haut) : un scroll de plus reboucle vers "partenaires".
-            if (!backgroundBackdrop) return;
-            bringToFront(backgroundId);
-          } else {
-            if (backgroundId === "habilitations") {
-              // "expertise" est actuellement EN FOND (on est revenu sur
-              // "partenaires" via un scroll vers le haut) : on la ramène
-              // devant plutôt que de retenter openModal, qui n'aurait plus
-              // rien fait une fois habilitationsShown déjà à true — c'est
-              // ce qui rendait la boucle à sens unique. bringToFront rend
-              // l'aller-retour infini.
-              bringToFront("habilitations");
-            } else if (!partnersShown) {
-              openModal("partners");
-            } else if (!habilitationsShown) {
-              openModal("habilitations");
-            } else {
-              return;
-            }
-          }
-
-          if (activeBackdrop) {
-            lockCardScroll(activeBackdrop.querySelector(".resources-modal-card"));
-          }
-
-          // La transition vient d'avoir lieu : repart propre pour la
-          // prochaine fois qu'"habilitations" redevient active.
-          habilitationsEdgeReachedAt = null;
-
-          scrollIntentLocked = true;
-          setTimeout(function () {
-            scrollIntentLocked = false;
-          }, 700);
-        }
-
-        window.addEventListener(
-          "wheel",
-          function (e) {
-            handleScrollIntent(e.deltaY);
-          },
-          { passive: true }
-        );
-
-        // Bascule d'une carte à l'autre par balayage HORIZONTAL — dédiée au
-        // téléphone (cf. isMobileNav), déclenchée seulement si une carte est
-        // déjà ouverte. Un seul geste simple (peu importe le sens, il n'y a
-        // que 2 cartes) : basculer suffit, pas besoin de distinguer
-        // suivant/précédent.
+        // Bascule d'une carte à l'autre par balayage HORIZONTAL au tactile,
+        // déclenchée seulement si une carte est déjà ouverte. Un seul geste
+        // simple (peu importe le sens, il n'y a que 2 cartes) : basculer
+        // suffit, pas besoin de distinguer suivant/précédent.
         function handleHorizontalSwipe(deltaX) {
           if (Math.abs(deltaX) <= 12 || scrollIntentLocked || !activeBackdrop || !backgroundBackdrop) return;
           bringToFront(backgroundBackdrop.getAttribute("data-modal-id"));
@@ -1549,33 +1384,23 @@
             var currentX = e.touches[0].clientX;
             var currentY = e.touches[0].clientY;
 
-            if (isMobileNav()) {
-              // Téléphone : plus aucune interception tant qu'aucune carte
-              // n'est ouverte — un balayage sur l'écran d'accueil ne fait
-              // plus rien, seul le clic sur une carte-amorce ouvre la
-              // première carte (cf. écouteurs click plus haut). Une fois une
-              // carte ouverte, le balayage VERTICAL redevient 100% natif
-              // (défilement normal du contenu, aucune interception — plus
-              // besoin du délai habilitationsEdgeReachedAt ici, qui ne
-              // s'applique qu'au chemin desktop/wheel plus bas dans
-              // handleScrollIntent) ; seul le balayage HORIZONTAL bascule
-              // vers l'autre carte.
-              if (!activeBackdrop) {
-                touchStartX = currentX;
-                touchStartY = currentY;
-                return;
-              }
-              var deltaX = touchStartX - currentX;
-              if (Math.abs(deltaX) > 12) {
-                handleHorizontalSwipe(deltaX);
-                touchStartX = currentX;
-              }
+            // Aucune interception tant qu'aucune carte n'est ouverte — un
+            // balayage sur l'écran d'accueil ne fait rien, seul le clic sur
+            // une carte-amorce ouvre la première carte (cf. écouteurs click
+            // plus haut). Une fois une carte ouverte, le balayage VERTICAL
+            // reste 100% natif (défilement normal du contenu, aucune
+            // interception) ; seul le balayage HORIZONTAL bascule vers
+            // l'autre carte.
+            if (!activeBackdrop) {
+              touchStartX = currentX;
               touchStartY = currentY;
               return;
             }
-
-            handleScrollIntent(touchStartY - currentY);
-            touchStartX = currentX;
+            var deltaX = touchStartX - currentX;
+            if (Math.abs(deltaX) > 12) {
+              handleHorizontalSwipe(deltaX);
+              touchStartX = currentX;
+            }
             touchStartY = currentY;
           },
           { passive: true }
@@ -1602,28 +1427,7 @@
             gsap.set(openingTeasers, { opacity: 0, y: 20 });
             openingTl.to(
               openingTeasers,
-              {
-                opacity: 1,
-                y: 0,
-                duration: 0.6,
-                ease: "power2.out",
-                // Sans ça, GSAP fige en style inline la valeur ABSOLUE (en px) du
-                // translateX(-50%) lu dans le CSS au moment de son premier
-                // gsap.set/to sur cet élément — .resources-opening-teasers est
-                // centré par CSS (position: fixed; left: 50%;
-                // transform: translateX(-50%)), une formule qui se recalcule
-                // normalement toute seule au redimensionnement de la fenêtre.
-                // Une fois GSAP passé dessus, ce style inline gagne toujours sur
-                // la règle CSS et reste figé à la largeur du chargement —
-                // signalé par Victor : les cartes se décentrent en agrandissant/
-                // rétrécissant la fenêtre en direct, mais se recentrent bien
-                // après un rechargement (qui repart de la formule CSS, avant que
-                // GSAP la fige à nouveau). clearProps rend la main au CSS une
-                // fois l'entrée jouée, qui reprend alors sa formule responsive.
-                onComplete: function () {
-                  gsap.set(openingTeasers, { clearProps: "transform" });
-                }
-              },
+              { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" },
               "-=0.2"
             );
           }

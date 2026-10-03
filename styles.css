@@ -784,19 +784,18 @@ h3 {
   gap: clamp(48px, 8svh, 80px);
 }
 
-/* #ressources (id unique à ressources.html) : centrer verticalement était
-   utile tant que le "vide" à combler se trouvait EN BAS de la composition
-   (avant l'ajout des cartes-amorce). Ces cartes vivent maintenant hors de
-   ce conteneur, fixées au bas du viewport (cf. .resources-opening-teasers
-   plus bas) — centrer le reste (logo/phrase/indication) créait alors un
-   vide au-dessus du logo à la place. Retour à align-content: start
-   (comportement par défaut de .home-page-content) : le bloc remonte juste
-   sous la nav, les cartes gèrent le bas de l'écran indépendamment. */
+/* #ressources (id unique à ressources.html) : son pied de page reste masqué
+   (cf. #ressources .site-footer plus bas) — sans lui pour occuper le bas de
+   la rangée 1fr, le contenu (logo/phrase/indication/cartes-amorce, toutes à
+   plat désormais, cf. .resources-opening-teasers plus bas) se centre dans
+   tout l'espace disponible plutôt que de rester collé sous la nav. */
+#ressources .home-page-content {
+  align-content: center;
+}
 
-/* Le pied de page n'est plus jamais visible sur cette page une fois les
-   cartes-amorce fixées au bas du viewport (cf. .resources-opening-teasers
-   plus bas) : plutôt que de le laisser dépasser sur les côtés derrière les
-   cartes, on le retire proprement de cet écran. */
+/* Le pied de page n'est volontairement pas affiché sur cet écran d'ouverture
+   (logo/phrase/cartes-amorce suffisent, cf. #ressources .home-page-content
+   ci-dessus). */
 #ressources .site-footer {
   display: none;
 }
@@ -1743,103 +1742,87 @@ body.resources-modal-open {
   }
 }
 
-/* Amorce visuelle des cartes "Partenaires"/"Habilitations" : deux vrais
-   boutons en éventail, silhouette de carte (mêmes codes que
-   .resources-modal-card — fond var(--paper) identique à la page,
-   différenciée par la bordure et l'ombre portée, coins arrondis en haut
-   seulement), superposées et décalées exactement comme la carte de fond
-   d'une pile ouverte (cf. openModal : translate(-20px,14px) rotate(-6deg)
-   scale(0.96)) — la composition d'ouverture montre ainsi, par avance, la
-   même mécanique que celle qui se joue une fois une carte ouverte. Devenues
-   le point d'entrée principal (les mots dorés dans la phrase restent
-   cliquables, en secondaire) : de vrais <button>, donc activables au
-   clavier nativement (Entrée/Espace), pas besoin de gérer keydown à la
-   main. Au survol/focus, la carte se "tire" davantage hors de la pile —
-   la carte de devant monte, celle de derrière glisse plus loin sur le
-   côté — pour suggérer explicitement le geste attendu.
-
-   position: fixed, ancrée au bas du VIEWPORT (pas de .resources-opening,
-   dont elle sort donc du flux/grid — un enfant fixed n'y occupe plus de
-   cellule) plutôt qu'en bas de la composition : les cartes débordent
-   franchement de l'écran, pour appeler le réflexe naturel de scroll (qui
-   les ouvre déjà, cf. handleScrollIntent) plutôt que de simplement
-   suggérer qu'il y a plus bas. Conséquence assumée : le footer, sous ces
-   cartes fixes, n'est plus visible sur cet écran d'ouverture. */
+/* Cartes-amorce de l'écran d'ouverture : deux boutons pleine largeur,
+   empilés verticalement, dans le flux normal de la page — même format sur
+   ordinateur et sur téléphone. (Ancienne version desktop : cartes fixées
+   au bas du viewport, débordant de l'écran pour appeler un scroll réflexe
+   qui les ouvrait automatiquement — jugée trop complexe par Victor, retirée
+   au profit de ce format simple, aligné sur ce qui existait déjà en
+   mobile.) De vrais <button>, donc activables au clavier nativement
+   (Entrée/Espace). */
 .resources-opening-teasers {
-  position: fixed;
-  left: 50%;
-  bottom: 0;
-  z-index: 2;
-  width: min(96vw, 760px);
-  transform: translateX(-50%);
+  position: static;
+  width: 100%;
+  max-width: 340px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-.resources-opening-teaser {
-  position: absolute;
-  bottom: -78px;
-  left: 50%;
-  width: min(96vw, 527px);
-  height: 255px;
+.resources-opening-teaser,
+.resources-opening-teaser-front,
+.resources-opening-teaser-back {
+  position: static;
+  z-index: auto;
+  width: 100%;
+  height: auto;
+  min-height: 88px;
   margin: 0;
+  padding: 18px 26px;
   display: flex;
-  align-items: flex-start;
-  padding-top: 36px;
-  border: 1px solid var(--line);
-  border-bottom: none;
-  border-radius: 32px 32px 0 0;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--ink);
+  border-radius: 22px;
   background: var(--paper);
-  box-shadow: 0 -22px 44px rgba(43, 37, 30, 0.12);
+  box-shadow: 0 10px 26px rgba(43, 37, 30, 0.08);
   font: inherit;
   color: inherit;
   appearance: none;
   -webkit-appearance: none;
   cursor: pointer;
-  transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 260ms ease;
+  transition: transform 100ms ease;
 }
 
-/* La carte de fond est décalée assez loin sur le côté (et son propre
-   libellé aligné sur ce même côté, pas centré) pour que "Habilitations"
-   se lise entièrement dans la portion qui dépasse de sous "Partenaires" —
-   un simple bord qui dépasse ne suffisait pas à rendre le mot lisible. */
-.resources-opening-teaser-back {
-  z-index: 1;
-  justify-content: flex-start;
-  padding-left: 31px;
-  transform: translate(calc(-50% - 246px), 22px) rotate(-4deg) scale(0.94);
-}
-
+/* Ordre visuel indépendant de l'ordre du DOM (habilitations déclarée avant
+   partners dans le markup, nécessaire à l'ancien z-index de la pile) :
+   "Partenaires" doit apparaître en premier. */
 .resources-opening-teaser-front {
-  z-index: 2;
-  justify-content: center;
-  transform: translate(-50%, 0) rotate(0deg) scale(1);
+  order: 1;
+}
+
+.resources-opening-teaser-back {
+  order: 2;
+}
+
+.resources-opening-teaser-label {
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: clamp(1.35rem, 3.6vw, 1.62rem);
+}
+
+.resources-opening-teaser:active,
+.resources-opening-teaser-front:active,
+.resources-opening-teaser-back:active {
+  transform: scale(0.97);
 }
 
 .resources-opening-teaser:hover,
-.resources-opening-teaser:focus-visible {
-  box-shadow: 0 -28px 54px rgba(43, 37, 30, 0.18);
-}
-
+.resources-opening-teaser:focus-visible,
 .resources-opening-teaser-front:hover,
-.resources-opening-teaser-front:focus-visible {
-  transform: translate(-50%, -46px) rotate(0deg) scale(1.08);
-}
-
+.resources-opening-teaser-front:focus-visible,
 .resources-opening-teaser-back:hover,
 .resources-opening-teaser-back:focus-visible {
-  transform: translate(calc(-50% - 281px), -5px) rotate(-6deg) scale(1.02);
+  box-shadow: 0 10px 26px rgba(43, 37, 30, 0.08);
 }
 
-/* Placées après :hover : au press (souris restée en hover pendant le clic,
-   ou simple tap tactile sans hover), la carte se tasse depuis sa position
-   de repos plutôt que de rester figée en position survolée/relevée. */
-.resources-opening-teaser-front:active {
-  transform: translate(-50%, 0) rotate(0deg) scale(0.96);
-  transition: transform 100ms ease;
-}
-
-.resources-opening-teaser-back:active {
-  transform: translate(calc(-50% - 246px), 22px) rotate(-4deg) scale(0.9);
-  transition: transform 100ms ease;
+@media (prefers-reduced-motion: reduce) {
+  .resources-opening-teaser:active,
+  .resources-opening-teaser-front:active,
+  .resources-opening-teaser-back:active {
+    transform: none;
+  }
 }
 
 .resources-opening-teaser:focus-visible {
@@ -1847,63 +1830,18 @@ body.resources-modal-open {
   outline-offset: 3px;
 }
 
-.resources-opening-teaser-label {
-  width: 100%;
-  color: var(--muted);
-  font-family: var(--serif);
-  /* Cartes agrandies (cf. .resources-opening-teaser) pour laisser grossir
-     ce libellé, quasiment à la hauteur de .resources-opening-text (clamp
-     2rem–3.6rem) sans l'égaler tout à fait — la phrase d'ouverture reste
-     la plus grande, hiérarchie conservée. Réduit de ~15% par rapport au
-     premier agrandissement, jugé trop imposant. */
-  font-size: clamp(1.62rem, 3.6vw, 2.55rem);
-}
-
-.resources-opening-teaser-front .resources-opening-teaser-label {
-  text-align: center;
-}
-
-.resources-opening-teaser-back .resources-opening-teaser-label {
-  text-align: left;
-  /* "Diplômes & habilitations" est trop long pour tenir sur une ligne dans
-     la portion qui dépasse de sous "Partenaires" — largeur contrainte pour
-     que le retour à la ligne se fasse DANS cette portion visible plutôt
-     qu'au bord de la carte entière (qui, lui, tombe sous "Partenaires" et
-     coupe le texte en plein mot). Valeur à ajuster si le libellé change. */
-  max-width: 212px;
-}
-
-/* En dessous d'environ 1160px de large, le décalage de -290px (ci-dessus)
-   pousse la carte de fond hors de l'écran par la gauche : sa demi-largeur
-   (620px de carte, quasi fixe dès qu'on dépasse ~646px de viewport) ne
-   laisse plus assez de place. Décalage et empiètement réduits ici — le
-   libellé repasse à 3 lignes courtes plutôt que 2 (moins de largeur
-   disponible), toujours dans la portion visible. Vérifié à 1024px ; à
-   surveiller sur les fenêtres de navigateur étroites. */
-@media (max-width: 1160px) {
-  .resources-opening-teaser {
-    width: min(90vw, 391px);
-    height: 221px;
-  }
-
-  .resources-opening-teaser-back {
-    padding-top: 20px;
-    transform: translate(calc(-50% - 153px), 17px) rotate(-4deg) scale(0.94);
-  }
-
-  .resources-opening-teaser-back:hover,
-  .resources-opening-teaser-back:focus-visible {
-    transform: translate(calc(-50% - 174px), 3px) rotate(-6deg) scale(1);
-  }
-
-  .resources-opening-teaser-back:active {
-    transform: translate(calc(-50% - 153px), 17px) rotate(-4deg) scale(0.9);
-  }
-
-  .resources-opening-teaser-back .resources-opening-teaser-label {
-    max-width: 110px;
-    font-size: 1.36rem;
-  }
+/* Petit chevron ">" en CSS pur (pas de nouvelle requête réseau) : signale
+   que ces deux boutons s'ouvrent au clic, cohérent avec le chevron
+   d'"Explorer" juste au-dessus. */
+.resources-opening-teaser::after {
+  content: "";
+  width: 7px;
+  height: 7px;
+  margin-left: 12px;
+  border-right: 1.5px solid var(--muted);
+  border-top: 1.5px solid var(--muted);
+  transform: rotate(45deg);
+  flex-shrink: 0;
 }
 
 .partner-group {
@@ -8840,15 +8778,9 @@ body[data-mode="scpi"] .tool-field[data-field="dureeTotale"] .tool-input-wrap in
     overflow-x: clip;
   }
 
-  /* #ressources incluse : à ce palier (≤900px), .resources-opening-teasers
-     repasse en flux normal (position: static, cf. plus bas) — ce n'est donc
-     PLUS le cas particulier "cartes fixées au viewport, rien à centrer" de
-     la version large. Son pied de page reste masqué (cf. #ressources
-     .site-footer plus haut), donc le contenu se centre dans tout l'espace
-     de la rangée 1fr — demandé par Victor : phrase/"Explorer"/cartes trop
-     collés sous la nav, avec un grand vide en dessous. */
-  #accueil .home-page-content,
-  #ressources .home-page-content {
+  /* #ressources centrée à toutes les largeurs désormais (cf. règle de base
+     plus haut) — seule #accueil a besoin d'être ajoutée ici, à ce palier. */
+  #accueil .home-page-content {
     align-content: center;
   }
 
@@ -9246,118 +9178,8 @@ body[data-mode="scpi"] .tool-field[data-field="dureeTotale"] .tool-input-wrap in
     font-size: 2.4rem;
   }
 
-  /* Le format "cartes qui se tirent" (empilées, tournées, décalées pour
-     laisser deviner la carte du dessous) ne fonctionne qu'en fenêtre assez
-     large/"paysage" : dès que la largeur se resserre, la carte de fond
-     (position: fixed, ancrée au bas du viewport) déborde ou se retrouve
-     coupée sans assez de place pour respirer — signalé par Victor sur une
-     fenêtre Safari réduite mais pas franchement "mobile". Auparavant ce
-     correctif n'existait qu'en dessous de 560px (repris ici à 900px, le
-     même palier que le reste du mode mobile/tablette du site — nav comprise
-     — plutôt qu'un troisième seuil arbitraire) : les deux cartes redeviennent
-     deux blocs simples, empilés verticalement, pleine largeur — plus de
-     position: fixed collée au bas de l'écran, plus de rotation/décalage —
-     juste deux boutons nets avec leur libellé complet et lisible. Ce bloc
-     redevient un enfant normal de la grille .resources-opening (position:
-     static), qui hérite donc de son gap partagé avec le logo/la phrase/
-     "Explorer" au-dessus — plus besoin de marge dédiée. */
-  .resources-opening-teasers {
-    position: static;
-    width: 100%;
-    max-width: 340px;
-    margin: 0 auto;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    transform: none;
-  }
-
-  .resources-opening-teaser,
-  .resources-opening-teaser-front,
-  .resources-opening-teaser-back {
-    position: static;
-    z-index: auto;
-    width: 100%;
-    height: auto;
-    min-height: 88px;
-    padding: 18px 26px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    /* Contour + libellé noirs (var(--ink), contre var(--line)/var(--muted)
-       plus discrets ailleurs) : demandé par Victor pour ces 2 boutons sur
-       téléphone spécifiquement — un contraste plus net une fois les cartes
-       repassées en blocs simples pleine largeur (cf. commentaire plus haut). */
-    border: 1px solid var(--ink);
-    border-radius: 22px;
-    box-shadow: 0 10px 26px rgba(43, 37, 30, 0.08);
-    transform: none;
-  }
-
-  .resources-opening-teaser-label {
-    color: var(--ink);
-  }
-
-  /* Ordre visuel indépendant de l'ordre du DOM (habilitations, puis
-     partners — cf. markup, nécessaire au z-index desktop de la pile) :
-     "Partenaires" doit apparaître en premier une fois les cartes à plat. */
-  .resources-opening-teaser-front {
-    order: 1;
-  }
-
-  .resources-opening-teaser-back {
-    order: 2;
-  }
-
-  .resources-opening-teaser:active,
-  .resources-opening-teaser-front:active,
-  .resources-opening-teaser-back:active {
-    transform: scale(0.97);
-    transition: transform 100ms ease;
-  }
-
-  .resources-opening-teaser:hover,
-  .resources-opening-teaser:focus-visible,
-  .resources-opening-teaser-front:hover,
-  .resources-opening-teaser-front:focus-visible,
-  .resources-opening-teaser-back:hover,
-  .resources-opening-teaser-back:focus-visible {
-    transform: none;
-    box-shadow: 0 10px 26px rgba(43, 37, 30, 0.08);
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .resources-opening-teaser:active,
-    .resources-opening-teaser-front:active,
-    .resources-opening-teaser-back:active {
-      transform: none;
-    }
-  }
-
-  /* Petit chevron ">" en CSS pur (pas de nouvelle requête réseau) : seule
-     touche qui distingue visuellement ces deux boutons d'un simple texte,
-     pour signaler qu'ils s'ouvrent au tap — cohérent avec le chevron de
-     "Explorer" juste au-dessus, sans dupliquer son SVG. */
-  .resources-opening-teaser::after {
-    content: "";
-    width: 7px;
-    height: 7px;
-    margin-left: 12px;
-    border-right: 1.5px solid var(--muted);
-    border-top: 1.5px solid var(--muted);
-    transform: rotate(45deg);
-    flex-shrink: 0;
-  }
-
-  .resources-opening-teaser-back .resources-opening-teaser-label {
-    width: auto;
-    max-width: none;
-    text-align: center;
-  }
-
-  .resources-opening-teaser-front .resources-opening-teaser-label {
-    width: auto;
-  }
+  /* Les cartes-amorce sont maintenant à plat (en flux normal) à toutes les
+     largeurs — cf. règle de base plus haut, rien à refaire ici. */
 }
 
 @media (max-width: 560px) {
