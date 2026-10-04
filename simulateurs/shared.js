@@ -339,7 +339,7 @@ function renderNumberField(field, values, fieldRefreshers, options = {}) {
 // valeurs sont positives (comportement historique inchangé), sinon min
 // descend jusqu'à la valeur la plus basse.
 function renderLineChart(rows, config) {
-  const chart = document.querySelector("#chart");
+  const chart = document.querySelector(`#${config.chartId || "chart"}`);
   if (!rows.length) {
     chart.innerHTML = `
       <div class="chart-zero-state" role="status">
@@ -348,7 +348,7 @@ function renderLineChart(rows, config) {
     `;
     return;
   }
-  const { series, areas = [], tooltipExtras = [], totals = [], marker = null, ariaLabel = "Graphique de projection", zeroBaseline = true } = config;
+  const { series, areas = [], tooltipExtras = [], totals = [], marker = null, ariaLabel = "Graphique de projection", zeroBaseline = true, tooltipExact = false } = config;
   // Par défaut, une puce de légende par ligne tracée — sauf si l'appelant
   // fournit sa propre liste (ex. une aire sans ligne tracée, comme "gains",
   // qui a quand même besoin d'une puce de légende).
@@ -475,7 +475,7 @@ function renderLineChart(rows, config) {
     document.fonts?.ready.then(alignTotalsWithYAxisLabel);
   }
 
-  setupChartHover(chart, rows, { x, y, pad, width, height, series, tooltipExtras });
+  setupChartHover(chart, rows, { x, y, pad, width, height, series, tooltipExtras, tooltipExact });
 }
 
 function setupChartHover(chart, rows, ctx) {
@@ -516,11 +516,11 @@ function setupChartHover(chart, rows, ctx) {
         dots[i].setAttribute("cx", px);
         dots[i].setAttribute("cy", py);
       }
-      if (tooltipValues[i]) tooltipValues[i].textContent = formatMoney(roundToHundred(s.values[index]));
+      if (tooltipValues[i]) tooltipValues[i].textContent = formatMoney(ctx.tooltipExact ? s.values[index] : roundToHundred(s.values[index]));
       topY = Math.min(topY, py);
     });
     ctx.tooltipExtras.forEach((t, i) => {
-      if (tooltipExtraValues[i]) tooltipExtraValues[i].textContent = formatMoney(roundToHundred(row[t.key]));
+      if (tooltipExtraValues[i]) tooltipExtraValues[i].textContent = formatMoney(ctx.tooltipExact ? row[t.key] : roundToHundred(row[t.key]));
     });
 
     tooltipYear.textContent = `Année ${row.annee}`;

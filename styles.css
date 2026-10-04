@@ -1439,8 +1439,8 @@ h3 {
   display: grid;
   justify-items: center;
   align-content: start;
-  /* gap partagé par les 3 enfants (logo, phrase, indication) : logo-phrase
-     et phrase-indication reçoivent donc le même écart par construction. */
+  /* gap partagé par les enfants (logo, phrase, cartes-boutons) : même écart
+     entre chaque paire par construction. */
   gap: 40px;
   padding: clamp(24px, 4vw, 48px) clamp(12px, 3vw, 24px) clamp(24px, 4vw, 40px);
   text-align: center;
@@ -1465,17 +1465,6 @@ h3 {
 
 .resources-modal-backdrop.is-open {
   display: flex;
-}
-
-/* Modale ouverte par-dessus une autre déjà affichée (enchaînement
-   partenaires → expertise, cf. script) : la carte de fond garde son propre
-   voile/flou plein écran, donc celle-ci n'a pas besoin du sien — sinon son
-   backdrop-filter aurait flouté la carte de fond au lieu de la laisser
-   nette, comme sur une vraie pile de cartes. */
-.resources-modal-backdrop.is-stacked {
-  background: transparent;
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
 }
 
 .resources-modal-card {
@@ -1616,8 +1605,8 @@ body.resources-modal-open {
 }
 
 /* Simple emphase statique, plus une interaction : ces mots n'ouvrent plus les
-   modales (retiré à la demande de Victor, cf. ressources.html — seuls le
-   clic sur une carte-amorce et le scroll réflexe restent des déclencheurs).
+   modales (retiré à la demande de Victor, cf. ressources.html — seul le
+   clic sur une des deux cartes-boutons reste un déclencheur).
    Ancienne version : reflet doré animé en boucle + agrandissement au survol,
    pensés pour signaler "cliquable" — supprimés avec l'interaction elle-même,
    sinon le mot continuerait de RESSEMBLER à un lien qui ne fait plus rien. */
@@ -1641,205 +1630,94 @@ body.resources-modal-open {
   }
 }
 
-/* Vrai <button> (ouvre une carte sur ressources.html, scrolle jusqu'à la
-   section suivante sur à-propos.html) : on repart de l'apparence native
-   (focus clavier gratuit) et on l'efface, même logique que
-   .resources-opening-teaser plus bas. */
-.resources-opening-hint {
+/* Amorce visuelle des cartes "Partenaires"/"Habilitations" : deux simples
+   boutons pleine largeur, empilés verticalement — point d'entrée unique
+   (clic) pour ouvrir chacune des deux modales, pas d'enchaînement ni de
+   bascule par scroll entre les deux. De vrais <button>, donc activables au
+   clavier nativement (Entrée/Espace), pas besoin de gérer keydown à la
+   main.
+
+   Deux simples boutons empilés verticalement, pleine largeur — même
+   présentation qu'auparavant réservée au téléphone (≤900px), désormais
+   appliquée à toutes les largeurs : plus de cartes qui se tirent/empilées/
+   tournées, plus de position: fixed collée au bas de l'écran. Un enfant
+   normal de la grille .resources-opening (position: static), qui hérite
+   donc de son gap partagé avec le logo/la phrase au-dessus. */
+.resources-opening-teasers {
+  position: static;
+  width: 100%;
+  max-width: 340px;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  /* S'ajoute au gap partagé de 40px de .resources-opening (logo/phrase/
-     indication) pour recentrer visuellement "EXPLORER" entre la phrase et
-     le sommet visible des cartes-amorce (position: fixed, cf.
-     .resources-opening-teasers) plutôt que de le laisser collé à la
-     phrase. Dépend de la hauteur d'écran réelle — à ajuster en direct si
-     le centrage ne tombe pas juste. */
-  margin: clamp(40px, 9svh, 100px) 0 0;
-  border: none;
-  background: none;
-  padding: 0;
-  appearance: none;
-  -webkit-appearance: none;
-  cursor: pointer;
-  color: var(--muted);
-  font: inherit;
-  font-family: var(--sans);
-  font-size: 0.76rem;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  text-align: center;
-  transition: color 200ms ease;
+  gap: 12px;
 }
 
-/* Deux formulations distinctes plutôt qu'un seul texte générique : sur
-   téléphone, "Explorer" seul ne dit pas COMMENT (glisser/cliquer), alors que
-   le geste change réellement d'une plateforme à l'autre (souris/molette sur
-   ordinateur, clic seul sur téléphone depuis le retrait du balayage pour
-   ouvrir la première carte, cf. handleHorizontalSwipe/isMobileNav dans le
-   script). 900px : même palier que le reste du site pour "mobile". */
-.resources-opening-hint-mobile {
-  display: none;
-}
-
-@media (max-width: 900px) {
-  .resources-opening-hint-desktop {
-    display: none;
-  }
-
-  .resources-opening-hint-mobile {
-    display: inline;
-  }
-}
-
-.resources-opening-hint:hover,
-.resources-opening-hint:focus-visible {
-  color: var(--ink);
-}
-
-.resources-opening-hint:focus-visible {
-  outline: 2px solid var(--logo-gold);
-  outline-offset: 4px;
-}
-
-.resources-opening-hint:active {
-  transform: scale(0.97);
-  transition: transform 100ms ease, color 200ms ease;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .resources-opening-hint:active {
-    transform: none;
-  }
-}
-
-/* Chevron animé sous l'indication texte : un signal graphique se capte en
-   périphérie de vision avant même qu'on lise "Cliquez pour explorer" — les
-   deux se renforcent plutôt que de se substituer l'un à l'autre. */
-.resources-opening-hint-icon {
-  width: 16px;
-  height: 16px;
-  color: var(--label);
-  animation: resources-hint-bounce 1.8s ease-in-out infinite;
-}
-
-@keyframes resources-hint-bounce {
-  0%,
-  100% {
-    transform: translateY(0);
-    opacity: 0.5;
-  }
-  50% {
-    transform: translateY(5px);
-    opacity: 1;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .resources-opening-hint-icon {
-    animation: none;
-  }
-}
-
-/* Amorce visuelle des cartes "Partenaires"/"Habilitations" : deux vrais
-   boutons en éventail, silhouette de carte (mêmes codes que
-   .resources-modal-card — fond var(--paper) identique à la page,
-   différenciée par la bordure et l'ombre portée, coins arrondis en haut
-   seulement), superposées et décalées exactement comme la carte de fond
-   d'une pile ouverte (cf. openModal : translate(-20px,14px) rotate(-6deg)
-   scale(0.96)) — la composition d'ouverture montre ainsi, par avance, la
-   même mécanique que celle qui se joue une fois une carte ouverte. Devenues
-   le point d'entrée principal (les mots dorés dans la phrase restent
-   cliquables, en secondaire) : de vrais <button>, donc activables au
-   clavier nativement (Entrée/Espace), pas besoin de gérer keydown à la
-   main. Au survol/focus, la carte se "tire" davantage hors de la pile —
-   la carte de devant monte, celle de derrière glisse plus loin sur le
-   côté — pour suggérer explicitement le geste attendu.
-
-   position: fixed, ancrée au bas du VIEWPORT (pas de .resources-opening,
-   dont elle sort donc du flux/grid — un enfant fixed n'y occupe plus de
-   cellule) plutôt qu'en bas de la composition : les cartes débordent
-   franchement de l'écran, pour appeler le réflexe naturel de scroll (qui
-   les ouvre déjà, cf. handleScrollIntent) plutôt que de simplement
-   suggérer qu'il y a plus bas. Conséquence assumée : le footer, sous ces
-   cartes fixes, n'est plus visible sur cet écran d'ouverture. */
-.resources-opening-teasers {
-  position: fixed;
-  left: 50%;
-  bottom: 0;
-  z-index: 2;
-  width: min(96vw, 760px);
-  transform: translateX(-50%);
-}
-
-.resources-opening-teaser {
-  position: absolute;
-  bottom: -78px;
-  left: 50%;
-  width: min(96vw, 527px);
-  height: 255px;
+.resources-opening-teaser,
+.resources-opening-teaser-front,
+.resources-opening-teaser-back {
+  position: static;
+  z-index: auto;
+  width: 100%;
+  height: auto;
+  min-height: 88px;
   margin: 0;
+  padding: 18px 26px;
   display: flex;
-  align-items: flex-start;
-  padding-top: 36px;
-  border: 1px solid var(--line);
-  border-bottom: none;
-  border-radius: 32px 32px 0 0;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--ink);
+  border-radius: 22px;
   background: var(--paper);
-  box-shadow: 0 -22px 44px rgba(43, 37, 30, 0.12);
+  box-shadow: 0 10px 26px rgba(43, 37, 30, 0.08);
   font: inherit;
   color: inherit;
   appearance: none;
   -webkit-appearance: none;
   cursor: pointer;
-  transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 260ms ease;
 }
 
-/* La carte de fond est décalée assez loin sur le côté (et son propre
-   libellé aligné sur ce même côté, pas centré) pour que "Habilitations"
-   se lise entièrement dans la portion qui dépasse de sous "Partenaires" —
-   un simple bord qui dépasse ne suffisait pas à rendre le mot lisible. */
-.resources-opening-teaser-back {
-  z-index: 1;
-  justify-content: flex-start;
-  padding-left: 31px;
-  transform: translate(calc(-50% - 246px), 22px) rotate(-4deg) scale(0.94);
+.resources-opening-teaser-label {
+  width: auto;
+  color: var(--ink);
+  font-family: var(--serif);
+  /* Taille fixe, pas un clamp lié au viewport : le conteneur
+     (.resources-opening-teasers) a une largeur fixe (max-width: 340px) à
+     toutes les tailles d'écran depuis le passage aux deux boutons à plat
+     — un clamp qui grossit avec le viewport (vw) faisait déborder
+     "Diplômes & habilitations" sur 2 lignes en desktop alors que le
+     bouton, lui, ne s'élargit jamais. white-space: nowrap pour que ça
+     reste visible si jamais ça ne tenait vraiment pas, plutôt qu'un retour
+     à la ligne silencieux. */
+  font-size: 1.5rem;
+  white-space: nowrap;
+  text-align: center;
 }
 
+/* Ordre visuel indépendant de l'ordre du DOM (habilitations, puis
+   partners) : "Partenaires" doit apparaître en premier. */
 .resources-opening-teaser-front {
-  z-index: 2;
-  justify-content: center;
-  transform: translate(-50%, 0) rotate(0deg) scale(1);
+  order: 1;
+}
+
+.resources-opening-teaser-back {
+  order: 2;
+}
+
+.resources-opening-teaser:active,
+.resources-opening-teaser-front:active,
+.resources-opening-teaser-back:active {
+  transform: scale(0.97);
+  transition: transform 100ms ease;
 }
 
 .resources-opening-teaser:hover,
-.resources-opening-teaser:focus-visible {
-  box-shadow: 0 -28px 54px rgba(43, 37, 30, 0.18);
-}
-
+.resources-opening-teaser:focus-visible,
 .resources-opening-teaser-front:hover,
-.resources-opening-teaser-front:focus-visible {
-  transform: translate(-50%, -46px) rotate(0deg) scale(1.08);
-}
-
+.resources-opening-teaser-front:focus-visible,
 .resources-opening-teaser-back:hover,
 .resources-opening-teaser-back:focus-visible {
-  transform: translate(calc(-50% - 281px), -5px) rotate(-6deg) scale(1.02);
-}
-
-/* Placées après :hover : au press (souris restée en hover pendant le clic,
-   ou simple tap tactile sans hover), la carte se tasse depuis sa position
-   de repos plutôt que de rester figée en position survolée/relevée. */
-.resources-opening-teaser-front:active {
-  transform: translate(-50%, 0) rotate(0deg) scale(0.96);
-  transition: transform 100ms ease;
-}
-
-.resources-opening-teaser-back:active {
-  transform: translate(calc(-50% - 246px), 22px) rotate(-4deg) scale(0.9);
-  transition: transform 100ms ease;
+  box-shadow: 0 10px 26px rgba(43, 37, 30, 0.08);
 }
 
 .resources-opening-teaser:focus-visible {
@@ -1847,63 +1725,25 @@ body.resources-modal-open {
   outline-offset: 3px;
 }
 
-.resources-opening-teaser-label {
-  width: 100%;
-  color: var(--muted);
-  font-family: var(--serif);
-  /* Cartes agrandies (cf. .resources-opening-teaser) pour laisser grossir
-     ce libellé, quasiment à la hauteur de .resources-opening-text (clamp
-     2rem–3.6rem) sans l'égaler tout à fait — la phrase d'ouverture reste
-     la plus grande, hiérarchie conservée. Réduit de ~15% par rapport au
-     premier agrandissement, jugé trop imposant. */
-  font-size: clamp(1.62rem, 3.6vw, 2.55rem);
-}
-
-.resources-opening-teaser-front .resources-opening-teaser-label {
-  text-align: center;
-}
-
-.resources-opening-teaser-back .resources-opening-teaser-label {
-  text-align: left;
-  /* "Diplômes & habilitations" est trop long pour tenir sur une ligne dans
-     la portion qui dépasse de sous "Partenaires" — largeur contrainte pour
-     que le retour à la ligne se fasse DANS cette portion visible plutôt
-     qu'au bord de la carte entière (qui, lui, tombe sous "Partenaires" et
-     coupe le texte en plein mot). Valeur à ajuster si le libellé change. */
-  max-width: 212px;
-}
-
-/* En dessous d'environ 1160px de large, le décalage de -290px (ci-dessus)
-   pousse la carte de fond hors de l'écran par la gauche : sa demi-largeur
-   (620px de carte, quasi fixe dès qu'on dépasse ~646px de viewport) ne
-   laisse plus assez de place. Décalage et empiètement réduits ici — le
-   libellé repasse à 3 lignes courtes plutôt que 2 (moins de largeur
-   disponible), toujours dans la portion visible. Vérifié à 1024px ; à
-   surveiller sur les fenêtres de navigateur étroites. */
-@media (max-width: 1160px) {
-  .resources-opening-teaser {
-    width: min(90vw, 391px);
-    height: 221px;
-  }
-
-  .resources-opening-teaser-back {
-    padding-top: 20px;
-    transform: translate(calc(-50% - 153px), 17px) rotate(-4deg) scale(0.94);
-  }
-
-  .resources-opening-teaser-back:hover,
-  .resources-opening-teaser-back:focus-visible {
-    transform: translate(calc(-50% - 174px), 3px) rotate(-6deg) scale(1);
-  }
-
+@media (prefers-reduced-motion: reduce) {
+  .resources-opening-teaser:active,
+  .resources-opening-teaser-front:active,
   .resources-opening-teaser-back:active {
-    transform: translate(calc(-50% - 153px), 17px) rotate(-4deg) scale(0.9);
+    transform: none;
   }
+}
 
-  .resources-opening-teaser-back .resources-opening-teaser-label {
-    max-width: 110px;
-    font-size: 1.36rem;
-  }
+/* Petit chevron ">" en CSS pur (pas de nouvelle requête réseau), pour
+   signaler que ces deux boutons s'ouvrent au clic. */
+.resources-opening-teaser::after {
+  content: "";
+  width: 7px;
+  height: 7px;
+  margin-left: 12px;
+  border-right: 1.5px solid var(--muted);
+  border-top: 1.5px solid var(--muted);
+  transform: rotate(45deg);
+  flex-shrink: 0;
 }
 
 .partner-group {
@@ -2141,7 +1981,8 @@ body.resources-modal-open {
 .habilitation-path-segment {
   fill: none;
   stroke: var(--logo-gold);
-  stroke-width: 2;
+  stroke-width: 1.5;
+  stroke-linecap: round;
   stroke-dasharray: 1;
   stroke-dashoffset: calc(1 - var(--segment-progress, 0));
 }
@@ -3473,6 +3314,146 @@ body.resources-modal-open {
   color: var(--interest-gold);
 }
 
+/* Mensualité totale + barre proportionnelle au-dessus des cases "Effort
+   d'épargne réel" et "Loyer brut SCPI crédit / mois" de la Synthèse
+   (une-pierre-deux-coups.html) : le total relie les deux cases par la
+   couleur (bleu/doré, proportionnel aux deux montants) plutôt que par un
+   tracé — plus sobre qu'un connecteur en Y, jugé pas assez abouti par
+   Victor. Libellé en petites capitales grasses, même typographie que les
+   étiquettes des cases (cf. body[data-mode="pierre2coups"] .capital-metrics
+   small) pour la cohérence. */
+.capital-metric-total-row {
+  text-align: center;
+}
+
+.capital-metric-total-label {
+  display: block;
+  /* .tool-result-editorial (grille, gap: clamp(14px, 1.65vw, 20px)) ajoute
+     déjà cet écart entre .capital-metric-total-row et .capital-metric-merged
+     en dessous — même valeur ici pour que l'écart libellé→barre soit
+     identique à l'écart barre→carte, au lieu d'un simple 8px qui s'ajoutait
+     par-dessus le gap de grille et rendait le bas bien plus espacé que le
+     haut. */
+  margin-bottom: clamp(14px, 1.65vw, 20px);
+  color: var(--muted);
+  font-size: 0.92rem;
+  font-weight: 650;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+}
+
+.capital-metric-total-bar {
+  display: flex;
+  width: 100%;
+  height: 6px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(43, 37, 30, 0.08);
+}
+
+.capital-metric-total-segment {
+  height: 100%;
+}
+
+.capital-metric-total-segment-reel {
+  background: var(--invested-blue);
+}
+
+.capital-metric-total-segment-loyer {
+  background: var(--interest-gold);
+}
+
+/* Carte unique "Effort d'épargne réel" / "Loyer brut SCPI crédit / mois"
+   de la Synthèse (une-pierre-deux-coups.html) : reprend le même dégradé
+   bleu→doré, séparateur vertical et typographie que les cartes
+   "Versement initial"/"Loyer perçu" du simulateur SCPI (cf. .scpi-flow,
+   .scpi-flow-label, .scpi-flow-amount) — demandé par Victor pour garder la
+   même identité visuelle entre les deux simulateurs. Composant statique
+   dédié plutôt que la réutilisation de .scpi-flow : ce dernier porte un
+   mécanisme de révélation au clic (chevron, is-open, JS) propre au
+   simulateur SCPI, sans objet ici où les deux valeurs sont toujours
+   visibles. */
+.capital-metric-merged {
+  display: flex;
+  align-items: stretch;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(43, 37, 30, 0.09);
+  border-radius: 24px;
+  background: linear-gradient(90deg, rgba(111, 139, 167, 0.14) 0%, rgba(255, 253, 250, 0.8) 50%, rgba(199, 174, 137, 0.14) 100%);
+  box-shadow: 0 14px 30px rgba(43, 37, 30, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.84);
+}
+
+.capital-metric-merged-col {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 13px 14px;
+}
+
+.capital-metric-merged-col-reel::after {
+  content: "";
+  position: absolute;
+  top: 20px;
+  right: 0;
+  bottom: 20px;
+  width: 1px;
+  background: linear-gradient(180deg, transparent, rgba(43, 37, 30, 0.11), transparent);
+}
+
+.capital-metric-merged-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.72rem;
+  font-weight: 650;
+  letter-spacing: 0.105em;
+  text-transform: uppercase;
+}
+
+.capital-metric-merged-col-reel .capital-metric-merged-label {
+  color: var(--invested-blue);
+}
+
+.capital-metric-merged-col-loyer .capital-metric-merged-label {
+  color: var(--interest-gold);
+}
+
+.capital-metric-merged-amount {
+  display: block;
+  color: var(--ink);
+  font-size: clamp(1.18rem, 1.65vw, 1.56rem);
+  font-weight: 600;
+}
+
+.capital-metric-merged-col-reel .capital-metric-merged-amount {
+  color: var(--invested-blue);
+}
+
+.capital-metric-merged-col-loyer .capital-metric-merged-amount {
+  color: var(--interest-gold);
+}
+
+/* Précision secondaire ("en année 1" / "le 1ᵉʳ mois de l'année 1") en
+   légende discrète sous le chiffre, plutôt que dans le libellé en capitales
+   grasses — ce dernier repassait sur 2 lignes et faisait trop chargé.
+   Reste rigoureux (la précision est toujours visible), juste moins
+   écrasant — demandé par Victor. */
+.capital-metric-merged-caption {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-weight: 500;
+}
+
+/* "/ mois" accolé au montant plutôt que "mensuel" dans le libellé — demandé
+   par Victor. Même couleur/police/graisse que le montant (hérite de
+   .capital-metric-merged-amount), seule la taille change : pas un gris
+   atténué séparé, juste une suite plus petite du même nombre. */
+.capital-metric-merged-period {
+  font-size: 0.7em;
+}
+
 .capital-narrative {
   align-self: end;
   margin-top: auto;
@@ -4420,6 +4401,28 @@ body.resources-modal-open {
   padding: 0;
 }
 
+/* Option "Tableau complet" en haut à droite d'une carte .tool-card-title
+   (cf. "Synthèse année par année") : condense le tableau à quelques années
+   clés (1, 2, autofinancement, fin de crédit...) quand elle est décochée. */
+.tool-table-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.tool-table-toggle input {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  accent-color: var(--button);
+  cursor: pointer;
+}
+
 .tool-params-title {
   flex-direction: row;
   align-items: center;
@@ -4483,6 +4486,49 @@ body.resources-modal-open {
 
 .tool-reset:hover {
   color: var(--ink);
+}
+
+/* Empile deux cartes .tool-params (crédit / SCPI au comptant) dans la
+   colonne de gauche de .tool-overview — même gap que celui entre cette
+   colonne et .tool-secondary-column, pour un rythme uniforme. */
+.tool-params-stack {
+  display: grid;
+  gap: clamp(10px, 1.15vw, 16px);
+  align-content: start;
+  min-width: 0;
+}
+
+/* Carte "SCPI au comptant" : repliée par défaut (cf. #fields-extra[hidden]
+   plus bas) — le titre (bouton .tool-zero-fields, cf. règle existante plus
+   haut) remet les versements à zéro et déplie la carte ; ce bouton-chevron,
+   séparé, ne fait que déplier/replier sans toucher aux valeurs. */
+.tool-collapsible-chevron-btn {
+  all: unset;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  margin: -4px;
+  cursor: pointer;
+}
+
+.tool-collapsible-chevron {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  stroke: var(--muted);
+  stroke-width: 2;
+  fill: none;
+  transition: transform 220ms ease, stroke 220ms ease;
+}
+
+.tool-collapsible-chevron-btn:hover .tool-collapsible-chevron,
+.tool-collapsible-chevron-btn:focus-visible .tool-collapsible-chevron {
+  stroke: var(--ink);
+}
+
+.tool-collapsible-chevron-btn[aria-expanded="true"] .tool-collapsible-chevron {
+  transform: rotate(180deg);
 }
 
 .line-chart {
@@ -5838,6 +5884,10 @@ body[data-mode="scpi"] #chart-panel .chart-tooltip-gains strong {
   gap: 0;
 }
 
+.tool-fields[hidden] {
+  display: none;
+}
+
 .tool-field {
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
@@ -6103,6 +6153,17 @@ body[data-mode="scpi"] #chart-panel .chart-tooltip-gains strong {
   accent-color: var(--button);
 }
 
+/* Case à cocher directement dans .tool-field (ex. "Arrêter les versements à
+   l'autofinancement", cf. renderCheckboxField) — même gabarit que
+   .tool-switch-row input, pour une case cochée identique sur tout le site. */
+.tool-field > input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  accent-color: var(--button);
+  cursor: pointer;
+}
+
 .tool-body[data-mode="per"] .tool-fields {
   gap: 0;
 }
@@ -6246,6 +6307,24 @@ body[data-mode="scpi"] #chart-panel .chart-tooltip-gains strong {
   color: var(--muted);
   font-size: 0.78rem;
   text-align: center;
+}
+
+/* Regroupe plusieurs .tool-page-note (une-pierre-deux-coups.html en a 3) en
+   un seul bloc, plutôt que des <p> dispersés en enfants directs de
+   .tool-layout : sinon chacun héritait du gap de section entière
+   (clamp(22px, 3vw, 38px)), bien trop large entre deux notes de bas de
+   page. Largeur limitée aussi : en pleine largeur de page (jusqu'à 1450px
+   sur cette page), les lignes devenaient trop longues pour rester
+   confortables à lire — demandé par Victor. */
+.tool-page-notes {
+  display: grid;
+  gap: 6px;
+  width: min(100%, 1080px);
+  margin: 0 auto;
+}
+
+.tool-page-notes .tool-page-note {
+  margin: 0;
 }
 
 /* Paire de mini-graphiques en barres (cf. renderMiniBarChart, gain-fiscal-per.html) :
@@ -8840,12 +8919,9 @@ body[data-mode="scpi"] .tool-field[data-field="dureeTotale"] .tool-input-wrap in
     overflow-x: clip;
   }
 
-  /* #ressources incluse : à ce palier (≤900px), .resources-opening-teasers
-     repasse en flux normal (position: static, cf. plus bas) — ce n'est donc
-     PLUS le cas particulier "cartes fixées au viewport, rien à centrer" de
-     la version large. Son pied de page reste masqué (cf. #ressources
+  /* #ressources incluse : son pied de page reste masqué (cf. #ressources
      .site-footer plus haut), donc le contenu se centre dans tout l'espace
-     de la rangée 1fr — demandé par Victor : phrase/"Explorer"/cartes trop
+     de la rangée 1fr — demandé par Victor : phrase/cartes-boutons trop
      collés sous la nav, avec un grand vide en dessous. */
   #accueil .home-page-content,
   #ressources .home-page-content {
@@ -9226,12 +9302,10 @@ body[data-mode="scpi"] .tool-field[data-field="dureeTotale"] .tool-input-wrap in
     min-height: 500px;
   }
 
-  /* 40px (base, partagé logo/phrase/indication) → 24px : sans le logo
-     (masqué à ce palier), ce gap ne sépare plus que la phrase et
-     "Explorer" — puis, une fois les cartes-amorce repassées en flux normal
-     juste en dessous (cf. .resources-opening-teasers plus bas, qui hérite
-     de ce même gap partagé), aussi "Explorer" et la première carte. Réduit
-     par Victor : lu comme "trop de vide" dans les deux cas sur téléphone. */
+  /* 40px (base, partagé logo/phrase/cartes-boutons) → 24px : sans le logo
+     (masqué à ce palier), ce gap ne sépare plus que la phrase et les
+     cartes-boutons. Réduit par Victor : lu comme "trop de vide" sur
+     téléphone. */
   .resources-opening {
     gap: 24px;
   }
@@ -9244,119 +9318,6 @@ body[data-mode="scpi"] .tool-field[data-field="dureeTotale"] .tool-input-wrap in
      enchaînement à 3 lignes plus équilibré. */
   .resources-opening-text {
     font-size: 2.4rem;
-  }
-
-  /* Le format "cartes qui se tirent" (empilées, tournées, décalées pour
-     laisser deviner la carte du dessous) ne fonctionne qu'en fenêtre assez
-     large/"paysage" : dès que la largeur se resserre, la carte de fond
-     (position: fixed, ancrée au bas du viewport) déborde ou se retrouve
-     coupée sans assez de place pour respirer — signalé par Victor sur une
-     fenêtre Safari réduite mais pas franchement "mobile". Auparavant ce
-     correctif n'existait qu'en dessous de 560px (repris ici à 900px, le
-     même palier que le reste du mode mobile/tablette du site — nav comprise
-     — plutôt qu'un troisième seuil arbitraire) : les deux cartes redeviennent
-     deux blocs simples, empilés verticalement, pleine largeur — plus de
-     position: fixed collée au bas de l'écran, plus de rotation/décalage —
-     juste deux boutons nets avec leur libellé complet et lisible. Ce bloc
-     redevient un enfant normal de la grille .resources-opening (position:
-     static), qui hérite donc de son gap partagé avec le logo/la phrase/
-     "Explorer" au-dessus — plus besoin de marge dédiée. */
-  .resources-opening-teasers {
-    position: static;
-    width: 100%;
-    max-width: 340px;
-    margin: 0 auto;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    transform: none;
-  }
-
-  .resources-opening-teaser,
-  .resources-opening-teaser-front,
-  .resources-opening-teaser-back {
-    position: static;
-    z-index: auto;
-    width: 100%;
-    height: auto;
-    min-height: 88px;
-    padding: 18px 26px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    /* Contour + libellé noirs (var(--ink), contre var(--line)/var(--muted)
-       plus discrets ailleurs) : demandé par Victor pour ces 2 boutons sur
-       téléphone spécifiquement — un contraste plus net une fois les cartes
-       repassées en blocs simples pleine largeur (cf. commentaire plus haut). */
-    border: 1px solid var(--ink);
-    border-radius: 22px;
-    box-shadow: 0 10px 26px rgba(43, 37, 30, 0.08);
-    transform: none;
-  }
-
-  .resources-opening-teaser-label {
-    color: var(--ink);
-  }
-
-  /* Ordre visuel indépendant de l'ordre du DOM (habilitations, puis
-     partners — cf. markup, nécessaire au z-index desktop de la pile) :
-     "Partenaires" doit apparaître en premier une fois les cartes à plat. */
-  .resources-opening-teaser-front {
-    order: 1;
-  }
-
-  .resources-opening-teaser-back {
-    order: 2;
-  }
-
-  .resources-opening-teaser:active,
-  .resources-opening-teaser-front:active,
-  .resources-opening-teaser-back:active {
-    transform: scale(0.97);
-    transition: transform 100ms ease;
-  }
-
-  .resources-opening-teaser:hover,
-  .resources-opening-teaser:focus-visible,
-  .resources-opening-teaser-front:hover,
-  .resources-opening-teaser-front:focus-visible,
-  .resources-opening-teaser-back:hover,
-  .resources-opening-teaser-back:focus-visible {
-    transform: none;
-    box-shadow: 0 10px 26px rgba(43, 37, 30, 0.08);
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .resources-opening-teaser:active,
-    .resources-opening-teaser-front:active,
-    .resources-opening-teaser-back:active {
-      transform: none;
-    }
-  }
-
-  /* Petit chevron ">" en CSS pur (pas de nouvelle requête réseau) : seule
-     touche qui distingue visuellement ces deux boutons d'un simple texte,
-     pour signaler qu'ils s'ouvrent au tap — cohérent avec le chevron de
-     "Explorer" juste au-dessus, sans dupliquer son SVG. */
-  .resources-opening-teaser::after {
-    content: "";
-    width: 7px;
-    height: 7px;
-    margin-left: 12px;
-    border-right: 1.5px solid var(--muted);
-    border-top: 1.5px solid var(--muted);
-    transform: rotate(45deg);
-    flex-shrink: 0;
-  }
-
-  .resources-opening-teaser-back .resources-opening-teaser-label {
-    width: auto;
-    max-width: none;
-    text-align: center;
-  }
-
-  .resources-opening-teaser-front .resources-opening-teaser-label {
-    width: auto;
   }
 }
 
@@ -9433,14 +9394,6 @@ body[data-mode="scpi"] .tool-field[data-field="dureeTotale"] .tool-input-wrap in
      le logo reste au même niveau sur les deux pages à cette largeur aussi. */
   .resources-opening {
     padding: 16px 20px 32px;
-  }
-
-  /* Le format "cartes qui se tirent" est maintenant à plat dès 901px (cf.
-     @media (max-width: 900px) plus haut) — rien à refaire ici à ce palier,
-     seule la taille du libellé est encore resserrée juste en dessous. */
-  .resources-opening-teaser-back .resources-opening-teaser-label,
-  .resources-opening-teaser-front .resources-opening-teaser-label {
-    font-size: 1.5rem;
   }
 
   /* Révèle les 2 bandes supplémentaires du mur de partenaires (cf. règle de
@@ -9701,6 +9654,10 @@ body[data-mode="comparateur"] .tool-field > span {
   color: rgba(43, 37, 30, 0.68);
   font-size: 0.86rem;
   font-weight: 540;
+  /* Labels plus longs que sur les autres pages ("Versement initial (SCPI
+     au comptant)"...) : le nowrap hérité de la règle de base .tool-field >
+     span les faisait déborder par-dessus la valeur à droite. */
+  white-space: normal;
 }
 
 body[data-mode="pierre2coups"] .tool-input-wrap,
@@ -9935,6 +9892,30 @@ body[data-mode="comparateur"] .tool-table-wrap th {
   line-height: 1.2;
 }
 
+/* Première colonne ("Année") tronquée en "An…" à 8% (largeur de base,
+   pensée pour une seule donnée courte en cellule, pas pour cet en-tête de 6
+   lettres) sur ces deux pages aux en-têtes plus longs que la moyenne. */
+body[data-mode="pierre2coups"] .tool-table-wrap th:first-child,
+body[data-mode="comparateur"] .tool-table-wrap th:first-child {
+  width: 11%;
+  white-space: normal;
+}
+
+/* Ordre de colonnes propre à cette page (Année, Mensualité, Patrimoine brut,
+   Effort sans/avec comptant...) — la règle générique colore en doré les
+   colonnes 3 et 4, pensée pour un "Effort sans/avec comptant" consécutif ;
+   ici la colonne 3 est "Patrimoine brut" (pas de couleur dédiée) et l'effort
+   est décalé en 4/5. */
+body[data-mode="pierre2coups"] .tool-table-wrap th:nth-child(3),
+body[data-mode="pierre2coups"] .tool-table-wrap td:nth-child(3) {
+  color: inherit;
+}
+
+body[data-mode="pierre2coups"] .tool-table-wrap th:nth-child(5),
+body[data-mode="pierre2coups"] .tool-table-wrap td:nth-child(5) {
+  color: var(--interest-gold);
+}
+
 /* .tool-layout est partagée avec projection.html (width: min(100%, 1120px))
    — élargie ici (valeur propre à chaque page) pour laisser assez de place
    aux cartes/graphique de ces mises en page plus chargées. */
@@ -9943,45 +9924,49 @@ body[data-mode="comparateur"] .tool-layout {
   width: min(100%, 1450px);
 }
 
-/* .tool-overview a déjà align-items: stretch (règle partagée inchangée),
-   donc .tool-secondary-column fait déjà la même hauteur que .tool-params —
-   mais rien à l'intérieur n'allait chercher cette hauteur. On fait grandir
-   tool-detail puis le panneau actif de tool-detail-panels jusqu'au bas de
-   tool-params ; le panneau tableau reçoit ainsi exactement la même hauteur
-   que le panneau graphique, avec un scroll interne sur .tool-table-wrap
-   (déjà overflow: auto) pour les lignes qui dépassent, plutôt que
-   d'agrandir la carte. min-height: 0 à chaque étage grid/flex imbriqué :
-   sans ça, la hauteur de contenu naturelle du tableau empêcherait tout
-   rétrécissement/scroll en amont. Propre à Une pierre deux coups (seule
-   page hors gabarit encore sur ce schéma 2 colonnes). */
-body[data-mode="pierre2coups"] .tool-detail {
-  flex: 1;
-  grid-template-rows: auto 1fr;
-  min-height: 0;
+/* Pas de grand cadre derrière Hypothèses/Synthèse : chacune de ces cases
+   garde son propre fond (cf. la règle partagée .tool-result-card,
+   .tool-table-card, .tool-params plus haut), posé directement sur le fond
+   de la page plutôt que dans un rectangle englobant — même traitement que
+   body[data-mode="per"] .tool-overview, demandé par Victor. */
+body[data-mode="pierre2coups"] .tool-overview {
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  /* La règle partagée .tool-overview force align-items: stretch, qui
+     étirait .tool-secondary-column (et donc la carte tableau/graphique)
+     à la hauteur du bloc Hypothèses de gauche — plein de vide sous les
+     3 lignes du tableau condensé quand le bloc "SCPI au comptant" est
+     déroulé et bien plus haut que le contenu de droite. Chaque colonne
+     garde maintenant sa hauteur naturelle. */
+  align-items: start;
 }
 
-/* .tool-detail-panels reprend par défaut le même cadre (bordure/fond/ombre)
-   que .tool-chart-card/.tool-table-card qu'il contient : plein écran sous
-   .tool-overview (projection.html), les deux cadres sont assez éloignés
-   pour ne pas se voir. Ici, nichés dans la colonne étroite de
-   .tool-secondary-column, les deux bordures/ombres se chevauchent à
-   quelques pixels d'écart et lisent comme un rendu cassé (carte dans la
-   carte). On retire le cadre du conteneur intermédiaire : seul le panneau
-   actif (chart ou tableau) garde sa propre carte. */
 body[data-mode="pierre2coups"] .tool-detail-panels {
   padding: 0;
   border: none;
   background: none;
   box-shadow: none;
   backdrop-filter: none;
-  min-height: 0;
 }
 
 body[data-mode="pierre2coups"] .tool-chart-card,
 body[data-mode="pierre2coups"] .tool-table-card {
-  grid-template-rows: auto 1fr;
-  min-height: 0;
   min-width: 0;
+}
+
+/* Libellés des cases .capital-metrics (Effort d'épargne réel, Loyer brut,
+   Effort d'épargne total, Patrimoine constitué, Effet de levier) en
+   capitales grasses, comme sur Assurance Vie (cf. body[data-mode="av"]
+   .av-result .capital-metrics small) — rend mieux que le libellé en bas de
+   casse par défaut, demandé par Victor. */
+body[data-mode="pierre2coups"] .capital-metrics small {
+  font-size: 0.67rem;
+  font-weight: 650;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
 }
 
 /* .chart-canvas (aspect-ratio: 960/380, sans largeur explicite) blow-up
@@ -10077,6 +10062,16 @@ body[data-mode="pierre2coups"] .chart-canvas {
   font-weight: 650;
 }
 
+/* Variante verte (ex. années où l'autofinancement est atteint, cf.
+   "Une pierre deux coups") — même teinte que .tool-status-banner.is-ok.
+   Fond de ligne uniquement : le gras des colonnes "Effort avec comptant"/
+   "Revenus perçus"/année est injecté cellule par cellule depuis
+   renderTableSynthese (balises <strong> directement dans le contenu), car il
+   dépend de la valeur de chaque cellule et pas seulement de la ligne. */
+.table-row-highlight-green td {
+  background: rgba(111, 163, 110, 0.16);
+}
+
 /* Étiquette "Optimal" dans la première colonne d'un tableau de scénarios
    (Gain fiscal PER : versement qui fait basculer le foyer dans la
    tranche inférieure) — même vert que .comparateur-result-verdict. */
@@ -10113,3 +10108,372 @@ body[data-mode="comparateur"] .table-row-highlight:hover td {
     grid-template-columns: 1fr;
   }
 }
+
+/* Graphique en barres empilées "Effet de levier du financement" (cf.
+   renderEffetLevier, simulateurs/une-pierre-deux-coups.html) : deux
+   colonnes, hauteur de chaque barre proportionnelle à sa valeur (calculée
+   en JS), bâtie en HTML/CSS plutôt qu'en SVG (deux barres seulement, pas
+   besoin d'un graphique générique). */
+.levier-panel-body {
+  display: grid;
+  gap: 18px;
+}
+
+/* Resserre l'écart avec le graphique juste en dessous/au-dessus (le gap de
+   18px de .levier-panel-body, pensé pour les autres paires d'éléments, est
+   trop large entre le sous-titre/la légende et les barres elles-mêmes) —
+   demandé par Victor. Texte du sous-titre aussi agrandi (0.78rem de base →
+   trop discret pour ce rôle de sous-titre de carte). */
+/* Gras + encre foncée, comme la légende "Part financée par..." juste en
+   dessous (même police, même traitement) — demandé par Victor. */
+.levier-panel-body > .tool-page-note {
+  margin-top: 14px;
+  margin-bottom: -10px;
+  color: var(--ink);
+  font-size: 1.02rem;
+  font-weight: 600;
+}
+
+.levier-panel-body .levier-legend {
+  margin-top: -10px;
+}
+
+.levier-chart {
+  display: flex;
+  justify-content: center;
+  gap: clamp(32px, 6vw, 72px);
+  /* Marge haute suffisante pour que .levier-bar-total (désormais positionnée
+     en absolu juste au-dessus du sommet de sa barre, cf. règle plus bas)
+     ait la place de déborder sans chevaucher le sous-titre au-dessus quand
+     une barre atteint 100% de hauteur. */
+  padding: 40px 0 0;
+}
+
+/* Les deux colonnes de barres partagent un seul calque de graduations
+   (.levier-gridlines, juste en dessous) plutôt qu'une par .levier-bars :
+   sinon les traits s'interrompaient dans l'espace entre les deux colonnes,
+   lisibles comme des segments disjoints plutôt qu'un vrai axe continu —
+   demandé par Victor. */
+/* Écart agrandi par rapport à la valeur partagée avec .levier-chart
+   (clamp(32px, 6vw, 72px)) : la pastille .levier-delta-badge déborde de la
+   colonne "Avec financement" dans cet espace, et à 72px max elle chevauchait
+   la valeur de la barre "Sans financement" — demandé par Victor. */
+.levier-plot {
+  position: relative;
+  display: flex;
+  gap: clamp(110px, 14vw, 210px);
+}
+
+/* Élargi de 128px à 164px : à 128px, la légende "Patrimoine constitué avec
+   financement" retombait sur 3 lignes — demandé par Victor (pas plus de 2). */
+.levier-bar-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  width: 164px;
+}
+
+/* Positionnée juste au-dessus du sommet de SA propre barre (même `bottom`
+   en % que .levier-bar, cf. renderSummary) plutôt qu'alignée sur une
+   rangée commune aux deux colonnes — sinon la barre la plus courte se
+   retrouvait avec un grand vide entre sa valeur et son sommet. Demandé par
+   Victor.
+   `bottom:X%` place déjà le bas de l'élément exactement au sommet de la
+   barre (0 écart) : seul un petit -6px de décalage vertical est encore
+   nécessaire pour l'espacement visuel — PAS de translateY(-100%) en plus,
+   qui décalerait une seconde fois d'toute la hauteur de l'élément. */
+/* Sans-serif gras (comme .capital-metrics strong), pas le serif des titres :
+   c'était le seul endroit de cette carte à utiliser le serif, incohérent
+   avec tous les autres chiffres de la page (187 €, 442 €...) — demandé par
+   Victor. */
+.levier-bar-total {
+  position: absolute;
+  left: 50%;
+  transform: translate(-50%, -6px);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: clamp(1.05rem, 1.5vw, 1.3rem);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.levier-bars {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  width: 100%;
+  height: 220px;
+}
+
+/* Axe des valeurs partagé par les deux barres — demandé par Victor pour
+   donner un repère mathématique sans surcharger un graphique volontairement
+   minimal. .levier-axis-spacer reprend la classe .levier-bar-label (texte
+   invisible) pour hériter exactement la même hauteur de ligne que la vraie
+   légende sous les barres, et aligner .levier-axis-ticks pile sur la zone
+   graduée de .levier-bars (.levier-bar-total ne compte plus dans cette
+   hauteur, désormais positionnée en absolu par-dessus). */
+.levier-axis {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 18px;
+  flex-shrink: 0;
+}
+
+.levier-axis-spacer {
+  visibility: hidden;
+}
+
+.levier-axis-ticks {
+  position: relative;
+  width: 100%;
+  height: 220px;
+}
+
+.levier-axis-tick {
+  position: absolute;
+  right: 0;
+  transform: translateY(50%);
+  white-space: nowrap;
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+.levier-gridlines {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 220px;
+  pointer-events: none;
+}
+
+.levier-gridline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: rgba(43, 37, 30, 0.08);
+}
+
+.levier-bar {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  width: 84px;
+  min-height: 2px;
+  border-radius: 10px 10px 0 0;
+  overflow: hidden;
+  transition: height 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.levier-bar-segment {
+  width: 100%;
+}
+
+.levier-bar-segment-reel {
+  background: var(--invested-blue);
+}
+
+.levier-bar-segment-levier {
+  background: #4f8f52;
+}
+
+/* Fin filet clair entre les deux segments empilés, pour les distinguer même
+   à hauteurs proches (cf. méthode des graphiques du site : un repère de 2px
+   couleur fond entre deux aplats adjacents). */
+.levier-bar-segment-levier {
+  border-bottom: 2px solid var(--paper);
+}
+
+/* Pastille d'écart accolée au segment vert de la barre "Avec financement"
+   (patrimoine avec financement vs capital contrefactuel sans financement) :
+   rend le gain explicite directement là où il se rapporte, plutôt qu'à
+   mi-chemin entre les deux barres ou à déduire des deux valeurs affichées —
+   demandé par Victor suite à un audit de cette section. Enfant de
+   .levier-bar (déjà position:relative) : `top:X%` compté depuis le haut de
+   LA BARRE (coordonnée propre à sa hauteur, pas celle du graphe entier,
+   puisque le segment vert est le premier enfant du flex-column .levier-bar,
+   donc en haut). `left:100%` + translateX positive la sort à droite de la
+   barre plutôt que dans l'espace entre les deux colonnes. Pastille arrondie
+   plutôt qu'une accolade/trait technique (jugée "archi moche" par Victor) :
+   même langage visuel que les autres éléments de la page (carte arrondie,
+   ombre douce, dégradé pastel). Enfant de .levier-bars (pas de .levier-bar,
+   qui a overflow:hidden et la masquerait) : positionnée à `left: calc(50% +
+   42px + 14px)` — 50% = centre de .levier-bars (où .levier-bar est centrée
+   via justify-content:center), +42px = demi-largeur de la barre (84px), pour
+   atteindre son bord droit, +14px de respiration. */
+/* Mise en ligne (flèche haute à gauche, texte empilé à droite) plutôt
+   qu'empilée verticalement : une flèche plus longue et plus visible, et un
+   bloc moins haut — demandé par Victor.
+   Posée à même le graphe plutôt qu'encadrée dans une carte (bordure +
+   ombre) : ça en faisait une 4e carte qui rivalisait avec les deux cartes
+   de stats du bas, alors que son rôle est d'annoter le dessin, pas de
+   résumer un total. Un halo flou (::before) la détache des lignes de grille
+   qui passent derrière, sans cadre ni coin visible — demandé par Victor. */
+.levier-delta-badge {
+  position: absolute;
+  left: calc(50% + 42px + 10px);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px 10px 10px;
+  transform: translateY(50%);
+  white-space: nowrap;
+}
+
+/* Inset gauche positif (pas de débordement du halo vers la barre, contrairement
+   aux autres côtés) : avec l'écart réduit par rapport à la barre, un halo
+   symétrique mordait sur son coin — demandé par Victor. */
+.levier-delta-badge::before {
+  content: "";
+  position: absolute;
+  inset: -16px -16px -16px 4px;
+  z-index: -1;
+  border-radius: 999px;
+  background: radial-gradient(ellipse at center, rgba(255, 253, 250, 0.94) 0%, rgba(255, 253, 250, 0.72) 55%, rgba(255, 253, 250, 0) 100%);
+  filter: blur(6px);
+}
+
+/* Largeur/hauteur fixées en ligne par renderSummary (échelle du segment
+   vert) : pas de taille ici, juste le style du trait. */
+.levier-delta-arrow {
+  flex-shrink: 0;
+  fill: none;
+  stroke: #4f8f52;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.levier-delta-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+/* Reprend le titre exact de la carte ("Synthèse — Effet de levier du
+   financement") directement sur la pastille accolée au segment vert, pour
+   qu'on comprenne explicitement que ce vert EST l'effet de levier —
+   demandé par Victor. */
+.levier-delta-title {
+  color: #4f8f52;
+  font-size: 0.66rem;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.levier-delta-value {
+  color: #4f8f52;
+  font-family: var(--sans);
+  font-size: clamp(0.92rem, 1.05vw, 1.02rem);
+  font-weight: 650;
+  line-height: 1.1;
+}
+
+.levier-delta-pct {
+  color: #4f8f52;
+  font-size: 0.68rem;
+  font-weight: 650;
+}
+
+/* Gras + encre foncée (pas le gris atténué d'une légende d'axe) : ces
+   légendes de barres sont une information de premier plan ("ce que montre
+   cette colonne"), pas une note secondaire — demandé par Victor. */
+.levier-bar-label {
+  color: var(--ink);
+  font-size: 0.78rem;
+  font-weight: 650;
+  line-height: 1.25;
+  text-align: center;
+}
+
+/* Pastille de couleur au-dessus du texte, reprenant exactement la
+   composition de la barre qu'elle légende (dégradé bleu→vert pour "avec
+   financement", bleu uni pour "sans financement") — fait écho aux couleurs
+   du graphe sans ajouter de carte/encadré (déjà retirés ailleurs sur cette
+   section pour ne pas surcharger). Même largeur que .levier-bar (84px) :
+   une vraie continuité visuelle avec le rectangle qu'elle légende, pas une
+   simple puce — demandé par Victor. .levier-axis-spacer réutilise la même
+   classe (contenu masqué) pour garder le même espace réservé en hauteur,
+   sinon il ne matcherait plus la hauteur des vraies légendes. */
+.levier-bar-label-swatched {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.levier-bar-label-swatched::before {
+  content: "";
+  width: 84px;
+  height: 6px;
+  border-radius: 999px;
+}
+
+.levier-bar-label-mixte::before {
+  background: linear-gradient(90deg, var(--invested-blue), #4f8f52);
+}
+
+.levier-bar-label-reel::before {
+  background: var(--invested-blue);
+}
+
+/* Le texte lui-même reprend la couleur de sa pastille (dégradé bleu→vert
+   pour "avec financement", bleu uni pour "sans financement") — demandé par
+   Victor. */
+.levier-bar-label-mixte {
+  background: linear-gradient(90deg, var(--invested-blue), #4f8f52);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.levier-bar-label-reel {
+  color: var(--invested-blue);
+}
+
+/* Ronds et texte agrandis, texte en gras : "gagnerait à être plus voyante"
+   — demandé par Victor. */
+.levier-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px 24px;
+  margin-top: 18px;
+  color: var(--ink);
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.levier-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.levier-legend-dot {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.levier-legend-dot-reel {
+  background: var(--invested-blue);
+}
+
+.levier-legend-dot-levier {
+  background: #4f8f52;
+}
+
+/* Les cartes "Effort d'épargne total"/"Patrimoine constitué" sous le
+   graphe ont été retirées : le graphe porte déjà ses propres totaux
+   (au-dessus de chaque barre) et le delta annoté en vert — ces cartes ne
+   faisaient plus que répéter des chiffres déjà visibles au-dessus, sans
+   lecture nouvelle — demandé par Victor suite à un audit de cette section. */

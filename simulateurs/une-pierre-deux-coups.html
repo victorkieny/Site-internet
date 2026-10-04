@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Une pierre deux coups | Simulateur</title>
+    <title>Financement | Simulateur</title>
     <link rel="icon" href="../favicon.ico" sizes="any">
     <link rel="icon" href="../assets/favicon-96x96.png" type="image/png" sizes="96x96">
     <link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
@@ -36,45 +36,60 @@
         </label>
       </nav>
       <nav class="tool-nav" aria-label="Navigation du simulateur">
-        <h1 id="tool-page-title">Une pierre deux coups</h1>
+        <h1 id="tool-page-title">Financement</h1>
       </nav>
 
       <section class="tool-layout">
         <section class="tool-overview" aria-label="Synthèse et hypothèses">
-          <aside class="tool-params" aria-label="Hypothèses">
-            <div class="tool-params-title">
-              <h2><button type="button" id="zero-fields" class="tool-zero-fields" aria-label="Hypothèses — mettre les versements à zéro" title="Mettre les versements à zéro">Hypothèses</button></h2>
-              <button type="button" id="reset-fields" class="tool-reset">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 1 2.64 6.36"></path><path d="M3 21v-6h6"></path></svg>
-                Réinitialiser
-              </button>
-            </div>
-            <div id="fields" class="tool-fields"></div>
-          </aside>
+          <div class="tool-params-stack">
+            <aside class="tool-params" aria-label="Hypothèses crédit">
+              <div class="tool-params-title">
+                <h2><button type="button" id="zero-fields" class="tool-zero-fields" aria-label="SCPI en financement — mettre le montant emprunté à zéro" title="Mettre le montant emprunté à zéro">SCPI en financement</button></h2>
+                <button type="button" id="reset-fields" class="tool-reset" aria-label="Réinitialiser" title="Réinitialiser">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 1 2.64 6.36"></path><path d="M3 21v-6h6"></path></svg>
+                </button>
+              </div>
+              <div id="fields" class="tool-fields"></div>
+            </aside>
+
+            <aside class="tool-params" aria-label="Hypothèses SCPI au comptant">
+              <div class="tool-params-title">
+                <h2><button type="button" id="zero-fields-extra" class="tool-zero-fields" aria-label="SCPI au comptant — mettre les versements à zéro" title="Mettre les versements à zéro">SCPI au comptant</button></h2>
+                <button type="button" id="toggle-fields-extra" class="tool-collapsible-chevron-btn" aria-expanded="false" aria-controls="fields-extra" aria-label="Afficher ou masquer les hypothèses SCPI au comptant">
+                  <svg class="tool-collapsible-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
+                </button>
+              </div>
+              <div id="fields-extra" class="tool-fields" hidden></div>
+            </aside>
+          </div>
 
           <div class="tool-secondary-column">
             <div class="tool-summary" id="summary"></div>
 
             <section class="tool-detail" aria-label="Projection détaillée">
               <div class="tool-view-toggle" aria-label="Affichage des résultats">
-                <button class="is-active" type="button" data-view="chart" aria-label="Graphique" title="Graphique">
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4v16h16"></path><path d="M7 15l4-5 3 3 5-6"></path></svg>
-                </button>
-                <button type="button" data-view="table" aria-label="Calendrier" title="Calendrier">
+                <button class="is-active" type="button" data-view="table" aria-label="Calendrier" title="Calendrier">
                   <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg>
+                </button>
+                <button type="button" data-view="fiscalite" aria-label="Fiscalité" title="Fiscalité">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3v18h18"></path><path d="M18 17V9"></path><path d="M13 17V5"></path><path d="M8 17v-3"></path></svg>
                 </button>
               </div>
 
               <div class="tool-detail-panels">
-                <div class="tool-chart-card" id="chart-panel">
+                <div class="tool-chart-card" id="fiscalite-panel" hidden>
                   <div class="tool-card-title">
-                    <h2>Effort mensuel net</h2>
+                    <h2>Loyer brut vs charges déductibles</h2>
                   </div>
-                  <div class="line-chart" id="chart" aria-label="Graphique de l'effort mensuel net"></div>
+                  <div class="line-chart" id="fiscalite-chart" aria-label="Graphique du loyer brut et des charges déductibles de la SCPI financée à crédit"></div>
                 </div>
-                <div class="tool-table-card" id="table-panel" hidden>
+                <div class="tool-table-card" id="table-panel">
                   <div class="tool-card-title">
                     <h2>Synthèse année par année</h2>
+                    <label class="tool-table-toggle">
+                      <span>Tableau complet</span>
+                      <input type="checkbox" id="table-full-toggle">
+                    </label>
                   </div>
                   <div class="tool-table-wrap">
                     <table id="projection-table"></table>
@@ -84,95 +99,104 @@
             </section>
           </div>
         </section>
+
+        <div class="tool-page-notes">
+          <p class="tool-page-note">La SCPI au comptant applique un taux d'imposition effectif forfaitaire propre à une SCPI étrangère.</p>
+          <p class="tool-page-note">La fiscalité des revenus de la SCPI financée à crédit n'est volontairement pas simulée : en régime réel, les intérêts d'emprunt et les charges associées sont déductibles de ces revenus fonciers (déficit foncier), ce qui en neutralise généralement une grande partie sur la durée du crédit.</p>
+          <p class="tool-page-note">Le délai de jouissance des parts de SCPI, généralement de quelques mois avant le versement des premiers loyers, n'est pas non plus pris en compte.</p>
+        </div>
       </section>
     </main>
 
     <script src="shared.js"></script>
     <script>
       // ---------------------------------------------------------------
-      // Calcul : SCPI financée à crédit (régime réel des revenus fonciers,
-      // TMI + prélèvements sociaux, intérêts déductibles, déficit foncier
-      // plafonné) comparée à une SCPI au comptant (versement initial +
-      // programmé, fiscalité forfaitaire estimée type SCPI européenne).
+      // Calcul : SCPI financée à crédit (en brut, non fiscalisée) comparée
+      // à une SCPI au comptant (versement initial + programmé, fiscalité
+      // forfaitaire estimée type SCPI européenne).
       // ---------------------------------------------------------------
 
-      const TAUX_PRELEVEMENTS_SOCIAUX_PCT = 17.2;
-      const PLAFOND_DEFICIT_FONCIER_IMPUTABLE = 10700;
-      const SEUIL_COUVERTURE_WARN = 0.6;
-
       // Mensualité d'un prêt amortissable classique (capital + intérêts constants).
-      function calculerMensualiteCredit(capitalEmprunte, taegAnnuelPct, dureeAnnees) {
+      function calculerMensualiteCreditMois(capitalEmprunte, taegAnnuelPct, nombreMensualites) {
+        if (nombreMensualites <= 0) return 0;
         const tauxMensuel = taegAnnuelPct / 100 / 12;
-        const nombreMensualites = dureeAnnees * 12;
         if (tauxMensuel === 0) return capitalEmprunte / nombreMensualites;
         const facteur = Math.pow(1 + tauxMensuel, nombreMensualites);
         return capitalEmprunte * tauxMensuel * facteur / (facteur - 1);
       }
 
-      function simulerUnePierreDeuxCoups(params) {
-        const tauxImpositionRevenusFonciers = params.tmiPct + TAUX_PRELEVEMENTS_SOCIAUX_PCT;
-        const tauxMensuelCredit = params.taegPct / 100 / 12;
-        const mensualiteCredit = calculerMensualiteCredit(params.montantEmprunte, params.taegPct, params.dureeCredit);
+      // Échéancier du crédit, mois par mois puis agrégé par année. Intérêts
+      // réellement payés chaque année (`interets`, décroissants au fil de
+      // l'amortissement) — et non une moyenne lissée sur toute la durée :
+      // nécessaire pour refléter correctement l'année 1, où le bouclier
+      // fiscal des intérêts est le plus fort.
+      function construireEcheancierCredit(params) {
+        const dureeMois = params.dureeCredit * 12;
+        const tauxMensuel = params.taegPct / 100 / 12;
+        const mensualite = calculerMensualiteCreditMois(params.montantEmprunte, params.taegPct, dureeMois);
 
+        let capital = params.montantEmprunte;
+        const parAnnee = [];
+
+        for (let annee = 1; annee <= params.dureeCredit; annee++) {
+          let interetsAnnee = 0;
+          for (let i = 0; i < 12; i++) {
+            const interetMois = capital * tauxMensuel;
+            interetsAnnee += interetMois;
+            capital = Math.max(0, capital - (mensualite - interetMois));
+          }
+          parAnnee.push({ mensualite, interets: interetsAnnee, capitalRestantDuFinAnnee: capital });
+        }
+
+        return { parAnnee };
+      }
+
+      // `anneeArretVersementsComptant` : si fourni, le versement mensuel
+      // programmé de la jambe "SCPI au comptant" s'arrête après cette
+      // année-là (le versement initial, lui, n'est jamais concerné — ce
+      // n'est pas un versement récurrent). Sert à l'option "Arrêter les
+      // versements à l'autofinancement" (cf. simulerUnePierreDeuxCoups).
+      function simulerAnnees(params, echeancierCredit, anneeArretVersementsComptant) {
         const annees = [];
-        let capitalRestantDu = params.montantEmprunte;
         let capitalComptant = params.versementInitial;
-        let deficitFoncierReportable = 0;
         let anneeAutofinancement = null;
 
         for (let annee = 1; annee <= params.horizonAnnees; annee++) {
           const creditEnCours = annee <= params.dureeCredit;
-
-          // --- Jambe "SCPI à crédit" : amortissement, puis revenus fonciers
-          //     imposés au régime réel (TMI + prélèvements sociaux, intérêts
-          //     déductibles). ---
-          let interetsPayesAnnee = 0;
-          if (creditEnCours) {
-            for (let mois = 0; mois < 12; mois++) {
-              const interetMois = capitalRestantDu * tauxMensuelCredit;
-              interetsPayesAnnee += interetMois;
-              capitalRestantDu = Math.max(0, capitalRestantDu - (mensualiteCredit - interetMois));
-            }
-          }
+          const infosCredit = creditEnCours ? echeancierCredit.parAnnee[annee - 1] : null;
+          const mensualiteAffichee = infosCredit ? infosCredit.mensualite : 0;
+          const capitalRestantDu = infosCredit ? infosCredit.capitalRestantDuFinAnnee : 0;
+          const interetsPayesAnnee = infosCredit ? infosCredit.interets : 0;
 
           const valeurPartsCredit = params.montantEmprunte * Math.pow(1 + params.revalorisationCreditPct / 100, annee);
           const revenuBrutCredit = valeurPartsCredit * (params.rendementCreditPct / 100);
-          const resultatFoncier = revenuBrutCredit - interetsPayesAnnee;
-
-          let impotRevenuCredit;
-          if (resultatFoncier < 0) {
-            // Déficit foncier : imputable sur le revenu global dans la limite
-            // légale de 10 700 €/an. Le surplus non imputé est en réalité
-            // reportable sur les revenus fonciers des 10 années suivantes —
-            // non modélisé ici (cf. mention affichée sous le bandeau de
-            // synthèse).
-            const deficit = -resultatFoncier;
-            const deficitImputable = Math.min(deficit, PLAFOND_DEFICIT_FONCIER_IMPUTABLE);
-            deficitFoncierReportable += Math.max(0, deficit - PLAFOND_DEFICIT_FONCIER_IMPUTABLE);
-            impotRevenuCredit = -(deficitImputable * (params.tmiPct / 100));
-          } else {
-            const revenuFoncierNetDeReport = Math.max(0, resultatFoncier - deficitFoncierReportable);
-            deficitFoncierReportable = Math.max(0, deficitFoncierReportable - resultatFoncier);
-            impotRevenuCredit = (tauxImpositionRevenusFonciers / 100) * revenuFoncierNetDeReport;
-          }
-
-          const revenuNetCreditMensuel = (revenuBrutCredit - impotRevenuCredit) / 12;
+          const revenuBrutCreditMensuel = revenuBrutCredit / 12;
 
           // --- Jambe "SCPI au comptant" : versements programmés capitalisés,
           //     fiscalité forfaitaire estimée. ---
+          const versementsActifs = anneeArretVersementsComptant === null || annee <= anneeArretVersementsComptant;
+          const versementMensuelEffectif = versementsActifs ? params.versementMensuelProgramme : 0;
           for (let mois = 0; mois < 12; mois++) {
-            capitalComptant = capitalComptant * (1 + params.revalorisationComptantPct / 100 / 12) + params.versementMensuelProgramme;
+            capitalComptant = capitalComptant * (1 + params.revalorisationComptantPct / 100 / 12) + versementMensuelEffectif;
           }
           const revenuNetComptantMensuel = capitalComptant * (params.rendementComptantPct / 100) * (1 - params.tauxEffectifEstimePct / 100) / 12;
 
           // --- Effort mensuel net, avec et sans la jambe "comptant". ---
-          const mensualiteAffichee = creditEnCours ? mensualiteCredit : 0;
+          // Basé sur le loyer BRUT de la jambe à crédit (non fiscalisée) :
+          // la fiscalité du crédit variait chaque année (érosion du
+          // bouclier fiscal des intérêts), ce qui donnait un effort "sans
+          // comptant" croissant dans le temps — jugé trompeur commercialement
+          // par Victor, puisque mensualité et loyer brut sont tous deux
+          // stables. Le curseur TMI et le calcul d'impôt associé (régime
+          // réel, déficit foncier reportable) ont depuis été retirés : ce
+          // revenu ne servait plus qu'à une phrase affichée à part, sans
+          // effet sur aucun autre chiffre de la page.
           const effortSansComptant = creditEnCours
-            ? mensualiteCredit - revenuNetCreditMensuel
-            : -revenuNetCreditMensuel;
+            ? mensualiteAffichee - revenuBrutCreditMensuel
+            : -revenuBrutCreditMensuel;
           const effortAvecComptant = creditEnCours
-            ? mensualiteCredit - revenuNetCreditMensuel - revenuNetComptantMensuel
-            : -(revenuNetCreditMensuel + revenuNetComptantMensuel);
+            ? mensualiteAffichee - revenuBrutCreditMensuel - revenuNetComptantMensuel
+            : -(revenuBrutCreditMensuel + revenuNetComptantMensuel);
 
           const autofinancementAtteintCetteAnnee = creditEnCours && effortAvecComptant <= 0 && anneeAutofinancement === null;
           if (autofinancementAtteintCetteAnnee) anneeAutofinancement = annee;
@@ -184,8 +208,12 @@
             annee,
             creditEnCours,
             mensualite: mensualiteAffichee,
-            revenuNetCreditMensuel,
+            valeurPartsCredit,
+            revenuBrutCredit,
+            revenuBrutCreditMensuel,
+            chargesDeductibles: interetsPayesAnnee,
             revenuNetComptantMensuel,
+            versementMensuelComptant: versementMensuelEffectif,
             effortSansComptant,
             effortAvecComptant,
             patrimoineBrut,
@@ -195,19 +223,22 @@
           });
         }
 
-        return { mensualiteCredit, anneeAutofinancement, annees };
+        return { anneeAutofinancement, annees };
       }
 
-      // "ok" si l'autofinancement est atteint sur l'horizon simulé ; sinon,
-      // "warn" si la couverture des revenus nets sur la mensualité en fin de
-      // crédit (ou à la dernière année simulée si le crédit court plus loin
-      // que l'horizon) atteint au moins 60 % ; "bad" en dessous.
-      function calculerEtatSynthese(resultat, params) {
-        if (resultat.anneeAutofinancement !== null) return "ok";
-        const derniereAnneeCredit = resultat.annees.filter((a) => a.creditEnCours).at(-1) || resultat.annees.at(-1);
-        const revenuNetTotal = derniereAnneeCredit.revenuNetCreditMensuel + derniereAnneeCredit.revenuNetComptantMensuel;
-        const couverture = derniereAnneeCredit.mensualite > 0 ? revenuNetTotal / derniereAnneeCredit.mensualite : 1;
-        return couverture >= SEUIL_COUVERTURE_WARN ? "warn" : "bad";
+      // Calcule d'abord le scénario "normal" (versements continus) pour
+      // détecter l'année d'autofinancement, puis, si l'option est activée,
+      // relance le calcul en arrêtant le versement mensuel programmé à
+      // partir de cette année-là (le capital déjà constitué continue de
+      // fructifier seul). Sans l'option, ou si l'autofinancement n'est
+      // jamais atteint, le premier passage suffit.
+      function simulerUnePierreDeuxCoups(params) {
+        const echeancierCredit = construireEcheancierCredit(params);
+        const premierPassage = simulerAnnees(params, echeancierCredit, null);
+        if (!params.arreterVersementsAutofinancement || premierPassage.anneeAutofinancement === null) {
+          return premierPassage;
+        }
+        return simulerAnnees(params, echeancierCredit, premierPassage.anneeAutofinancement);
       }
 
       // ---------------------------------------------------------------
@@ -217,14 +248,14 @@
       const defaults = {
         montantEmprunte: 100000,
         dureeCredit: 25,
-        taegPct: 5.5,
-        rendementCreditPct: 5.5,
+        taegPct: 5.75,
+        rendementCreditPct: 5.3,
         revalorisationCreditPct: 0,
-        versementInitial: 30000,
-        versementMensuelProgramme: 300,
+        versementInitial: 0,
+        versementMensuelProgramme: 0,
+        arreterVersementsAutofinancement: false,
         rendementComptantPct: 5.8,
         revalorisationComptantPct: 0,
-        tmiPct: 30,
         tauxEffectifEstimePct: 15,
         horizonAnnees: 30
       };
@@ -234,25 +265,17 @@
       };
       document.body.dataset.mode = "pierre2coups";
 
-      const fieldDefinitions = [
-        { key: "montantEmprunte", label: "Montant emprunté", min: 50000, max: 500000, step: 5000, suffix: "€" },
+      const fieldDefinitionsCredit = [
+        { key: "montantEmprunte", label: "Montant emprunté", min: 10000, max: 500000, step: 5000, suffix: "€" },
         { key: "dureeCredit", label: "Durée du crédit", min: 5, max: 25, step: 1, suffix: "ans" },
-        { key: "taegPct", label: "TAEG", min: 3, max: 7.5, step: 0.1, suffix: "%" },
-        { key: "rendementCreditPct", label: "Rendement SCPI financée", min: 3, max: 8, step: 0.1, suffix: "%" },
-        { key: "revalorisationCreditPct", label: "Revalorisation SCPI financée", min: 0, max: 4, step: 0.1, suffix: "%/an" },
-        { key: "versementInitial", label: "Versement initial (SCPI au comptant)", min: 0, max: 200000, step: 1000, suffix: "€" },
-        { key: "versementMensuelProgramme", label: "Versement mensuel programmé", min: 0, max: 2000, step: 50, suffix: "€" },
-        { key: "rendementComptantPct", label: "Rendement SCPI au comptant", min: 3, max: 8, step: 0.1, suffix: "%" },
-        { key: "revalorisationComptantPct", label: "Revalorisation SCPI au comptant", min: 0, max: 4, step: 0.1, suffix: "%/an" },
-        {
-          key: "tmiPct",
-          label: "Tranche marginale d'imposition (TMI)",
-          min: 0,
-          max: 45,
-          step: 1,
-          suffix: "%",
-          note: "Prélèvements sociaux fixés à 17,2 %, non éditables, ajoutés automatiquement au calcul."
-        },
+        { key: "taegPct", label: "TAEG", min: 3, max: 7.5, step: 0.05, suffix: "%" },
+        { key: "rendementCreditPct", label: "Taux de distribution", min: 3, max: 8, step: 0.1, suffix: "%" },
+        { key: "revalorisationCreditPct", label: "Revalorisation des parts", min: 0, max: 4, step: 0.1, suffix: "%/an" }
+      ];
+
+      const fieldDefinitionsComptant = [
+        { key: "versementInitial", label: "Versement initial", min: 0, max: 200000, step: 1000, suffix: "€" },
+        { key: "versementMensuelProgramme", label: "Versement mensuel", min: 0, max: 2000, step: 50, suffix: "€" },
         {
           key: "tauxEffectifEstimePct",
           label: "Taux d'imposition effectif estimé",
@@ -262,7 +285,12 @@
           suffix: "%",
           note: "Approxime la fiscalité d'une SCPI européenne : crédit d'impôt ou taux effectif selon convention fiscale, pas une retenue à la source française."
         },
-        { key: "horizonAnnees", label: "Horizon de simulation", min: 15, max: 40, step: 1, suffix: "ans" }
+        {
+          key: "arreterVersementsAutofinancement",
+          label: "Arrêter les versements à l'autofinancement",
+          type: "checkbox",
+          note: "Le versement mensuel programmé s'arrête dès que l'autofinancement est atteint ; le capital déjà constitué continue de fructifier seul (le versement initial n'est jamais concerné)."
+        }
       ];
 
       // ---------------------------------------------------------------
@@ -278,13 +306,50 @@
         });
       }
 
+      // Case à cocher générique — réutilise .tool-field (même structure que
+      // renderNumberField : span à gauche, contrôle à droite, note en pleine
+      // largeur) pour une mise en page identique à celle des champs
+      // numériques, plutôt qu'un .tool-switch-row séparé qui n'héritait pas
+      // du même style (taille de police, retour à la ligne, interlignage de
+      // la note) — ici "Arrêter les versements à l'autofinancement".
+      function renderCheckboxField(field) {
+        const label = document.createElement("label");
+        label.className = "tool-field";
+        const span = document.createElement("span");
+        span.textContent = field.label;
+        const input = document.createElement("input");
+        input.type = "checkbox";
+        input.checked = state.values[field.key];
+        input.addEventListener("change", () => {
+          state.values[field.key] = input.checked;
+          renderOutputs();
+        });
+        label.append(span, input);
+        if (field.note) {
+          const note = document.createElement("small");
+          note.className = "tool-field-note";
+          note.textContent = field.note;
+          label.append(note);
+        }
+        return label;
+      }
+
       function renderFields() {
         const fields = document.querySelector("#fields");
+        const fieldsExtra = document.querySelector("#fields-extra");
         const fieldRefreshers = [];
         fields.innerHTML = "";
+        fieldsExtra.innerHTML = "";
 
-        fieldDefinitions.forEach((field) => {
+        fieldDefinitionsCredit.forEach((field) => {
           fields.append(renderNumberField(field, state.values, fieldRefreshers, {
+            onValueChange: () => scheduleRenderOutputs(),
+            onCommit: () => renderOutputs()
+          }));
+        });
+
+        fieldDefinitionsComptant.forEach((field) => {
+          fieldsExtra.append(field.type === "checkbox" ? renderCheckboxField(field) : renderNumberField(field, state.values, fieldRefreshers, {
             onValueChange: () => scheduleRenderOutputs(),
             onCommit: () => renderOutputs()
           }));
@@ -296,125 +361,366 @@
       // ---------------------------------------------------------------
 
       const ICON_CHECK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>';
-      const ICON_WARN = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 9v4"></path><path d="M12 17h.01"></path><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"></path></svg>';
-      const ICON_CROSS = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>';
-
-      const ETAT_SYNTHESE_COPY = {
-        ok: {
-          title: "Autofinancement atteint",
-          icon: ICON_CHECK
-        },
-        warn: {
-          title: "Autofinancement proche, non atteint",
-          detail: `En fin de crédit, les revenus nets couvrent au moins ${Math.round(SEUIL_COUVERTURE_WARN * 100)} % de la mensualité — un effort résiduel subsiste.`,
-          icon: ICON_WARN
-        },
-        bad: {
-          title: "Autofinancement non atteint",
-          detail: `En fin de crédit, les revenus nets couvrent moins de ${Math.round(SEUIL_COUVERTURE_WARN * 100)} % de la mensualité — un effort résiduel important subsiste.`,
-          icon: ICON_CROSS
-        }
-      };
 
       function renderSummary(resultat) {
         const summary = document.querySelector("#summary");
         const anneeUn = resultat.annees[0];
-        const anneeFinale = resultat.annees.at(-1);
-        const etat = calculerEtatSynthese(resultat, state.values);
-        const copy = ETAT_SYNTHESE_COPY[etat];
-        const detail = etat === "ok"
-          ? `Dès l'année ${resultat.anneeAutofinancement}, les revenus nets des deux SCPI couvrent l'intégralité de la mensualité du crédit.`
-          : copy.detail;
+        const autofinancementAtteint = resultat.anneeAutofinancement !== null;
+        const statusBanner = autofinancementAtteint ? `
+            <div class="tool-status-banner is-ok" role="status">
+              <span class="tool-status-icon" aria-hidden="true">${ICON_CHECK}</span>
+              <div class="tool-status-copy">
+                <strong>Autofinancement atteint</strong>
+                <span>Dès l'année ${resultat.anneeAutofinancement}, les revenus des deux SCPI couvrent l'intégralité de la mensualité du crédit.</span>
+              </div>
+            </div>
+        ` : "";
+
+        // Graphique "Effet de levier" fusionné directement dans la carte
+        // "Synthèse" (plutôt qu'un onglet séparé de second niveau) — demandé
+        // par Victor.
+        const levier = calculerEffetLevier(resultat, state.values);
+        const maxValeur = Math.max(levier.patrimoineAvecFinancement, levier.capitalContrefactuel, 1);
+        const hauteurAvecFinancement = (levier.patrimoineAvecFinancement / maxValeur) * 100;
+        const hauteurPartLevier = levier.patrimoineAvecFinancement > 0 ? (levier.partLevier / levier.patrimoineAvecFinancement) * 100 : 0;
+        const hauteurPartReelle = 100 - hauteurPartLevier;
+        const hauteurSansFinancement = (levier.capitalContrefactuel / maxValeur) * 100;
+        // Quelques graduations (5, pas plus) : juste de quoi situer les deux
+        // barres sur une échelle commune sans charger le graphique — repris
+        // de niceValueTicks (shared.js), déjà utilisé par les graphiques en
+        // ligne du site pour le même usage.
+        const graduations = niceValueTicks(maxValeur, 5);
+        const axisHtml = graduations.map((t) => `<span class="levier-axis-tick" style="bottom:${(t / maxValeur) * 100}%">${formatMoney(t)}</span>`).join("");
+        const gridlinesHtml = graduations.map((t) => `<span class="levier-gridline" style="bottom:${(t / maxValeur) * 100}%"></span>`).join("");
+        // Écart entre les deux barres — calculé sur les mêmes totaux que ceux
+        // réellement dessinés (patrimoineAvecFinancement et capitalContrefactuel,
+        // pas partReelle/effetLevierPct, basés sur une autre référence et donc
+        // potentiellement différents dès que la revalorisation de la SCPI au
+        // comptant n'est pas nulle) : affiché en pastille accolée au segment
+        // vert (pas entre les deux barres) pour rendre ce chiffre explicite
+        // sans déduction, directement là où il se rapporte — demandé par
+        // Victor. Positionnée en absolu dans .levier-bars (pas dans
+        // .levier-bar lui-même, qui a overflow:hidden et la masquerait) :
+        // `bottom` compté depuis le bas de .levier-bars, comme
+        // .levier-bar-total — le segment vert va du sommet de la barre
+        // (hauteurAvecFinancement%) à hauteurAvecFinancement% moins sa propre
+        // hauteur (hauteurPartLevier% de la hauteur DE LA BARRE), d'où son
+        // centre vertical ci-dessous.
+        const centreSegmentLevier = hauteurAvecFinancement - (hauteurPartLevier / 100) * hauteurAvecFinancement / 2;
+        // Flèche à l'échelle du segment vert (220px = hauteur de
+        // .levier-bars), toujours un peu moins haute que lui (×0.82, jamais
+        // pile sa hauteur) : largeur ET hauteur sont mises à l'échelle
+        // ensemble depuis le même viewBox (24×56), pas seulement la hauteur
+        // — sinon la pointe se serait déformée en s'étirant verticalement
+        // sans grandir en largeur. Demandé par Victor : la flèche doit
+        // réagir au rectangle vert, sans jamais l'égaler ni le dépasser.
+        const hauteurFlecheLevier = (hauteurPartLevier / 100) * (hauteurAvecFinancement / 100) * 220 * 0.82;
+        const largeurFlecheLevier = hauteurFlecheLevier * (24 / 56);
+        const deltaValeur = levier.patrimoineAvecFinancement - levier.capitalContrefactuel;
+        const deltaPct = levier.capitalContrefactuel > 0 ? (levier.patrimoineAvecFinancement / levier.capitalContrefactuel - 1) * 100 : 0;
+        const deltaHtml = deltaValeur > 0.5 ? `
+                        <div class="levier-delta-badge" style="bottom:${centreSegmentLevier}%">
+                          <svg class="levier-delta-arrow" viewBox="0 0 24 56" style="width:${largeurFlecheLevier}px; height:${hauteurFlecheLevier}px" aria-hidden="true"><path d="M12 54V4"></path><path d="m4 14 8-10 8 10"></path></svg>
+                          <div class="levier-delta-text">
+                            <span class="levier-delta-title">Effet de levier</span>
+                            <strong class="levier-delta-value">+${formatMoney(deltaValeur)}</strong>
+                            ${levier.capitalContrefactuel > 0 ? `<span class="levier-delta-pct">+${Math.round(deltaPct)} %</span>` : ""}
+                          </div>
+                        </div>
+        ` : "";
+        const texteEffort = resultat.anneeAutofinancement !== null
+          ? `${formatMoney(anneeUn.effortAvecComptant)}/mois, puis dégressif jusqu'à 0 €/mois en ${resultat.anneeAutofinancement}ᵉ année`
+          : `${formatMoney(anneeUn.effortAvecComptant)}/mois`;
+
+        // Le chiffre mis en avant est l'effort d'épargne réel (ce qui sort
+        // vraiment de la poche), pas la mensualité. La mensualité totale est
+        // rappelée au-dessus des deux cases (même typographie — petites
+        // capitales grasses — que leurs étiquettes, pour la cohérence),
+        // suivie d'une fine barre bleu/doré proportionnelle qui relie le
+        // total aux deux cases par la couleur plutôt que par un tracé —
+        // demandé par Victor, le connecteur en Y jugé pas assez abouti.
+        // Dès qu'il y a un versement initial et/ou programmé sur la SCPI au
+        // comptant, son revenu net (déjà capitalisé sur l'année via
+        // simulerAnnees) doit entrer dans l'effort réel et dans le revenu
+        // locatif affichés — sinon la carte ignorerait complètement cette
+        // jambe du patrimoine. Ce revenu net croît ensuite chaque année
+        // (contributions + capitalisation), ce qui abaisse l'effort réel
+        // global au fil du temps : les deux chiffres ci-dessous (basés sur
+        // l'année 1) ne restent donc valables qu'en année 1 — précisé dans
+        // les libellés — demandé par Victor.
+        const comptantActif = state.values.versementInitial > 0 || state.values.versementMensuelProgramme > 0;
+        const versementMensuelActif = state.values.versementMensuelProgramme > 0;
+        // anneeUn.revenuNetComptantMensuel est calculé sur le capital de FIN
+        // d'année 1 (après les 12 mois de versements/capitalisation de
+        // simulerAnnees) : représentatif tant qu'il n'y a qu'un versement
+        // initial (le capital ne bouge alors que par capitalisation, assez
+        // lissée sur l'année), mais trompeur dès qu'il y a aussi un
+        // versement mensuel programmé — l'effort y décroît sensiblement
+        // chaque mois. Dans ce cas, on recalcule la valeur du seul premier
+        // mois de l'année 1 (un seul versement, pas les 12) — demandé par
+        // Victor.
+        const revenuNetComptantMensuelEffort = versementMensuelActif
+          ? (state.values.versementInitial * (1 + state.values.revalorisationComptantPct / 100 / 12) + state.values.versementMensuelProgramme)
+            * (state.values.rendementComptantPct / 100) * (1 - state.values.tauxEffectifEstimePct / 100) / 12
+          : anneeUn.revenuNetComptantMensuel;
+        const effortReelMensuel = Math.max(0, Math.min(anneeUn.mensualite, comptantActif ? (anneeUn.mensualite - anneeUn.revenuBrutCreditMensuel - revenuNetComptantMensuelEffort) : anneeUn.effortSansComptant));
+        const revenuLocatifMensuel = anneeUn.revenuBrutCreditMensuel + (comptantActif ? revenuNetComptantMensuelEffort : 0);
+        const pctEffortReel = anneeUn.mensualite > 0 ? (effortReelMensuel / anneeUn.mensualite) * 100 : 0;
+        const pctLoyerBrut = 100 - pctEffortReel;
+        const suffixeAnnee1 = versementMensuelActif ? " le 1ᵉʳ mois de l'année 1" : (comptantActif ? " en année 1" : "");
 
         summary.innerHTML = `
           <article class="tool-result-card tool-result-editorial">
             <div class="tool-summary-title">
-              <h2>Synthèse</h2>
+              <h2>Synthèse — Effet de levier du financement</h2>
             </div>
-            <div class="tool-hero">
-              <div class="tool-hero-panel tool-hero-panel-blue">
-                <span class="tool-hero-label">Mensualité crédit</span>
-                <strong class="tool-hero-amount">${formatMoney(resultat.mensualiteCredit)}</strong>
-              </div>
-              <div class="tool-hero-panel tool-hero-panel-gold">
-                <span class="tool-hero-label">Effort net an 1 (avec comptant)</span>
-                <strong class="tool-hero-amount">${formatMoney(anneeUn.effortAvecComptant)}</strong>
+            <div class="capital-metric-total-row">
+              <span class="capital-metric-total-label">Mensualité crédit totale : ${formatMoney(anneeUn.mensualite)}</span>
+              <div class="capital-metric-total-bar">
+                <div class="capital-metric-total-segment capital-metric-total-segment-reel" style="width:${pctEffortReel}%"></div>
+                <div class="capital-metric-total-segment capital-metric-total-segment-loyer" style="width:${pctLoyerBrut}%"></div>
               </div>
             </div>
-            <div class="tool-status-banner is-${etat}" role="status">
-              <span class="tool-status-icon" aria-hidden="true">${copy.icon}</span>
-              <div class="tool-status-copy">
-                <strong>${copy.title}</strong>
-                <span>${detail}</span>
+            <div class="capital-metric-merged">
+              <div class="capital-metric-merged-col capital-metric-merged-col-reel">
+                <span class="capital-metric-merged-label">Effort d'épargne réel</span>
+                <strong class="capital-metric-merged-amount">${formatMoney(effortReelMensuel)}<small class="capital-metric-merged-period"> / mois</small></strong>
+                ${suffixeAnnee1 ? `<span class="capital-metric-merged-caption">${suffixeAnnee1.trim()}</span>` : ""}
+              </div>
+              <div class="capital-metric-merged-col capital-metric-merged-col-loyer">
+                <span class="capital-metric-merged-label">Revenu locatif brut</span>
+                <strong class="capital-metric-merged-amount">${formatMoney(revenuLocatifMensuel)}<small class="capital-metric-merged-period"> / mois</small></strong>
+                ${suffixeAnnee1 ? `<span class="capital-metric-merged-caption">${suffixeAnnee1.trim()}</span>` : ""}
               </div>
             </div>
-            <div class="capital-metrics">
-              <span class="capital-metric-invested">
-                <small>Revenus nets SCPI crédit / mois</small>
-                <strong>${formatMoney(anneeUn.revenuNetCreditMensuel)}</strong>
-              </span>
-              <span class="capital-metric-interest">
-                <small>Revenus nets SCPI comptant / mois</small>
-                <strong>${formatMoney(anneeUn.revenuNetComptantMensuel)}</strong>
-              </span>
+            ${statusBanner}
+            <div class="levier-panel-body">
+              <p class="tool-page-note">À effort d'épargne équivalent : (${texteEffort})</p>
+              <div class="levier-chart">
+                <div class="levier-axis">
+                  <div class="levier-axis-ticks">${axisHtml}</div>
+                  <span class="levier-bar-label levier-bar-label-swatched levier-axis-spacer" aria-hidden="true">&nbsp;</span>
+                </div>
+                <div class="levier-plot">
+                  <div class="levier-gridlines">${gridlinesHtml}</div>
+                  <div class="levier-bar-group">
+                    <div class="levier-bars">
+                      <strong class="levier-bar-total" style="bottom:${hauteurAvecFinancement}%">${formatMoney(levier.patrimoineAvecFinancement)}</strong>
+                      <div class="levier-bar" style="height:${hauteurAvecFinancement}%">
+                        <span class="levier-bar-segment levier-bar-segment-levier" style="height:${hauteurPartLevier}%"></span>
+                        <span class="levier-bar-segment levier-bar-segment-reel" style="height:${hauteurPartReelle}%"></span>
+                      </div>
+                      ${deltaHtml}
+                    </div>
+                    <span class="levier-bar-label levier-bar-label-swatched levier-bar-label-mixte">Patrimoine constitué<br>avec financement</span>
+                  </div>
+                  <div class="levier-bar-group">
+                    <div class="levier-bars">
+                      <strong class="levier-bar-total" style="bottom:${hauteurSansFinancement}%">${formatMoney(levier.capitalContrefactuel)}</strong>
+                      <div class="levier-bar" style="height:${hauteurSansFinancement}%">
+                        <span class="levier-bar-segment levier-bar-segment-reel" style="height:100%"></span>
+                      </div>
+                    </div>
+                    <span class="levier-bar-label levier-bar-label-swatched levier-bar-label-reel">Patrimoine constitué<br>sans financement</span>
+                  </div>
+                </div>
+              </div>
+              <div class="levier-legend">
+                <span><i class="levier-legend-dot levier-legend-dot-reel"></i>Part financée par l'effort d'épargne réel</span>
+                <span><i class="levier-legend-dot levier-legend-dot-levier"></i>Part financée par effet de levier</span>
+              </div>
             </div>
-            <div class="capital-shares">
-              <span>
-                <small>Autofinancement</small>
-                <strong>${resultat.anneeAutofinancement !== null ? `An ${resultat.anneeAutofinancement}` : "Non atteint"}</strong>
-              </span>
-              <span>
-                <small>Patrimoine net final</small>
-                <strong>${formatMoney(anneeFinale.patrimoineNet)}</strong>
-              </span>
-            </div>
-            <p class="capital-insight">Le déficit foncier non imputé est reportable sur les revenus fonciers des 10 années suivantes (non modélisé dans la simulation ci-dessus).</p>
           </article>
         `;
       }
 
-      function renderChartEffort(resultat) {
+      // Loyer brut vs charges déductibles (intérêts d'emprunt réellement
+      // payés, cf. construireEcheancierCredit) de la jambe à crédit, année
+      // par année sur tout l'horizon — l'écart entre les deux courbes
+      // grandit au fil de l'amortissement, à mesure que les intérêts
+      // (décroissants) couvrent une part de moins en moins grande du loyer.
+      function renderChartFiscalite(resultat) {
         const rows = resultat.annees;
-        const marker = resultat.anneeAutofinancement !== null
-          ? { index: resultat.anneeAutofinancement - 1, label: `Autofinancement — An ${resultat.anneeAutofinancement}` }
-          : null;
-
         renderLineChart(rows, {
+          chartId: "fiscalite-chart",
           series: [
-            { role: "invested", label: "Mensualité crédit", values: rows.map((a) => a.mensualite) },
-            { role: "gains", label: "Effort net sans SCPI comptant", values: rows.map((a) => a.effortSansComptant) },
-            { role: "capital", label: "Effort net avec SCPI comptant", values: rows.map((a) => a.effortAvecComptant) }
+            { role: "invested", label: "Loyer brut", values: rows.map((a) => a.revenuBrutCredit / 12) },
+            { role: "gains", label: "Charges déductibles", values: rows.map((a) => a.chargesDeductibles / 12) }
           ],
-          marker,
-          ariaLabel: "Évolution de l'effort mensuel net, avec et sans SCPI au comptant"
+          ariaLabel: "Évolution du loyer brut et des charges déductibles de la SCPI financée à crédit",
+          // Valeurs mensuelles, de l'ordre de quelques centaines d'euros ici
+          // (contrairement aux montants de capital des autres graphiques du
+          // site) : l'arrondi à la centaine par défaut de l'infobulle
+          // (roundToHundred, shared.js) les rendait illisibles. Demandé par
+          // Victor.
+          tooltipExact: true
         });
       }
 
-      function renderTableSynthese(resultat) {
-        const headers = ["Année", "Mensualité crédit", "Effort net sans comptant", "Effort net avec comptant", "Patrimoine brut", "Patrimoine net"];
-        // Après la fin du crédit, la mensualité est nulle et l'"effort" est
-        // par construction négatif : on affiche alors ces mêmes colonnes en
-        // valeur inversée, lues comme un revenu net perçu plutôt qu'un coût.
-        const mapper = (row) => [
-          row.annee,
-          row.creditEnCours ? formatMoney(row.mensualite) : "—",
-          formatMoney(row.creditEnCours ? row.effortSansComptant : -row.effortSansComptant),
-          formatMoney(row.creditEnCours ? row.effortAvecComptant : -row.effortAvecComptant),
-          formatMoney(row.patrimoineBrut),
-          formatMoney(row.patrimoineNet)
-        ];
-        const dividerIndex = resultat.annees.findIndex((a) => !a.creditEnCours);
+      // Effet de levier du financement, à effort d'épargne équivalent :
+      // tout l'argent réellement sorti de la poche — le manque à gagner sur
+      // la mensualité du crédit (effort "avec comptant", une fois les
+      // revenus des deux SCPI déduits) ET les versements sur la SCPI au
+      // comptant elle-même (versement initial + mensuels programmés) — si
+      // ce même total avait été placé directement sur une SCPI au comptant
+      // plutôt que de servir à financer le crédit, combien aurait-il
+      // constitué ?
+      //
+      // Fenêtre de sommation (demandé par Victor) : jusqu'à l'autofinancement
+      // du crédit s'il est atteint — au-delà, plus aucun effort n'est
+      // compté, qu'il s'agisse du manque à gagner sur le crédit (déjà à 0,
+      // cf. le clamp ci-dessous) ou des versements SCPI au comptant, même si
+      // ceux-ci continuent réellement dans la simulation (option "Arrêter
+      // les versements à l'autofinancement" non cochée) — cette comparaison
+      // raisonne indépendamment de ce réglage. Sinon (pas d'autofinancement
+      // atteint, typiquement sans SCPI au comptant), sur toute la durée du
+      // crédit.
+      //
+      // L'écart avec le patrimoine réellement détenu à ce même horizon (la
+      // SCPI financée seule, hors capital propre de la SCPI au comptant —
+      // son rôle ici est de réduire l'effort, pas de s'ajouter au
+      // patrimoine comparé) mesure l'effet de levier. Capital contrefactuel
+      // net d'aucune fiscalité, cohérent avec la façon dont le capital
+      // "SCPI au comptant" lui-même ne capitalise que via sa revalorisation
+      // (cf. simulerAnnees) : le rendement y est un revenu distribué, pas
+      // réinvesti.
+      function calculerEffetLevier(resultat, params) {
+        const anneeLimite = resultat.anneeAutofinancement ?? params.dureeCredit;
+        const anneesFinancement = resultat.annees.slice(0, anneeLimite);
+        let partReelle = params.versementInitial;
+        let capitalContrefactuel = params.versementInitial;
+        anneesFinancement.forEach((row) => {
+          const effortMensuel = Math.max(0, row.effortAvecComptant) + row.versementMensuelComptant;
+          for (let mois = 0; mois < 12; mois++) {
+            partReelle += effortMensuel;
+            capitalContrefactuel = capitalContrefactuel * (1 + params.revalorisationComptantPct / 100 / 12) + effortMensuel;
+          }
+        });
+        const patrimoineAvecFinancement = anneesFinancement.length
+          ? anneesFinancement[anneesFinancement.length - 1].valeurPartsCredit
+          : 0;
+        const partLevier = Math.max(0, patrimoineAvecFinancement - partReelle);
+        const effetLevierPct = partReelle > 0 ? (patrimoineAvecFinancement / partReelle - 1) * 100 : 0;
+        return { anneeLimite, patrimoineAvecFinancement, partReelle, partLevier, capitalContrefactuel, effetLevierPct };
+      }
 
-        renderTable(headers, mapper, resultat.annees, {
+
+      // Lignes affichées quand "Tableau complet" n'est pas coché : toujours
+      // année 1, année 2 et la dernière année du crédit (N). S'il y a une
+      // autofinancement, on ajoute aussi l'année qui précède et celle de
+      // l'autofinancement lui-même, avec au moins 3 lignes avant celle qui
+      // précède l'autofinancement (année 1, année 2 comprises) et au moins
+      // 2 lignes après l'autofinancement (N comprise) — complétées par des
+      // jalons régulièrement espacés (à mi-chemin, puis de plus en plus
+      // nombreux si l'écart le justifie) pour qu'il n'y ait jamais plus de
+      // 5 ans entre deux lignes consécutives. Sans autofinancement, même
+      // règle des 5 ans sur toute la durée du crédit. Évite les grands
+      // blancs d'un tableau trop clairsemé — demandé par Victor.
+      function selectAnneesCondensees(resultat, params) {
+        const maxYear = resultat.annees.length;
+        const years = new Set();
+        const add = (y) => { if (y >= 1 && y <= maxYear) years.add(Math.round(y)); };
+
+        // Sans SCPI au comptant, le tableau n'a rien de spécifique à montrer
+        // d'une année à l'autre (pas d'autofinancement ni de bascule) : la
+        // vue condensée se limite à l'année 1 et à la dernière — demandé par
+        // Victor.
+        const sansComptant = !params.versementInitial && !params.versementMensuelProgramme;
+        if (sansComptant) {
+          add(1);
+          add(2);
+          add(params.dureeCredit);
+          return Array.from(years).sort((a, b) => a - b).map((y) => resultat.annees[y - 1]);
+        }
+
+        // Jalons régulièrement espacés entre `debut` et `fin` (exclusifs) :
+        // au plus `ecartMax` ans entre deux jalons consécutifs, et au moins
+        // `minPoints` jalons même si l'écart réel est plus petit.
+        const ajouterJalons = (debut, fin, ecartMax, minPoints) => {
+          const ecart = fin - debut;
+          if (ecart <= 0) return;
+          const segments = Math.max(Math.ceil(ecart / ecartMax), minPoints + 1);
+          for (let i = 1; i < segments; i++) {
+            add(debut + (ecart * i) / segments);
+          }
+        };
+
+        add(1);
+        add(2);
+        add(params.dureeCredit);
+
+        const auto = resultat.anneeAutofinancement;
+        if (auto !== null) {
+          ajouterJalons(2, auto - 1, 5, 1);
+          add(auto - 1);
+          add(auto);
+          ajouterJalons(auto, params.dureeCredit, 5, 1);
+        } else {
+          ajouterJalons(2, params.dureeCredit, 5, 0);
+        }
+
+        return Array.from(years).sort((a, b) => a - b).map((y) => resultat.annees[y - 1]);
+      }
+
+      function renderTableSynthese(resultat) {
+        const auto = resultat.anneeAutofinancement;
+        // Colonne "Revenus perçus" ajoutée seulement si l'autofinancement
+        // est effectivement atteint à un moment du crédit — sinon elle ne
+        // contiendrait que des tirets (demandé par Victor).
+        const headers = ["Année", "Mensualité crédit", "Patrimoine brut", "Effort d'épargne sans SCPI au comptant", "Effort d'épargne avec SCPI au comptant"];
+        if (auto !== null) headers.push("Revenus perçus");
+        // Après la fin du crédit, la mensualité est nulle et l'"effort sans
+        // comptant" est par construction négatif : affiché en valeur
+        // inversée, lu comme un revenu perçu plutôt qu'un coût.
+        //
+        // Dès que l'autofinancement est atteint (effort "avec comptant" ≤
+        // 0), on n'affiche plus d'effort négatif dans cette colonne — 0 à la
+        // place — et le revenu réellement perçu passe dans sa propre
+        // colonne : demandé par Victor, pour ne pas lire "-166 €" comme un
+        // effort d'épargne alors que c'est déjà un revenu.
+        //
+        // Gras : "Effort avec comptant" tant qu'il est différent de 0,
+        // "Revenus perçus" dès qu'il est différent de 0 (donc jamais les
+        // deux à la fois sur une même ligne) — demandé par Victor.
+        const mapper = (row) => {
+          const autofinance = auto !== null && row.annee >= auto;
+          const isFirstAutofinance = row.annee === auto;
+          const effortAvecComptantValue = autofinance ? 0 : (row.creditEnCours ? row.effortAvecComptant : -row.effortAvecComptant);
+          const effortAvecComptantCell = formatMoney(effortAvecComptantValue);
+          const cells = [
+            isFirstAutofinance ? `<strong>${row.annee}</strong>` : row.annee,
+            row.creditEnCours ? formatMoney(row.mensualite) : "—",
+            formatMoney(row.patrimoineBrut),
+            formatMoney(row.creditEnCours ? row.effortSansComptant : -row.effortSansComptant),
+            effortAvecComptantValue !== 0 ? `<strong>${effortAvecComptantCell}</strong>` : effortAvecComptantCell
+          ];
+          if (auto !== null) {
+            if (!autofinance) {
+              cells.push("—");
+            } else {
+              const revenuPercuValue = -row.effortAvecComptant;
+              const revenuPercuCell = formatMoney(revenuPercuValue);
+              cells.push(revenuPercuValue !== 0 ? `<strong>${revenuPercuCell}</strong>` : revenuPercuCell);
+            }
+          }
+          return cells;
+        };
+        const rows = document.querySelector("#table-full-toggle").checked
+          ? resultat.annees
+          : selectAnneesCondensees(resultat, state.values);
+        const dividerIndex = rows.findIndex((a) => !a.creditEnCours);
+
+        renderTable(headers, mapper, rows, {
           dividerIndex: dividerIndex >= 0 ? dividerIndex : null,
-          dividerLabel: "Fin du crédit — revenus nets perçus ci-dessous"
+          dividerLabel: "Fin du crédit — revenus perçus ci-dessous",
+          rowClassName: (row) => (auto !== null && row.annee >= auto) ? "table-row-highlight-green" : ""
         });
       }
 
       function renderOutputs() {
         const resultat = simulerUnePierreDeuxCoups(state.values);
         renderSummary(resultat);
-        renderChartEffort(resultat);
+        renderChartFiscalite(resultat);
         renderTableSynthese(resultat);
       }
 
@@ -428,24 +734,53 @@
       // ---------------------------------------------------------------
 
       document.querySelector("#zero-fields").addEventListener("click", () => {
-        state.values.versementInitial = 0;
-        state.values.versementMensuelProgramme = 0;
-        withHeightTransition(document.querySelector(".tool-params"), render);
+        state.values.montantEmprunte = 0;
+        withHeightTransition(document.querySelector(".tool-params-stack"), render);
       });
 
       document.querySelector("#reset-fields").addEventListener("click", () => {
         state.values = structuredClone(defaults);
-        withHeightTransition(document.querySelector(".tool-params"), render);
+        withHeightTransition(document.querySelector(".tool-params-stack"), render);
       });
 
+      const toggleFieldsExtra = document.querySelector("#toggle-fields-extra");
+      const fieldsExtraPanel = document.querySelector("#fields-extra");
+      const fieldsExtraCard = toggleFieldsExtra.closest(".tool-params");
+
+      function setFieldsExtraExpanded(expanded) {
+        withHeightTransition(fieldsExtraCard, () => {
+          toggleFieldsExtra.setAttribute("aria-expanded", String(expanded));
+          fieldsExtraPanel.hidden = !expanded;
+        });
+      }
+
+      toggleFieldsExtra.addEventListener("click", () => {
+        setFieldsExtraExpanded(toggleFieldsExtra.getAttribute("aria-expanded") !== "true");
+      });
+
+      document.querySelector("#zero-fields-extra").addEventListener("click", () => {
+        state.values.versementInitial = 0;
+        state.values.versementMensuelProgramme = 0;
+        render();
+        setFieldsExtraExpanded(true);
+      });
+
+      document.querySelector("#table-full-toggle").addEventListener("change", () => {
+        withHeightTransition(document.querySelector("#table-panel"), () => {
+          renderTableSynthese(simulerUnePierreDeuxCoups(state.values));
+        });
+      });
+
+      const vuesDetail = ["fiscalite", "table"];
       document.querySelectorAll(".tool-view-toggle button").forEach((button) => {
         button.addEventListener("click", () => {
           const applyView = () => {
             document.querySelectorAll(".tool-view-toggle button").forEach((item) => {
               item.classList.toggle("is-active", item === button);
             });
-            document.querySelector("#chart-panel").hidden = button.dataset.view !== "chart";
-            document.querySelector("#table-panel").hidden = button.dataset.view !== "table";
+            vuesDetail.forEach((vue) => {
+              document.querySelector(`#${vue}-panel`).hidden = button.dataset.view !== vue;
+            });
           };
           if (document.startViewTransition) {
             document.startViewTransition(applyView);
