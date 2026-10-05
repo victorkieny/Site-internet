@@ -45,9 +45,14 @@
             <aside class="tool-params" aria-label="Hypothèses crédit">
               <div class="tool-params-title">
                 <h2><button type="button" id="zero-fields" class="tool-zero-fields" aria-label="SCPI en financement — mettre le montant emprunté à zéro" title="Mettre le montant emprunté à zéro">SCPI en financement</button></h2>
-                <button type="button" id="reset-fields" class="tool-reset" aria-label="Réinitialiser" title="Réinitialiser">
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 1 2.64 6.36"></path><path d="M3 21v-6h6"></path></svg>
-                </button>
+                <div class="tool-params-title-actions">
+                  <button type="button" id="reset-fields" class="tool-reset" aria-label="Réinitialiser" title="Réinitialiser">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 1 2.64 6.36"></path><path d="M3 21v-6h6"></path></svg>
+                  </button>
+                  <button type="button" id="toggle-fields" class="tool-collapsible-chevron-btn" aria-expanded="true" aria-controls="fields" aria-label="Afficher ou masquer les hypothèses SCPI en financement">
+                    <svg class="tool-collapsible-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
+                  </button>
+                </div>
               </div>
               <div id="fields" class="tool-fields"></div>
             </aside>
@@ -117,9 +122,9 @@
       // ---------------------------------------------------------------
 
       // Mensualité d'un prêt amortissable classique (capital + intérêts constants).
-      function calculerMensualiteCreditMois(capitalEmprunte, taegAnnuelPct, nombreMensualites) {
+      function calculerMensualiteCreditMois(capitalEmprunte, tauxInteretAnnuelPct, nombreMensualites) {
         if (nombreMensualites <= 0) return 0;
-        const tauxMensuel = taegAnnuelPct / 100 / 12;
+        const tauxMensuel = tauxInteretAnnuelPct / 100 / 12;
         if (tauxMensuel === 0) return capitalEmprunte / nombreMensualites;
         const facteur = Math.pow(1 + tauxMensuel, nombreMensualites);
         return capitalEmprunte * tauxMensuel * facteur / (facteur - 1);
@@ -130,10 +135,22 @@
       // l'amortissement) — et non une moyenne lissée sur toute la durée :
       // nécessaire pour refléter correctement l'année 1, où le bouclier
       // fiscal des intérêts est le plus fort.
+      //
+      // L'assurance emprunteur est une prime FIXE sur le capital initial
+      // (pas amortie, constante sur toute la durée), ajoutée à la
+      // mensualité d'intérêt/capital mais sans influer sur l'amortissement
+      // lui-même — c'est ainsi que la calculent les courtiers (cf. Fisy) :
+      // un taux d'intérêt et un taux d'assurance bien séparés, pas un TAEG
+      // unique composé. Démontré par Victor : à mensualité égale, un TAEG
+      // unique composé equivalent n'existe pas (828 €/mois à 5,7 % d'intérêt
+      // seul, mais 6,806 % de TAEG composé nécessaires pour retomber sur les
+      // 888 €/mois de Fisy avec assurance incluse — pas 5,7 + 0,36 = 6,06 %).
       function construireEcheancierCredit(params) {
         const dureeMois = params.dureeCredit * 12;
-        const tauxMensuel = params.taegPct / 100 / 12;
-        const mensualite = calculerMensualiteCreditMois(params.montantEmprunte, params.taegPct, dureeMois);
+        const tauxMensuel = params.tauxInteretPct / 100 / 12;
+        const mensualiteCredit = calculerMensualiteCreditMois(params.montantEmprunte, params.tauxInteretPct, dureeMois);
+        const assuranceMensuelle = params.montantEmprunte * (params.tauxAssurancePct / 100) / 12;
+        const mensualite = mensualiteCredit + assuranceMensuelle;
 
         let capital = params.montantEmprunte;
         const parAnnee = [];
@@ -143,7 +160,7 @@
           for (let i = 0; i < 12; i++) {
             const interetMois = capital * tauxMensuel;
             interetsAnnee += interetMois;
-            capital = Math.max(0, capital - (mensualite - interetMois));
+            capital = Math.max(0, capital - (mensualiteCredit - interetMois));
           }
           parAnnee.push({ mensualite, interets: interetsAnnee, capitalRestantDuFinAnnee: capital });
         }
@@ -248,12 +265,14 @@
       const defaults = {
         montantEmprunte: 100000,
         dureeCredit: 25,
-        taegPct: 5.75,
+        tauxInteretPct: 5.7,
+        tauxAssurancePct: 0.36,
         rendementCreditPct: 5.3,
         revalorisationCreditPct: 0,
         versementInitial: 0,
         versementMensuelProgramme: 0,
         arreterVersementsAutofinancement: false,
+        reinvestirLoyersComptant: false,
         rendementComptantPct: 5.8,
         revalorisationComptantPct: 0,
         tauxEffectifEstimePct: 15,
@@ -268,7 +287,8 @@
       const fieldDefinitionsCredit = [
         { key: "montantEmprunte", label: "Montant emprunté", min: 10000, max: 500000, step: 5000, suffix: "€" },
         { key: "dureeCredit", label: "Durée du crédit", min: 5, max: 25, step: 1, suffix: "ans" },
-        { key: "taegPct", label: "TAEG", min: 3, max: 7.5, step: 0.05, suffix: "%" },
+        { key: "tauxInteretPct", label: "Taux d'intérêt annuel", min: 3, max: 7.5, step: 0.05, suffix: "%" },
+        { key: "tauxAssurancePct", label: "Taux d'assurance", min: 0, max: 1.5, step: 0.02, suffix: "%" },
         { key: "rendementCreditPct", label: "Taux de distribution", min: 3, max: 8, step: 0.1, suffix: "%" },
         { key: "revalorisationCreditPct", label: "Revalorisation des parts", min: 0, max: 4, step: 0.1, suffix: "%/an" }
       ];
@@ -289,7 +309,12 @@
           key: "arreterVersementsAutofinancement",
           label: "Arrêter les versements à l'autofinancement",
           type: "checkbox",
-          note: "Le versement mensuel programmé s'arrête dès que l'autofinancement est atteint ; le capital déjà constitué continue de fructifier seul (le versement initial n'est jamais concerné)."
+          note: "Le versement mensuel programmé s'arrête dès que l'autofinancement est atteint ; le capital déjà constitué continue alors de fructifier seul."
+        },
+        {
+          key: "reinvestirLoyersComptant",
+          label: "Réinvestir les loyers (sans financement)",
+          type: "checkbox"
         }
       ];
 
@@ -594,6 +619,16 @@
           for (let mois = 0; mois < 12; mois++) {
             partReelle += effortMensuel;
             capitalContrefactuel = capitalContrefactuel * (1 + params.revalorisationComptantPct / 100 / 12) + effortMensuel;
+            // Option "Réinvestir les loyers (sans financement)" : propre à
+            // cette seule jambe contrefactuelle, sans toucher à la SCPI au
+            // comptant réellement détenue en parallèle du crédit (cf.
+            // simulerAnnees, où les loyers restent perçus/déduits de
+            // l'effort). Logique ici : sans crédit à payer, rien n'empêche
+            // de laisser les loyers nets capitaliser plutôt que d'être
+            // perçus — demandé par Victor.
+            if (params.reinvestirLoyersComptant) {
+              capitalContrefactuel += capitalContrefactuel * (params.rendementComptantPct / 100) * (1 - params.tauxEffectifEstimePct / 100) / 12;
+            }
           }
         });
         const patrimoineAvecFinancement = anneesFinancement.length
@@ -741,6 +776,25 @@
       document.querySelector("#reset-fields").addEventListener("click", () => {
         state.values = structuredClone(defaults);
         withHeightTransition(document.querySelector(".tool-params-stack"), render);
+      });
+
+      // Repli/dépli de "SCPI en financement", même mécanisme que "SCPI au
+      // comptant" (cf. toggleFieldsExtra plus bas) — demandé par Victor.
+      // Ouvert par défaut (aria-expanded="true" dans le HTML, pas de
+      // `hidden` sur #fields) : c'est le bloc d'hypothèses principal.
+      const toggleFields = document.querySelector("#toggle-fields");
+      const fieldsPanel = document.querySelector("#fields");
+      const fieldsCard = toggleFields.closest(".tool-params");
+
+      function setFieldsExpanded(expanded) {
+        withHeightTransition(fieldsCard, () => {
+          toggleFields.setAttribute("aria-expanded", String(expanded));
+          fieldsPanel.hidden = !expanded;
+        });
+      }
+
+      toggleFields.addEventListener("click", () => {
+        setFieldsExpanded(toggleFields.getAttribute("aria-expanded") !== "true");
       });
 
       const toggleFieldsExtra = document.querySelector("#toggle-fields-extra");

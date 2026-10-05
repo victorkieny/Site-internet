@@ -147,7 +147,9 @@
           dureeVersements: 30,
           dureeTotale: 50,
           reinvestir: false,
-          tmi: 30
+          tmi: 30,
+          fiscaliteEuropeenne: false,
+          tauxEffectifReinvestissement: 15
         },
         av: {
           capitalInitial: 10000,
@@ -203,9 +205,15 @@
         let versementsCumules = 0;
         let capital = 0;
         let revenusCumules = 0;
-        // Seule la part nette de fiscalité (TMI + prélèvements sociaux) d'un dividende
-        // réinvesti se capitalise réellement : voir skill scpi-capitalisation.
-        const tauxImposition = (values.tmi + PS_RATE) / 100;
+        // Seule la part nette de fiscalité d'un dividende réinvesti se capitalise
+        // réellement : voir skill scpi-capitalisation. Deux régimes au choix (case
+        // "Fiscalité européenne") : TMI + prélèvements sociaux français, ou taux
+        // effectif forfaitaire approximant une SCPI étrangère (crédit d'impôt ou
+        // taux effectif selon convention fiscale) — demandé par Victor, pour
+        // comparer les deux en rendez-vous selon la situation du client.
+        const tauxImposition = values.fiscaliteEuropeenne
+          ? values.tauxEffectifReinvestissement / 100
+          : (values.tmi + PS_RATE) / 100;
 
         for (let annee = 1; annee <= values.dureeTotale; annee++) {
           const versementAnnuel = annee <= values.dureeVersements ? values.versementMensuel * 12 : 0;
@@ -304,8 +312,10 @@
           { key: "versementMensuel", label: "Versement mensuel", type: "number", min: 0, max: 5000, step: 50, suffix: "€" },
           { key: "dureeVersements", label: "Durée des versements", type: "number", min: 0, max: 50, step: 1, suffix: "ans" },
           { key: "dureeTotale", label: "Durée totale", type: "number", min: 0, max: 80, step: 1, suffix: "ans" },
-          { key: "reinvestir", label: "Réinvestir les loyers", type: "checkbox", checkedNote: "Les loyers sont réinjectés dans le capital pendant la période de versement, puis vous sont versés.\nCe calcul réinvestit les loyers nets de fiscalité (TMI + prélèvements sociaux de 17,2 %)." },
-          { key: "tmi", label: "Tranche marginale d'imposition (TMI)", type: "number", steps: [0, 11, 30, 41, 45], suffix: "%", dependsOn: "reinvestir" }
+          { key: "reinvestir", label: "Réinvestir les loyers", type: "checkbox", checkedNote: "Les loyers sont réinjectés dans le capital pendant la période de versement, puis vous sont versés, nets de la fiscalité choisie ci-dessous." },
+          { key: "fiscaliteEuropeenne", label: "Fiscalité européenne", type: "checkbox", dependsOn: "reinvestir", checkedNote: "Taux d'imposition effectif forfaitaire (crédit d'impôt ou taux effectif selon convention fiscale), au lieu de la TMI et des prélèvements sociaux français." },
+          { key: "tmi", label: "Tranche marginale d'imposition (TMI)", type: "number", steps: [0, 11, 30, 41, 45], suffix: "%", dependsOn: (values) => values.reinvestir && !values.fiscaliteEuropeenne },
+          { key: "tauxEffectifReinvestissement", label: "Taux d'imposition effectif estimé", type: "number", min: 0, max: 35, step: 0.5, suffix: "%", dependsOn: (values) => values.reinvestir && values.fiscaliteEuropeenne }
         ],
         av: [
           { key: "capitalInitial", label: "Versement initial", type: "number", min: 0, max: 500000, step: 1000, suffix: "€" },
@@ -521,7 +531,15 @@
         };
 
         fieldDefinitions[state.mode].forEach((field) => {
-          if (field.dependsOn && !values[field.dependsOn]) return;
+          // dependsOn accepte soit la clé d'un champ booléen (comportement
+          // d'origine), soit une fonction de prédicat pour les cas où la
+          // visibilité dépend de plusieurs champs à la fois (ex. "tmi" et
+          // "tauxEffectifReinvestissement", mutuellement exclusifs selon le
+          // régime fiscal choisi) — demandé par Victor.
+          if (field.dependsOn) {
+            const satisfait = typeof field.dependsOn === "function" ? field.dependsOn(values) : values[field.dependsOn];
+            if (!satisfait) return;
+          }
           if (state.mode === "av" && ["fraisEntreeActifs", "fraisEntree", "fraisActifs", "frais"].includes(field.key)) return;
 
           if (field.type === "select") {

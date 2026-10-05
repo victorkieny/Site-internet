@@ -4463,6 +4463,18 @@ body.resources-modal-open {
   outline-offset: 5px;
 }
 
+/* Regroupe Réinitialiser + le chevron replier/déplier d'"SCPI en
+   financement" : .tool-params-title (space-between) attend 2 enfants
+   directs (le titre et "le reste"), pas 3 — demandé par Victor, même
+   fonctionnalité de repli que "SCPI au comptant". */
+.tool-params-title-actions {
+  display: flex;
+  flex-direction: row;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 10px;
+}
+
 .tool-reset {
   display: inline-flex;
   align-items: center;
