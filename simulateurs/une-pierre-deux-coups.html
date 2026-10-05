@@ -109,6 +109,7 @@
           <p class="tool-page-note">La SCPI au comptant applique un taux d'imposition effectif forfaitaire propre à une SCPI étrangère.</p>
           <p class="tool-page-note">La fiscalité des revenus de la SCPI financée à crédit n'est volontairement pas simulée : en régime réel, les intérêts d'emprunt et les charges associées sont déductibles de ces revenus fonciers (déficit foncier), ce qui en neutralise généralement une grande partie sur la durée du crédit.</p>
           <p class="tool-page-note">Le délai de jouissance des parts de SCPI, généralement de quelques mois avant le versement des premiers loyers, n'est pas non plus pris en compte.</p>
+          <p class="tool-page-note">L'effet de levier est mesuré jusqu'à l'autofinancement (ou jusqu'à la fin du crédit si non atteint) : plus les versements sur la SCPI au comptant sont élevés, plus l'autofinancement est atteint tôt, et plus l'effet de levier affiché peut paraître important sur cette fenêtre plus courte.</p>
         </div>
       </section>
     </main>
@@ -631,8 +632,17 @@
             }
           }
         });
+        // patrimoineBrut = valeurPartsCredit + capitalComptant (simulerAnnees) :
+        // il faut compter le capital RÉEL de la SCPI au comptant construit en
+        // parallèle du crédit, pas seulement la SCPI financée — sinon, dès que
+        // versementMensuelProgramme n'est pas nul, ce même versement est compté
+        // comme "effort" côté partReelle (ligne 618) sans que le patrimoine
+        // qu'il construit réellement apparaisse côté "avec financement" : la
+        // comparaison devenait invalide (effet de levier à 0, voire négatif,
+        // dès que les versements comptant dépassaient le gain du crédit seul).
+        // Bug identifié par Victor.
         const patrimoineAvecFinancement = anneesFinancement.length
-          ? anneesFinancement[anneesFinancement.length - 1].valeurPartsCredit
+          ? anneesFinancement[anneesFinancement.length - 1].patrimoineBrut
           : 0;
         const partLevier = Math.max(0, patrimoineAvecFinancement - partReelle);
         const effetLevierPct = partReelle > 0 ? (patrimoineAvecFinancement / partReelle - 1) * 100 : 0;
