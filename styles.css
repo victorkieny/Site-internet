@@ -4807,6 +4807,25 @@ body.resources-modal-open {
   text-anchor: middle;
 }
 
+/* Pas de grand cadre derrière Hypothèses/Projection : chacune de ces cases
+   garde son propre fond (cf. la règle partagée .tool-result-card,
+   .tool-table-card, .tool-params plus haut), posé directement sur le fond
+   de la page plutôt que dans un rectangle englobant — même traitement que
+   body[data-mode="per"] .tool-overview, demandé par Victor. */
+body[data-mode="scpi"] .tool-overview {
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  /* .tool-overview a align-items: stretch par défaut : ça étirait
+     "Projection" à la hauteur d'"Hypothèses" dès que celle-ci s'allongeait
+     (ex. case "Fiscalité européenne" dépliée), avec un grand vide sous la
+     carte de droite. Chaque colonne garde maintenant sa hauteur naturelle —
+     demandé par Victor. */
+  align-items: start;
+}
+
 /* SCPI — graphique éditorial inspiré de la synthèse patrimoniale */
 body[data-mode="scpi"] .tool-detail-panels {
   padding: 0;
@@ -8868,12 +8887,28 @@ body[data-mode="scpi"] .tool-field[data-field="dureeTotale"] .tool-input-wrap in
 }
 
 @media (max-width: 900px) {
-  html,
-  body {
+  /* Seul <html> porte le overflow-x: hidden (anti-débordement horizontal) ;
+     <body> reste en overflow: visible. Avant : overflow-x: hidden +
+     overflow-y: auto sur html ET body → body devenait un conteneur de scroll
+     à part entière (hauteur = contenu, donc jamais scrollable lui-même), et
+     son overscroll-behavior: none (règle de base) empêchait le geste de
+     remonter jusqu'au viewport. Résultat sur Android/Chrome : page
+     impossible à faire défiler au doigt (dernière carte de rdv.html
+     inatteignable) ; Safari iOS n'applique pas le même chaînage, d'où un
+     rendu correct sur iPhone. overscroll-behavior: none reste sur html
+     (règle de base) : c'est lui qui désactive le pull-to-refresh. */
+  html {
     width: 100%;
     max-width: 100%;
     overflow-x: hidden;
     overflow-y: auto;
+  }
+
+  body {
+    width: 100%;
+    max-width: 100%;
+    overflow: visible;
+    overscroll-behavior: auto;
   }
 
   .page {
@@ -10489,3 +10524,33 @@ body[data-mode="comparateur"] .table-row-highlight:hover td {
    (au-dessus de chaque barre) et le delta annoté en vert — ces cartes ne
    faisaient plus que répéter des chiffres déjà visibles au-dessus, sans
    lecture nouvelle — demandé par Victor suite à un audit de cette section. */
+
+/* Simulateurs — mobile/tablette (≤980px) : supprime le débordement horizontal.
+   1) grid-template-columns: 1fr équivaut à minmax(auto, 1fr) : la colonne
+      s'élargit jusqu'à la largeur minimale de son contenu (tableau ou graphique,
+      jusqu'à 720px sur un écran de 390px). minmax(0, 1fr) + min-width: 0
+      autorisent le rétrécissement.
+   2) .chart-canvas (aspect-ratio + min-height) tirait sa largeur de sa hauteur
+      minimale (270px × 960/380 = 682px) : width: 100% coupe court.
+   3) .tool-page clippe le halo décoratif de .levier-delta-badge::before
+      (inset droit : -16px) qui dépassait de 17px à droite de l'écran. */
+@media (max-width: 980px) {
+  .tool-layout,
+  .tool-overview,
+  .tool-summary {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .tool-layout :where(div, section, article) {
+    min-width: 0;
+  }
+
+  .line-chart,
+  .chart-canvas {
+    width: 100%;
+  }
+
+  .tool-page {
+    overflow-x: clip;
+  }
+}
