@@ -5926,6 +5926,15 @@ body[data-mode="scpi"] #chart-panel .chart-tooltip-gains strong {
   display: none;
 }
 
+/* Léger espace avant "Frais de notaire & garantie" (Acheter ou louer) :
+   marque visuellement que ce champ et "Apport personnel" juste au-dessus
+   forment un même sous-groupe (l'apport couvre d'abord les frais de
+   notaire, cf. simulerAchatLocation), avant le bloc financement/charges
+   qui suit. */
+body[data-mode="acheter-louer"] [data-field="fraisNotairePct"] {
+  margin-top: 22px;
+}
+
 .tool-field {
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
