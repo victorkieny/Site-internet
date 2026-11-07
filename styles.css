@@ -9884,7 +9884,9 @@ body[data-mode="comparateur"] #chart-panel .chart-line-invested {
    (.chart-marker-label), pensé à l'origine pour un repère isolé — ici sur
    fond de deux courbes déjà colorées. Même traitement que le libellé d'un
    curseur (.tool-field > span en mode comparateur) : encre atténuée,
-   graisse 540, plutôt que le doré/gras d'origine. */
+   graisse 460 (plutôt que 540) pour rester lisible sans retomber sur un
+   rendu gras quand la police système ne propose pas de graisse
+   intermédiaire. */
 body[data-mode="comparateur"] #chart-panel .chart-marker-line {
   stroke: rgba(43, 37, 30, 0.38);
 }
@@ -9892,7 +9894,7 @@ body[data-mode="comparateur"] #chart-panel .chart-marker-line {
 body[data-mode="comparateur"] #chart-panel .chart-marker-label {
   fill: rgba(43, 37, 30, 0.68);
   font-size: 14px;
-  font-weight: 540;
+  font-weight: 460;
 }
 
 /* Colonne de droite propre à une page hors gabarit à 2 colonnes (Une
