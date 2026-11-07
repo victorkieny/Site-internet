@@ -4801,6 +4801,7 @@ body.resources-modal-open {
 
 .chart-marker-label {
   fill: var(--interest-gold);
+  stroke: none;
   font-family: var(--sans);
   font-size: 15px;
   font-weight: 650;
