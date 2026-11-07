@@ -2344,6 +2344,13 @@ body.resources-modal-open {
     linear-gradient(112deg, #2f3f4a 0%, #3c3a35 52%, #6d5230 100%);
 }
 
+.simulator-choice-achatlouer {
+  background:
+    radial-gradient(circle at 94% 8%, rgba(140, 181, 210, 0.19), transparent 39%),
+    radial-gradient(circle at 6% 96%, rgba(210, 169, 101, 0.18), transparent 41%),
+    linear-gradient(112deg, #324450 0%, #3e3d39 54%, #62502f 100%);
+}
+
 .simulator-choice-featured::before {
   content: "";
   position: absolute;
