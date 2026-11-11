@@ -3,11 +3,11 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Acheter ou louer | Simulateur</title>
+    <title>Acheter ou louer ? | Simulateur</title>
     <link rel="icon" href="../favicon.ico" sizes="any">
     <link rel="icon" href="../assets/favicon-96x96.png" type="image/png" sizes="96x96">
     <link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
-    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="../styles.css?v=38">
   </head>
   <body class="tool-body">
     <main class="tool-page" aria-labelledby="tool-page-title">
@@ -36,30 +36,26 @@
         </label>
       </nav>
       <nav class="tool-nav" aria-label="Navigation du simulateur">
-        <h1 id="tool-page-title">Acheter ou louer</h1>
+        <h1 id="tool-page-title">Acheter ou louer ?</h1>
       </nav>
 
       <section class="tool-layout">
-        <section class="tool-params-bar" aria-label="Hypothèses">
-          <div class="tool-params-title">
-            <h2>Hypothèses</h2>
-            <button type="button" id="reset-fields" class="tool-reset">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 1 2.64 6.36"></path><path d="M3 21v-6h6"></path></svg>
-              Réinitialiser
-            </button>
-          </div>
-          <div id="fields" class="comparateur-top-fields"></div>
-        </section>
+        <div class="tool-fields-row" id="fields-row" aria-label="Hypothèses du bien, du financement et de la location"></div>
 
-        <div class="contract-fields" id="contract-fields" aria-label="Hypothèses achat et location"></div>
+        <div id="stat-split-row"></div>
 
-        <div class="tool-summary" id="summary"></div>
-
-        <div class="tool-chart-card" id="chart-panel">
+        <div class="tool-chart-card" id="chart-panel-depenses">
           <div class="tool-card-title">
-            <h2>Patrimoine net dans le temps</h2>
+            <h2>Dépenses cumulées</h2>
           </div>
-          <div class="line-chart" id="chart" aria-label="Graphique comparant le patrimoine net de l'acheteur et du locataire"></div>
+          <div class="line-chart" id="chart-depenses" aria-label="Graphique comparant les coûts cumulés du propriétaire et les loyers cumulés du locataire"></div>
+        </div>
+
+        <div class="tool-chart-card" id="chart-panel-patrimoine">
+          <div class="tool-card-title">
+            <h2>Patrimoine net réel</h2>
+          </div>
+          <div class="line-chart" id="chart-patrimoine" aria-label="Graphique comparant le patrimoine net du propriétaire et celui du locataire dans le temps"></div>
         </div>
 
         <div class="tool-table-card" id="table-panel">
@@ -72,24 +68,29 @@
         </div>
 
         <div class="tool-page-notes">
-          <p class="tool-page-note">Les frais de notaire et les frais d'agence à la revente sont perdus dès l'achat : le patrimoine net de l'acheteur démarre donc en-dessous de son apport, contrairement au locataire, qui place l'intégralité du sien dès le départ.</p>
-          <p class="tool-page-note">Cette simulation suppose que le locataire place réellement, chaque mois, l'écart entre la mensualité d'achat et son loyer — une discipline d'épargne qui, en pratique, n'est pas toujours tenue.</p>
-          <p class="tool-page-note">La résidence principale est exonérée de plus-value immobilière à la revente ; le placement financier du locataire reste, lui, fiscalisé sur ses seuls gains (flat tax par défaut). Cette asymétrie favorise structurellement l'achat à rendements comparables.</p>
-          <p class="tool-page-note">Sur un horizon court (moins de 5 à 7 ans), les frais d'acquisition et de revente pèsent proportionnellement plus lourd : l'achat est rarement la solution la plus avantageuse à très court terme.</p>
-          <p class="tool-page-note">Cette simulation ne valorise pas les avantages non financiers du logement (stabilité, liberté d'aménagement) ni la contrainte de mobilité propre à la propriété.</p>
+          <p class="tool-page-note">Les frais de notaire sont financés par le crédit (pas payés cash en plus de l'apport), mais comptent immédiatement dans les coûts cumulés du propriétaire : ils sont perdus dès la signature, bien avant que le capital restant dû ne commence à baisser.</p>
+          <p class="tool-page-note">En mode Auto, les charges annuelles (taxe foncière + taxe d'enlèvement des ordures ménagères, copropriété, assurance habitation, entretien courant) sont estimées à 1,7 % du prix du bien — une hypothèse moyenne entre grande métropole (~1 %) et ville moyenne (~2,5 %), pour un appartement ancien de 60 m². Répartition indicative : 0,9 % copropriété, 0,4 % taxe foncière, 0,3 % entretien courant, 0,1 % assurance habitation.</p>
+          <p class="tool-page-note">L'écart d'effort (mensualité + charges, moins le loyer) n'est investi que lorsqu'il est positif, et capitalisé une fois par an — une approximation plus simple que le modèle du simulateur "Financer sa RP ou financer de l'immobilier locatif", qui capitalise mois par mois sur un vrai second crédit immobilier.</p>
+          <p class="tool-page-note">Le capital du locataire (apport non dépensé + écart d'effort investi) est placé sur un seul support générique, au taux de rendement renseigné, sans fiscalité ni frais de gestion.</p>
+          <p class="tool-page-note">Cette simulation ne valorise pas les avantages non financiers du logement en propre (stabilité, liberté d'aménagement) ni la contrainte de mobilité propre à la propriété.</p>
         </div>
       </section>
     </main>
 
-    <script src="shared.js"></script>
+    <script src="shared.js?v=15"></script>
     <script>
       // ---------------------------------------------------------------
-      // Calcul — résidence principale financée à crédit, comparée à une
-      // location dont l'écart de mensualité (et l'apport non mobilisé)
-      // sont placés et capitalisés.
+      // Calcul — achat de la résidence principale à crédit, comparé à la
+      // location du même bien combinée au placement de l'écart d'effort sur
+      // un support générique (sans crédit, sans levier). Modèle
+      // volontairement plus simple que "Financer sa RP ou financer de
+      // l'immobilier locatif" (pas de second crédit immobilier en face) :
+      // l'écart d'effort n'est capitalisé qu'une fois par an, pas mois par
+      // mois, et les coûts cumulés du propriétaire ne comptent que les
+      // intérêts et charges payés — jamais le capital remboursé, déjà
+      // reflété dans le capital restant dû.
       // ---------------------------------------------------------------
 
-      // Mensualité d'un prêt amortissable classique (capital + intérêts constants).
       function calculerMensualiteCreditMois(capitalEmprunte, tauxInteretAnnuelPct, nombreMensualites) {
         if (nombreMensualites <= 0) return 0;
         const tauxMensuel = tauxInteretAnnuelPct / 100 / 12;
@@ -98,91 +99,92 @@
         return capitalEmprunte * tauxMensuel * facteur / (facteur - 1);
       }
 
-      // Boucle mensuelle (précision de l'amortissement et du point de
-      // bascule), avec un instantané conservé en fin de chaque année civile
-      // simulée pour l'affichage (graphique/tableau) — même logique que
-      // "Une pierre deux coups".
-      //
-      // Patrimoine net acheteur = valeur du bien revalorisée, nette des
-      // frais d'agence à la revente, moins le capital restant dû. Dès le
-      // premier mois, ce patrimoine démarre sous l'apport initial : c'est
-      // la perte immédiate des frais de notaire et de revente — piège
-      // classique volontairement visible plutôt que masqué.
-      //
-      // Patrimoine net locataire = apport initial + écarts mensuels de
-      // mensualité capitalisés au taux de placement net choisi, moins la
-      // fiscalité (flat tax par défaut) appliquée uniquement à la
-      // plus-value latente à la date considérée — pas année par année.
-      function simulerAchatLocation(p) {
-        const fraisNotaire = p.prixBien * (p.fraisNotairePct / 100);
-        const montantEmprunte = Math.max(0, p.prixBien + fraisNotaire - p.apport);
-        const dureeMoisCredit = p.dureeCredit * 12;
-        const mensualiteCredit = calculerMensualiteCreditMois(montantEmprunte, p.tauxInteretPct, dureeMoisCredit);
-        const assuranceMensuelle = montantEmprunte * (p.tauxAssurancePct / 100) / 12;
-        const mensualiteCreditTotale = mensualiteCredit + assuranceMensuelle;
-        const chargesMensuelles = (p.taxeFonciereAnnuelle + p.chargesAnnuelles) / 12;
+      function simulerAcheterLouer(p) {
+        const fraisNotaire = p.prixBien * p.fraisNotairePct / 100;
+        const coutTotalAchat = p.prixBien + fraisNotaire;
+        // Les frais de notaire sont financés par le crédit, net de
+        // l'apport — ils ne sont pas payés cash en plus. Ça ne les rend pas
+        // moins perdus pour autant : ils comptent dans les coûts cumulés du
+        // propriétaire dès la première ligne, plus bas.
+        const montantEmprunte = Math.max(0, coutTotalAchat - p.apport);
+        const dureeMois = p.dureeCredit * 12;
+        const mensualiteCredit = calculerMensualiteCreditMois(montantEmprunte, p.tauxInteretPct, dureeMois);
+        // Pas d'assurance emprunteur distincte : déjà incluse dans le TAEG
+        // renseigné, comme la plupart des simulations de mensualité.
+        const mensualiteTotale = mensualiteCredit;
+        const chargesMensuelles = p.chargesAnnuelles / 12;
         const tauxMensuelCredit = p.tauxInteretPct / 100 / 12;
 
         let capitalRestant = montantEmprunte;
-        let capitalPlace = p.apport;
-        let versementsCumules = p.apport;
-        let moisBascule = null;
-        let signeInitial = null;
+        let valeurBien = p.prixBien;
+        let loyerCourant = p.loyerMensuel;
+        // Le capital du locataire démarre à l'apport (non consommé par un
+        // achat) : il capitalise dès le premier jour, avant même que
+        // l'écart d'effort ne vienne s'y ajouter.
+        let capitalLocataire = p.apport;
+        // Les coûts cumulés du propriétaire démarrent aux frais de
+        // notaire : perdus dès la signature, avant le premier mois de
+        // crédit.
+        let coutsCumules = fraisNotaire;
+        let loyersCumules = 0;
+        let anneeSeuil = null;
 
-        const totalMois = p.horizonAnnees * 12;
         const annees = [];
 
-        for (let mois = 1; mois <= totalMois; mois++) {
-          const anneeCourante = Math.ceil(mois / 12);
-          const creditEnCours = mois <= dureeMoisCredit;
-
-          const loyerMensuelCourant = p.loyerMensuel * Math.pow(1 + p.revalorisationLoyerPct / 100, anneeCourante - 1);
-          const mensualiteAchatCourante = (creditEnCours ? mensualiteCreditTotale : 0) + chargesMensuelles;
-          const ecartMensuel = mensualiteAchatCourante - loyerMensuelCourant;
-
-          if (creditEnCours) {
-            const interetMois = capitalRestant * tauxMensuelCredit;
-            capitalRestant = Math.max(0, capitalRestant - (mensualiteCredit - interetMois));
+        // La durée simulée est celle du crédit (p.dureeCredit) : pas
+        // d'horizon distinct, donc le crédit est toujours en cours sur
+        // toute la boucle (plus de branche "crédit soldé, horizon continue").
+        for (let annee = 1; annee <= p.dureeCredit; annee++) {
+          let interetsAnnee = 0;
+          for (let mois = 0; mois < 12; mois++) {
+            if (capitalRestant > 0) {
+              const interetMois = capitalRestant * tauxMensuelCredit;
+              const principalMois = Math.min(mensualiteCredit - interetMois, capitalRestant);
+              capitalRestant -= principalMois;
+              interetsAnnee += interetMois;
+            }
           }
-          capitalPlace = capitalPlace * (1 + p.rendementPlacementPct / 100 / 12) + ecartMensuel;
-          versementsCumules += ecartMensuel;
+          coutsCumules += interetsAnnee + p.chargesAnnuelles;
+          loyersCumules += loyerCourant * 12;
 
-          // Revalorisation du bien composée en continu (exposant mois/12) :
-          // une courbe lisse plutôt qu'un palier une fois par an.
-          const valeurBien = p.prixBien * Math.pow(1 + p.revalorisationBienPct / 100, mois / 12);
-          const patrimoineNetAchat = valeurBien * (1 - p.fraisAgenceReventePct / 100) - capitalRestant;
+          // Écart d'effort mensuel (mensualité totale + charges, moins le
+          // loyer) : seul l'écart POSITIF (location moins chère) est
+          // investi — jamais "récupéré" en sens inverse si la location
+          // devient la plus chère des deux.
+          const effortProprietaireMensuel = mensualiteTotale + chargesMensuelles;
+          const ecartMensuel = effortProprietaireMensuel - loyerCourant;
+          capitalLocataire *= 1 + p.rendementPlacementPct / 100;
+          if (ecartMensuel > 0) capitalLocataire += ecartMensuel * 12;
 
-          const gainBrutPlacement = Math.max(0, capitalPlace - versementsCumules);
-          const impotPlusValue = gainBrutPlacement * (p.fiscalitePlacementPct / 100);
-          const patrimoineNetLocation = capitalPlace - impotPlusValue;
+          valeurBien *= 1 + p.revalorisationBienPct / 100;
+          loyerCourant *= 1 + p.revalorisationLoyerPct / 100;
 
-          const ecartPatrimoine = patrimoineNetAchat - patrimoineNetLocation;
-          const signe = ecartPatrimoine >= 0 ? 1 : -1;
-          if (signeInitial === null) signeInitial = signe;
-          if (moisBascule === null && signe !== signeInitial) moisBascule = mois;
+          const positionProprietaire = valeurBien - Math.max(0, capitalRestant) - coutsCumules - p.apport;
+          const positionLocataire = capitalLocataire - loyersCumules;
+          const patrimoineNet = positionProprietaire - positionLocataire;
 
-          if (mois % 12 === 0) {
-            annees.push({
-              annee: mois / 12,
-              mensualiteAchat: mensualiteAchatCourante,
-              loyerMensuel: loyerMensuelCourant,
-              capitalRestant,
-              valeurBien,
-              patrimoineNetAchat,
-              capitalPlace,
-              patrimoineNetLocation
-            });
-          }
+          if (anneeSeuil === null && patrimoineNet >= 0) anneeSeuil = annee;
+
+          annees.push({
+            annee,
+            coutsCumulesProprietaire: coutsCumules + p.apport,
+            loyersCumulesLocataire: loyersCumules,
+            patrimoineProprietaire: positionProprietaire,
+            patrimoineLocataire: positionLocataire,
+            patrimoineNet
+          });
         }
 
         return {
           fraisNotaire,
+          coutTotalAchat,
           montantEmprunte,
-          mensualiteCreditTotale,
+          mensualiteCredit,
+          mensualiteTotale,
+          mensualiteTotaleReelle: mensualiteTotale + chargesMensuelles,
           chargesMensuelles,
-          mensualiteAchatInitiale: mensualiteCreditTotale + chargesMensuelles,
-          anneeBascule: moisBascule !== null ? moisBascule / 12 : null,
-          achatAvantageuxDepart: signeInitial > 0,
+          ecartMensuelInitial: mensualiteTotale + chargesMensuelles - p.loyerMensuel,
+          seuilRentabilite: anneeSeuil,
           annees
         };
       }
@@ -192,21 +194,21 @@
       // ---------------------------------------------------------------
 
       const defaults = {
-        prixBien: 300000,
-        apport: 60000,
-        fraisNotairePct: 7.5,
-        tauxInteretPct: 3.5,
-        tauxAssurancePct: 0.25,
-        dureeCredit: 20,
-        taxeFonciereAnnuelle: 1200,
-        chargesAnnuelles: 2400,
+        prixBien: 200000,
+        fraisNotairePct: 8,
+        // 1,7 % du prix par défaut (cf. recomputeCharges plus bas) — même
+        // ratio, pour que la valeur au chargement corresponde déjà à ce que
+        // l'Auto recalculerait. Taxe foncière, copropriété, assurance
+        // habitation et entretien courant sont réunis dans ce seul champ
+        // (cf. note sous "Charges annuelles" pour le détail).
+        chargesAnnuelles: 3400,
         revalorisationBienPct: 1.5,
-        fraisAgenceReventePct: 5,
-        loyerMensuel: 950,
+        apport: 20000,
+        tauxInteretPct: 4,
+        dureeCredit: 25,
+        loyerMensuel: 900,
         revalorisationLoyerPct: 1.5,
-        rendementPlacementPct: 4,
-        fiscalitePlacementPct: 30,
-        horizonAnnees: 10
+        rendementPlacementPct: 4
       };
 
       const state = {
@@ -214,76 +216,148 @@
       };
       document.body.dataset.mode = "acheter-louer";
 
-      const topLevelFieldDefinitions = [
-        { key: "horizonAnnees", label: "Horizon de simulation", min: 1, max: 30, step: 1, suffix: "ans" }
-      ];
+      // Charges annuelles (taxe foncière + TEOM, copropriété, assurance
+      // habitation, entretien courant réunis dans un seul champ, cf. note
+      // sous le champ pour le détail) suit automatiquement le prix du bien
+      // tant que le bouton "Auto" reste activé (cf. field.autoToggle,
+      // shared.js) — désactivé, l'utilisateur reprend la main dessus. Ratio
+      // issu d'ordres de grandeur sur un appartement ancien de 60 m² en
+      // métropole régionale (hypothèse moyenne entre grande métropole et
+      // ville moyenne, cf. note de bas de page) : 1,7 % du prix au total.
+      // CHARGES_BREAKDOWN_RATIOS (plus bas) répartit ce total entre les
+      // quatre postes pour la note détaillée, sans changer ce calcul.
+      // Idem pour l'apport, mais sans bouton dédié (cf. demande de Victor) :
+      // le PRIX du bien qui change ne doit pas, lui, changer le pourcentage
+      // d'apport (en laissant le montant fixe) — c'est le montant qui doit
+      // suivre, à pourcentage constant (10 % par défaut), tant que
+      // l'utilisateur n'a pas réglé l'apport lui-même.
+      let chargesAuto = true;
+      let apportTouched = false;
+      const recomputeCharges = (prixBien) => {
+        state.values.chargesAnnuelles = Math.round((prixBien * 0.017) / 100) * 100;
+      };
+      function handleCrossFieldDefaults(key, previousValue, newValue) {
+        if (key === "apport") {
+          apportTouched = true;
+          return;
+        }
+        if (key === "prixBien") {
+          if (chargesAuto) recomputeCharges(newValue);
+          if (!apportTouched) {
+            state.values.apport = Math.round((newValue * 0.1) / 1000) * 1000;
+          }
+        }
+      }
 
-      const fieldDefinitionsAchat = [
-        { key: "prixBien", label: "Prix d'achat du bien", min: 50000, max: 1000000, step: 5000, suffix: "€" },
+      // Répartition indicative des 1,7 % entre les quatre postes détaillés
+      // sous "Charges annuelles" (cf. tableau de Victor, colonne métropole
+      // régionale) : copropriété (courantes + fonds travaux + gros travaux
+      // lissés) 0,9 %, taxe foncière + TEOM 0,4 %, assurance habitation
+      // 0,1 %, entretien courant 0,3 % — appliquée au montant RÉEL du champ
+      // (qu'il soit en Auto ou réglé à la main), pas au prix du bien
+      // directement, pour que le détail somme toujours exactement au total
+      // affiché.
+      const CHARGES_BREAKDOWN_RATIOS = {
+        "taxe foncière": 0.4 / 1.7,
+        "copropriété": 0.9 / 1.7,
+        "assurance habitation": 0.1 / 1.7,
+        "entretien courant": 0.3 / 1.7
+      };
+
+      // Pas d'horizon de simulation distinct : la durée du crédit (Le
+      // financement) fixe directement la durée simulée, cf. simulerAcheterLouer.
+      const fieldDefinitionsBien = [
+        { key: "prixBien", label: "Prix d'achat du bien", min: 50000, max: 900000, step: 5000, suffix: "€" },
         {
-          key: "apport",
-          label: "Apport personnel",
-          min: 0,
-          max: 500000,
-          step: 1000,
+          static: true,
+          label: "Mensualité totale du crédit",
+          value: (values) => {
+            const fraisNotaire = values.prixBien * values.fraisNotairePct / 100;
+            const montantEmprunte = Math.max(0, values.prixBien + fraisNotaire - values.apport);
+            const dureeMois = values.dureeCredit * 12;
+            return formatNumber(calculerMensualiteCreditMois(montantEmprunte, values.tauxInteretPct, dureeMois));
+          },
           suffix: "€",
-          note: "Non mobilisé par la location, ce même apport est placé dès le départ dans le scénario locataire."
+          group: "couts",
+          note: "Calculée sur le montant emprunté (prix + frais de notaire − apport), cf. Le financement."
         },
-        {
-          key: "fraisNotairePct",
-          label: "Frais de notaire & garantie",
-          min: 2,
-          max: 9,
-          step: 0.1,
-          suffix: "%",
-          note: "≈ 7 à 8 % dans l'ancien, 2 à 3 % dans le neuf."
-        },
-        { key: "tauxInteretPct", label: "Taux d'intérêt annuel du crédit", min: 2, max: 6, step: 0.05, suffix: "%" },
-        { key: "tauxAssurancePct", label: "Taux d'assurance emprunteur", min: 0, max: 0.8, step: 0.02, suffix: "%" },
-        { key: "dureeCredit", label: "Durée du crédit", min: 5, max: 25, step: 1, suffix: "ans" },
-        { key: "taxeFonciereAnnuelle", label: "Taxe foncière annuelle", min: 0, max: 6000, step: 100, suffix: "€" },
         {
           key: "chargesAnnuelles",
-          label: "Charges & entretien annuels",
+          label: "Charges annuelles",
           min: 0,
-          max: 10000,
+          max: 16000,
           step: 100,
-          suffix: "€",
-          note: "Copropriété, assurance habitation, gros entretien provisionné."
+          suffix: "€/an",
+          group: "couts",
+          autoToggle: {
+            get: () => chargesAuto,
+            set: (checked) => {
+              chargesAuto = checked;
+              if (checked) recomputeCharges(state.values.prixBien);
+            }
+          },
+          note: (values) => {
+            const detail = Object.entries(CHARGES_BREAKDOWN_RATIOS)
+              .map(([poste, ratio]) => `${poste} ${formatMoney(values.chargesAnnuelles * ratio)}`)
+              .join(", ");
+            return `Dont ${detail}. Soit ${formatMoney(values.chargesAnnuelles / 12)}/mois.`;
+          }
         },
-        { key: "revalorisationBienPct", label: "Revalorisation annuelle du bien", min: 0, max: 4, step: 0.1, suffix: "%/an" },
         {
-          key: "fraisAgenceReventePct",
-          label: "Frais d'agence à la revente",
-          min: 0,
-          max: 8,
-          step: 0.5,
-          suffix: "%",
-          note: "Appliqués sur la valeur du bien à l'horizon simulé."
-        }
+          static: true,
+          label: "Frais de notaire",
+          value: (values) => formatNumber(values.prixBien * values.fraisNotairePct / 100),
+          suffix: "€",
+          group: "couts",
+          inlineSelect: {
+            key: "fraisNotairePct",
+            label: "Frais de notaire & garantie",
+            options: [
+              { value: 3, label: "Frais de notaire dans le neuf : 3 %" },
+              { value: 8, label: "Frais de notaire dans l'ancien : 8 %" }
+            ]
+          },
+          note: "Payés à fonds perdus dès la signature — réglés via l'apport, cf. Le financement."
+        },
+        { key: "revalorisationBienPct", label: "Revalorisation annuelle du bien", min: 0, max: 4, step: 0.1, suffix: "%/an", group: "gains" }
+      ];
+
+      const fieldDefinitionsFinancement = [
+        {
+          key: "apport",
+          label: "Apport",
+          min: (values) => values.prixBien * values.fraisNotairePct / 100,
+          max: (values) => values.prixBien,
+          zeroBased: true,
+          step: 1000,
+          suffix: "€",
+          valueCaption: (values) => `${formatPercent(values.apport / values.prixBien * 100)}%, soit`,
+          note: (values) => {
+            const fraisNotaire = values.prixBien * values.fraisNotairePct / 100;
+            const reste = Math.max(0, values.apport - fraisNotaire);
+            return `${formatMoney(fraisNotaire)} de frais de notaire payés à fonds perdus, ${formatMoney(reste)} financent une partie du bien.`;
+          }
+        },
+        { key: "tauxInteretPct", label: "Taux d'emprunt annuel (TAEG)", min: 2.5, max: 7, step: 0.05, suffix: "%/an" },
+        { key: "dureeCredit", label: "Durée du crédit", min: 5, max: 25, step: 1, suffix: "ans" }
       ];
 
       const fieldDefinitionsLocation = [
-        { key: "loyerMensuel", label: "Loyer mensuel équivalent", min: 300, max: 4000, step: 50, suffix: "€" },
-        { key: "revalorisationLoyerPct", label: "Revalorisation annuelle du loyer", min: 0, max: 4, step: 0.1, suffix: "%/an" },
+        { key: "loyerMensuel", label: "Loyer mensuel équivalent", min: 300, max: 4000, step: 50, suffix: "€/mois" },
+        { key: "revalorisationLoyerPct", label: "Revalorisation du loyer", min: 0, max: 4, step: 0.1, suffix: "%/an", group: "couts" },
         {
-          key: "rendementPlacementPct",
-          label: "Rendement net annuel du placement",
-          min: 0,
-          max: 8,
-          step: 0.1,
-          suffix: "%",
-          note: "Net de frais, avant fiscalité de sortie — ex. unités de compte diversifiées en assurance vie."
+          key: "apport",
+          label: "Versement initial (identique à l'apport)",
+          min: (values) => values.prixBien * values.fraisNotairePct / 100,
+          max: (values) => values.prixBien,
+          zeroBased: true,
+          step: 1000,
+          suffix: "€",
+          group: "gains",
+          investedFully: true,
+          note: "Le même apport, investi ici plutôt que dépensé en frais de notaire : il capitalise dès le premier jour, sans attendre l'écart d'effort."
         },
-        {
-          key: "fiscalitePlacementPct",
-          label: "Fiscalité à la sortie sur les gains",
-          min: 0,
-          max: 35,
-          step: 0.5,
-          suffix: "%",
-          note: "Par défaut, flat tax (PFU) de 30 % sur la seule plus-value, hors abattement éventuel."
-        }
+        { key: "rendementPlacementPct", label: "Rendement du placement", min: 0, max: 10, step: 0.1, suffix: "%/an", group: "gains", note: "Capital du locataire (apport non dépensé + écart d'effort investi), capitalisé une fois par an." }
       ];
 
       // ---------------------------------------------------------------
@@ -299,12 +373,135 @@
         });
       }
 
-      // Une carte (Achat ou Location) : titre statique (pas de nom
-      // éditable, contrairement au comparateur de contrats — les deux
-      // notions sont fixes) + ses propres curseurs.
-      function renderOptionCard(letter, title, fieldDefinitions) {
+      // Champ "figé" (field.static) : un libellé + une valeur calculée, sans
+      // curseur (ex. "Frais de notaire", dérivé du prix du bien et du
+      // sélecteur Neuf/Ancien de l'apport — pas une hypothèse indépendante,
+      // donc pas un curseur en plus). Même habillage visuel que
+      // renderNumberField (.tool-field / .tool-input-wrap) pour s'intégrer
+      // sans rupture dans une carte, mais poussé par les autres champs
+      // plutôt que réglable directement.
+      function renderStaticField(field, values, fieldRefreshers) {
+        const row = document.createElement("div");
+        row.className = "tool-field tool-field-static";
+
+        const span = document.createElement("span");
+        span.textContent = typeof field.label === "function" ? field.label(values) : field.label;
+
+        row.append(span);
+
+        let dropdownRow = null;
+        if (field.inlineSelect) {
+          dropdownRow = document.createElement("div");
+          dropdownRow.className = "tool-dropdown-row";
+
+          const dropdown = document.createElement("div");
+          dropdown.className = "tool-dropdown";
+
+          const trigger = document.createElement("button");
+          trigger.type = "button";
+          trigger.className = "tool-dropdown-trigger";
+          trigger.setAttribute("aria-haspopup", "listbox");
+          trigger.setAttribute("aria-expanded", "false");
+          const triggerLabel = document.createElement("span");
+          const chevron = document.createElement("span");
+          chevron.className = "tool-dropdown-chevron";
+          chevron.textContent = "⌄";
+          chevron.setAttribute("aria-hidden", "true");
+          trigger.append(triggerLabel, chevron);
+
+          const menu = document.createElement("div");
+          menu.className = "tool-dropdown-menu";
+          menu.setAttribute("role", "listbox");
+
+          const closeMenu = () => {
+            menu.classList.remove("is-open");
+            trigger.setAttribute("aria-expanded", "false");
+          };
+          const setDropdownSelected = (value) => {
+            const opt = field.inlineSelect.options.find((o) => o.value === value) || field.inlineSelect.options[0];
+            triggerLabel.textContent = opt.label;
+            menu.querySelectorAll(".tool-dropdown-option").forEach((btn) => {
+              btn.classList.toggle("is-active", btn.dataset.value === String(opt.value));
+            });
+          };
+
+          field.inlineSelect.options.forEach((opt) => {
+            const optionButton = document.createElement("button");
+            optionButton.type = "button";
+            optionButton.className = "tool-dropdown-option";
+            optionButton.dataset.value = String(opt.value);
+            optionButton.setAttribute("role", "option");
+            const optionLabel = document.createElement("span");
+            optionLabel.textContent = opt.label;
+            const optionCheck = document.createElement("span");
+            optionCheck.className = "tool-dropdown-option-check";
+            optionCheck.textContent = "✓";
+            optionCheck.setAttribute("aria-hidden", "true");
+            optionButton.append(optionLabel, optionCheck);
+            optionButton.addEventListener("click", () => {
+              values[field.inlineSelect.key] = opt.value;
+              setDropdownSelected(opt.value);
+              closeMenu();
+              fieldRefreshers.forEach((refresh) => refresh());
+              renderOutputs();
+            });
+            menu.append(optionButton);
+          });
+
+          trigger.addEventListener("click", (event) => {
+            event.stopPropagation();
+            const willOpen = !menu.classList.contains("is-open");
+            closeMenu();
+            if (willOpen) {
+              menu.classList.add("is-open");
+              trigger.setAttribute("aria-expanded", "true");
+            }
+          });
+          document.addEventListener("click", (event) => {
+            if (!dropdown.contains(event.target)) closeMenu();
+          });
+
+          setDropdownSelected(values[field.inlineSelect.key]);
+          dropdown.append(trigger, menu);
+          dropdownRow.append(dropdown);
+        }
+
+        const control = document.createElement("div");
+        control.className = "tool-input-wrap";
+        const value = document.createElement("span");
+        value.className = "tool-static-value";
+        const suffix = document.createElement("small");
+        suffix.textContent = field.suffix || "";
+        control.append(value, suffix);
+        row.append(control);
+
+        if (field.inlineSelect) row.append(dropdownRow);
+
+        const note = field.note ? document.createElement("small") : null;
+        if (note) {
+          note.className = "tool-field-note";
+          row.append(note);
+        }
+
+        const refresh = () => {
+          value.textContent = typeof field.value === "function" ? field.value(values) : field.value;
+          if (note) note.textContent = typeof field.note === "function" ? field.note(values) : field.note;
+        };
+        refresh();
+        fieldRefreshers.push(refresh);
+
+        return row;
+      }
+
+      // Une carte (Le bien, Le financement ou Location & placement) : même
+      // recette que "Financer sa RP ou financer de l'immobilier locatif"
+      // (renderOptionCard), sans lettrage de "camp" — un seul scénario ici,
+      // pas deux à distinguer. sharedFieldRefreshers permet à "Le bien" et
+      // "Le financement" de rafraîchir l'un l'autre (l'apport dépend du
+      // prix du bien, dans l'autre carte).
+      function renderFieldCard(title, fieldDefinitions, sharedFieldRefreshers, collapsible) {
         const card = document.createElement("div");
-        card.className = `tool-result-card contract-card contract-card-${letter.toLowerCase()}`;
+        card.className = "tool-result-card";
 
         const titleWrap = document.createElement("div");
         titleWrap.className = "tool-card-title";
@@ -315,170 +512,330 @@
 
         const fieldsWrap = document.createElement("div");
         fieldsWrap.className = "tool-fields";
-        const fieldRefreshers = [];
+        const fieldRefreshers = sharedFieldRefreshers || [];
+        const groupLabels = { couts: "Coûts", gains: "Gains" };
+        let currentGroupWrap = null;
+        let currentGroupFieldsWrap = null;
+        let currentGroup = null;
         fieldDefinitions.forEach((field) => {
-          fieldsWrap.append(renderNumberField(field, state.values, fieldRefreshers, {
-            onValueChange: () => scheduleRenderOutputs(),
-            onCommit: () => renderOutputs()
-          }));
+          if (field.group) {
+            if (field.group !== currentGroup) {
+              currentGroup = field.group;
+              // Liaisons locales (const) dédiées à ce groupe précis, pour la
+              // fermeture du clic ci-dessous : les variables currentGroupWrap/
+              // currentGroupFieldsWrap, elles, seront réaffectées au groupe
+              // suivant avant que ce gestionnaire ne soit jamais déclenché.
+              const thisGroupWrap = document.createElement("div");
+              thisGroupWrap.className = `tool-field-group tool-field-group-${field.group}`;
+
+              // Même recette que le chevron-repli d'une carte entière (Le
+              // bien, Le financement...), appliquée ici au groupe Coûts/Gains
+              // à l'intérieur d'une carte : le libellé lui-même est le bouton,
+              // seuls les champs (pas le libellé) se masquent.
+              const groupLabel = document.createElement("button");
+              groupLabel.type = "button";
+              groupLabel.className = "tool-field-group-label";
+              // Repliées par défaut à l'arrivée sur la page (demandé par
+              // Victor) : seul un clic les déplie.
+              groupLabel.setAttribute("aria-expanded", "false");
+              groupLabel.innerHTML = `${groupLabels[field.group] || field.group}<svg class="tool-collapsible-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>`;
+
+              const thisGroupFieldsWrap = document.createElement("div");
+              thisGroupFieldsWrap.className = "tool-field-group-fields";
+              thisGroupFieldsWrap.hidden = true;
+
+              groupLabel.addEventListener("click", () => {
+                const expanded = groupLabel.getAttribute("aria-expanded") !== "true";
+                withHeightTransition(thisGroupWrap, () => {
+                  groupLabel.setAttribute("aria-expanded", String(expanded));
+                  thisGroupFieldsWrap.hidden = !expanded;
+                });
+              });
+
+              thisGroupWrap.append(groupLabel, thisGroupFieldsWrap);
+              fieldsWrap.append(thisGroupWrap);
+              currentGroupWrap = thisGroupWrap;
+              currentGroupFieldsWrap = thisGroupFieldsWrap;
+            }
+          } else {
+            currentGroupWrap = null;
+            currentGroupFieldsWrap = null;
+            currentGroup = null;
+          }
+          const target = currentGroupFieldsWrap || fieldsWrap;
+          const node = field.static
+            ? renderStaticField(field, state.values, fieldRefreshers)
+            : renderNumberField(field, state.values, fieldRefreshers, {
+              onValueChange: (key, previousValue, newValue) => {
+                handleCrossFieldDefaults(key, previousValue, newValue);
+                scheduleRenderOutputs();
+              },
+              onCommit: () => renderOutputs()
+            });
+          // field.investedFully (ex. "Versement initial" côté Location &
+          // placement) : le même apport que côté Financement, mais ici il
+          // est entièrement investi — pas de part perdue en frais de
+          // notaire sur ce versant-là, donc la piste doit être tout verte,
+          // pas rouge/vert comme l'original.
+          if (field.investedFully) node.classList.add("tool-field-all-gains");
+          target.append(node);
         });
         card.append(fieldsWrap);
+
+        if (collapsible) {
+          const toggle = document.createElement("button");
+          toggle.type = "button";
+          toggle.className = "tool-collapsible-chevron-btn";
+          toggle.setAttribute("aria-expanded", "true");
+          toggle.setAttribute("aria-label", `Afficher ou masquer les hypothèses ${title}`);
+          toggle.innerHTML = '<svg class="tool-collapsible-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>';
+          toggle.addEventListener("click", () => {
+            const expanded = toggle.getAttribute("aria-expanded") !== "true";
+            withHeightTransition(card, () => {
+              toggle.setAttribute("aria-expanded", String(expanded));
+              fieldsWrap.hidden = !expanded;
+            });
+          });
+          titleWrap.append(toggle);
+        }
 
         return card;
       }
 
-      function renderFields() {
-        const fields = document.querySelector("#fields");
-        const fieldRefreshers = [];
-        fields.innerHTML = "";
-
-        topLevelFieldDefinitions.forEach((field) => {
-          fields.append(renderNumberField(field, state.values, fieldRefreshers, {
-            onValueChange: () => scheduleRenderOutputs(),
-            onCommit: () => renderOutputs()
-          }));
-        });
-
-        const contractFields = document.querySelector("#contract-fields");
-        contractFields.innerHTML = "";
-        contractFields.append(renderOptionCard("A", "Achat", fieldDefinitionsAchat));
-        contractFields.append(renderOptionCard("B", "Location", fieldDefinitionsLocation));
+      // Empile une carte de champs et, juste en dessous, l'emplacement (vide
+      // pour l'instant, rempli par renderStats) de sa case "Mensualité
+      // totale" : même recette que .contract-card-stack sur la page
+      // "Financer sa RP..." (une seule cellule de grille, flux indépendant
+      // des deux autres colonnes) — ainsi, replier "Le bien" fait remonter
+      // sa case juste en dessous, sans attendre que les deux autres colonnes
+      // se replient. statGroupId est omis pour "Le financement" : ses cases
+      // (Point d'équilibre, Écart d'effort) vivent dans #stat-split-row,
+      // pleine largeur sous les trois cartes, cf. renderStats.
+      function renderCardStack(card, statGroupId) {
+        const stack = document.createElement("div");
+        stack.className = "contract-card-stack";
+        stack.append(card);
+        if (statGroupId) {
+          const statGroup = document.createElement("div");
+          statGroup.id = statGroupId;
+          statGroup.className = "tool-stat-group";
+          stack.append(statGroup);
+        }
+        return stack;
       }
+
+      function renderFields() {
+        const fieldsRow = document.querySelector("#fields-row");
+        fieldsRow.innerHTML = "";
+
+        // Un seul fieldRefreshers partagé par les trois cartes : l'apport
+        // (dans Le financement) dépend du prix du bien (dans Le bien).
+        const allFieldRefreshers = [];
+        fieldsRow.append(renderCardStack(renderFieldCard("Le bien", fieldDefinitionsBien, allFieldRefreshers, true), "stat-achat-group"));
+        fieldsRow.append(renderCardStack(renderFieldCard("Le financement", fieldDefinitionsFinancement, allFieldRefreshers, true), null));
+        fieldsRow.append(renderCardStack(renderFieldCard("Location & placement", fieldDefinitionsLocation, allFieldRefreshers, true), "stat-location-group"));
+
+        // Le bas de "Le financement" doit toucher le bas de la case
+        // "Mensualité totale" elle-même — pas celui de l'écart d'effort qui
+        // s'ajoute parfois sous l'une des deux (cf. renderStats), ce qui la
+        // rendrait plus haute que l'autre. Un align-content: stretch suivrait
+        // la colonne la PLUS HAUTE des trois (donc celle avec l'écart) :
+        // pas ce qu'on veut. À la place, hauteur de la carte fixée en JS sur
+        // la position réelle de la case "Mensualité totale (achat)" — invariante
+        // que l'écart s'y ajoute ou non, puisqu'il vient toujours APRÈS elle.
+        // Un ResizeObserver sur "Le bien" (plutôt qu'un appel ponctuel) garde
+        // ça vrai pendant l'animation de repli/dépli d'une carte ou d'un
+        // groupe Coûts/Gains, et au redimensionnement de la fenêtre.
+        const bienCard = fieldsRow.querySelector(".contract-card-stack:nth-child(1) .tool-result-card");
+        financementHeightObserver.disconnect();
+        if (bienCard) financementHeightObserver.observe(bienCard);
+        syncFinancementHeight();
+      }
+
+      function syncFinancementHeight() {
+        const stacks = document.querySelectorAll("#fields-row > .contract-card-stack");
+        const financementStack = stacks[1];
+        const financementCard = financementStack?.querySelector(".tool-result-card");
+        const achatTile = document.querySelector("#stat-achat-group > .tool-stat-tile:first-child");
+        if (!financementCard || !achatTile) return;
+        const stackTop = financementStack.getBoundingClientRect().top;
+        const targetBottom = achatTile.getBoundingClientRect().bottom;
+        const targetHeight = targetBottom - stackTop;
+        // Jamais plus bas que son propre contenu (Apport, Taux, Durée) :
+        // si "Le bien" est replié, le niveau de sa case "Mensualité totale"
+        // remonte bien plus haut que la hauteur réelle dont "Le financement"
+        // a besoin pour afficher ses champs — sans ce plancher, ses derniers
+        // champs se retrouvaient coupés. scrollHeight reste fiable même
+        // pendant qu'une hauteur explicite plus petite est déjà appliquée.
+        financementCard.style.height = "auto";
+        const naturalHeight = financementCard.scrollHeight;
+        financementCard.style.height = `${Math.max(naturalHeight, targetHeight, 0)}px`;
+      }
+
+      const financementHeightObserver = new ResizeObserver(() => syncFinancementHeight());
 
       // ---------------------------------------------------------------
       // Rendu des résultats
       // ---------------------------------------------------------------
-
-      const ICON_CROSSING = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h6l4 12h6"></path><path d="M4 18h6l4-12h6"></path></svg>';
 
       function formatEcart(value) {
         const signe = value > 0 ? "+" : value < 0 ? "−" : "";
         return `${signe}${formatMoney(Math.abs(value))}`;
       }
 
-      function renderSummary(resultat) {
-        const summary = document.querySelector("#summary");
-        const { horizonAnnees } = state.values;
-        const dernierAnnee = resultat.annees[resultat.annees.length - 1];
-        const finalAchat = dernierAnnee.patrimoineNetAchat;
-        const finalLocation = dernierAnnee.patrimoineNetLocation;
-        const ecartFinal = finalAchat - finalLocation;
-
-        // Seuil d'égalité à 2 % du plus grand des deux patrimoines : évite
-        // d'afficher un verdict tranché sur un écart qui n'a, en pratique,
-        // rien de significatif.
-        const seuilEgalite = Math.max(finalAchat, finalLocation) * 0.02;
-        const gagnant = Math.abs(ecartFinal) < seuilEgalite ? null : ecartFinal > 0 ? "achat" : "location";
-
-        // Arrondi à l'inférieur pour l'affichage (cohérent avec le reste du
-        // site) : une décimale ici a l'air d'une fausse précision.
-        const basculeAffichee = resultat.anneeBascule !== null ? Math.max(1, Math.floor(resultat.anneeBascule)) : null;
-        const basculeBanner = resultat.anneeBascule !== null ? (() => {
-          const achatPrendLAvantage = !resultat.achatAvantageuxDepart;
-          return `
-          <div class="tool-status-banner is-ok" role="status">
-            <span class="tool-status-icon" aria-hidden="true">${ICON_CROSSING}</span>
-            <div class="tool-status-copy">
-              <strong>Bascule en faveur de ${achatPrendLAvantage ? "l'achat" : "la location"} à ${formatNumber(basculeAffichee)} ans</strong>
-              <span>${achatPrendLAvantage
-                ? `Jusqu'à cette échéance, les frais d'acquisition pèsent plus que l'écart de mensualité placé : louer est plus avantageux. Au-delà, c'est l'achat qui prend l'avantage.`
-                : `Jusqu'à cette échéance, l'achat reste plus avantageux. Au-delà, le placement de l'écart de mensualité rattrape puis dépasse la plus-value immobilière nette.`}</span>
-            </div>
-          </div>
+      // Construit une case-chiffre (sans la poser dans le DOM — l'appelant
+      // décide où, cf. renderStats : l'écart d'effort change de colonne
+      // d'un appel à l'autre selon la mensualité totale la plus petite).
+      function buildStatTile(title, value, sub, statusClass) {
+        const tile = document.createElement("div");
+        tile.className = `tool-stat-tile${statusClass ? ` ${statusClass}` : ""}`;
+        tile.innerHTML = `
+          <small>${title}</small>
+          <strong>${value}</strong>
+          <small class="tool-stat-sub">${sub}</small>
         `;
-        })() : "";
-
-        summary.innerHTML = `
-          ${basculeBanner}
-          <div class="comparateur-results">
-            <span class="capital-metric-interest">
-              <small>Achat — patrimoine net à ${horizonAnnees} ans</small>
-              <strong>${formatMoney(finalAchat)}</strong>
-              <small class="comparateur-result-sub">Mensualité initiale : ${formatMoney(resultat.mensualiteAchatInitiale)}/mois</small>
-            </span>
-            <span class="capital-metric-invested">
-              <small>Location + placement — patrimoine net à ${horizonAnnees} ans</small>
-              <strong>${formatMoney(finalLocation)}</strong>
-              <small class="comparateur-result-sub">Loyer initial : ${formatMoney(state.values.loyerMensuel)}/mois</small>
-            </span>
-            <span class="capital-metric-ecart">
-              <small>Écart à l'échéance</small>
-              <strong>${formatEcart(ecartFinal)}</strong>
-              <small class="comparateur-result-verdict">${gagnant ? `${gagnant === "achat" ? "Acheter" : "Louer et placer l'écart"} est plus avantageux` : "Quasi équivalent"}</small>
-            </span>
-          </div>
-        `;
+        return tile;
       }
 
-      function renderChartAchatLocation(resultat) {
+      function renderStats(resultat) {
+        const achatValue = resultat.mensualiteTotaleReelle;
+        const locationValue = state.values.loyerMensuel;
+        const achatCheaper = achatValue <= locationValue;
+
+        const achatTile = buildStatTile(
+          "Mensualité totale (achat)",
+          formatMoney(achatValue),
+          "Mensualité de remboursement du crédit et charges mensualisées"
+        );
+        const locationTile = buildStatTile(
+          "Mensualité totale (location)",
+          formatMoney(locationValue),
+          "Loyer mensuel"
+        );
+        // Toujours posée sous la mensualité totale la plus petite (plutôt
+        // que toujours sous Le financement) et toujours en vert : elle vient
+        // compléter ce côté-là, jamais l'autre — un gain, jamais un coût.
+        const ecartMontant = formatMoney(Math.abs(resultat.ecartMensuelInitial));
+        const ecartTile = buildStatTile(
+          "Écart d'effort d'épargne mensuel",
+          `${formatEcart(resultat.ecartMensuelInitial)}/mois`,
+          achatCheaper
+            ? `Ici, acheter plutôt que louer son logement permet d'économiser ${ecartMontant} tous les mois.`
+            : `Ici, louer plutôt qu'acheter son logement permet d'économiser ${ecartMontant} tous les mois.`,
+          "is-gain"
+        );
+
+        document.querySelector("#stat-achat-group").replaceChildren(achatTile);
+        document.querySelector("#stat-location-group").replaceChildren(locationTile);
+
+        // "Point d'équilibre" et "Écart d'effort..." occupent à elles deux
+        // toute la largeur sous les trois cartes (#stat-split-row, flex
+        // 50/50) — la première depuis le bord gauche du "Bien" jusqu'au
+        // milieu de "Le financement", la seconde du milieu de "Le
+        // financement" jusqu'au bord droit de "Location & placement" (cf.
+        // demande de Victor). Comme les trois colonnes ont la même largeur,
+        // le milieu de "Le financement" est exactement le milieu de la
+        // rangée entière — un simple 50/50 suffit, pas besoin de mesurer la
+        // position réelle de "Le financement" en JS. Fond sombre + or
+        // (is-highlight) pour la mettre en valeur, même recette que
+        // .tool-hero sur le simulateur PER.
+        const seuil = resultat.seuilRentabilite;
+        const seuilTile = buildStatTile(
+          "Point d'équilibre",
+          seuil !== null ? `${formatNumber(seuil)} ans` : "—",
+          seuil !== null
+            ? `Le financement de la résidence principale ne se justifie patrimonialement qu'à partir de ${formatNumber(seuil)} ${seuil > 1 ? "années" : "année"} de détention.`
+            : "Le financement de la résidence principale ne se justifie pas patrimonialement sur l'horizon simulé.",
+          "is-highlight"
+        );
+        document.querySelector("#stat-split-row").replaceChildren(seuilTile, ecartTile);
+      }
+
+      // Deux graphiques séparés plutôt qu'un seul mêlant dépenses et
+      // patrimoine net (cf. échange avec Victor) : le premier ne compare que
+      // l'argent sorti de la poche de chacun (dépenses pures, sans les actifs
+      // qu'elles construisent) ; son croisement n'a pas de sens en soi et n'a
+      // donc pas de repère "Seuil". Le second compare les deux patrimoines
+      // nets réels (valeur du bien net de dette et de coûts, vs capital
+      // placé net de loyers) : LEUR croisement EST le seuil de rentabilité,
+      // affiché ici. Même code couleur dans les deux (bleu = propriétaire,
+      // doré = locataire), cohérent avec la teinte des cartes Le bien/
+      // Location & placement plus haut sur la page.
+      function renderChartDepenses(resultat) {
         const rows = resultat.annees;
-        const marker = resultat.anneeBascule !== null ? {
-          index: Math.max(0, Math.min(rows.length - 1, resultat.anneeBascule - 1)),
-          label: "Bascule"
+        renderLineChart(rows, {
+          chartId: "chart-depenses",
+          series: [
+            { role: "invested", label: "Cumul coûts propriétaire", values: rows.map((r) => r.coutsCumulesProprietaire) },
+            { role: "gains", label: "Cumul loyers locataire", values: rows.map((r) => r.loyersCumulesLocataire) }
+          ],
+          height: 460,
+          ariaLabel: "Évolution des coûts cumulés du propriétaire et des loyers cumulés du locataire dans le temps"
+        });
+      }
+
+      function renderChartPatrimoine(resultat) {
+        const rows = resultat.annees;
+        const marker = resultat.seuilRentabilite !== null ? {
+          index: resultat.seuilRentabilite - 1,
+          label: "Seuil"
         } : null;
 
-        // Code couleur respecté partout sur la page : doré (rôle "gains",
-        // carte A) = achat, bleu (rôle "invested", carte B) = location.
         renderLineChart(rows, {
+          chartId: "chart-patrimoine",
           series: [
-            { role: "gains", label: "Achat — patrimoine net", values: rows.map((r) => r.patrimoineNetAchat) },
-            { role: "invested", label: "Location + placement — patrimoine net", values: rows.map((r) => r.patrimoineNetLocation) }
+            { role: "invested", label: "Patrimoine net (achat)", values: rows.map((r) => r.patrimoineProprietaire) },
+            { role: "gains", label: "Patrimoine net (location)", values: rows.map((r) => r.patrimoineLocataire) }
           ],
-          zeroBaseline: false,
           marker,
-          ariaLabel: "Évolution du patrimoine net de l'acheteur et du locataire dans le temps"
+          height: 460,
+          ariaLabel: "Évolution du patrimoine net du propriétaire et du locataire dans le temps"
         });
       }
 
       function renderTableSynthese(resultat) {
-        const horizonAnnees = state.values.horizonAnnees;
+        const horizonAnnees = state.values.dureeCredit;
         const echeances = [1, 2, 3, 5, 7, 10, 12, 15, 20, 25, 30].filter((a) => a <= horizonAnnees);
         if (!echeances.includes(horizonAnnees)) echeances.push(horizonAnnees);
-        const basculeArrondie = resultat.anneeBascule !== null ? Math.round(resultat.anneeBascule) : null;
-        if (basculeArrondie && basculeArrondie >= 1 && basculeArrondie <= horizonAnnees && !echeances.includes(basculeArrondie)) {
-          echeances.push(basculeArrondie);
+        if (resultat.seuilRentabilite !== null && resultat.seuilRentabilite <= horizonAnnees && !echeances.includes(resultat.seuilRentabilite)) {
+          echeances.push(resultat.seuilRentabilite);
         }
         echeances.sort((a, b) => a - b);
         const rows = echeances.map((an) => resultat.annees[an - 1]);
 
-        const headers = ["Année", "Patrimoine net — Achat", "Patrimoine net — Location", "Écart", "Avantage"];
-        const mapper = (row) => {
-          const ecart = row.patrimoineNetAchat - row.patrimoineNetLocation;
-          const seuilEgalite = Math.max(row.patrimoineNetAchat, row.patrimoineNetLocation) * 0.02;
-          return [
-            row.annee,
-            formatMoney(row.patrimoineNetAchat),
-            formatMoney(row.patrimoineNetLocation),
-            formatEcart(ecart),
-            Math.abs(ecart) < seuilEgalite ? "Quasi équivalent" : ecart > 0 ? "Achat" : "Location"
-          ];
-        };
+        const headers = ["Année", "Cumul coûts propriétaire", "Cumul loyers locataire", "Patrimoine net", "Statut"];
+        const mapper = (row) => [
+          row.annee,
+          formatMoney(row.coutsCumulesProprietaire),
+          formatMoney(row.loyersCumulesLocataire),
+          formatEcart(row.patrimoineNet),
+          row.patrimoineNet >= 0
+            ? `<span style="color: #2f6b52">Patrimoine net positif</span>`
+            : `<span style="color: #a5493c">Patrimoine net négatif</span>`
+        ];
 
         renderTable(headers, mapper, rows, {
-          rowClassName: (row) => basculeArrondie !== null && row.annee === basculeArrondie ? "table-row-highlight" : ""
+          rowClassName: (row) => resultat.seuilRentabilite !== null && row.annee === resultat.seuilRentabilite ? "table-row-highlight" : ""
         });
       }
 
       function renderOutputs() {
-        const resultat = simulerAchatLocation(state.values);
-        renderSummary(resultat);
-        renderChartAchatLocation(resultat);
+        const resultat = simulerAcheterLouer(state.values);
+        renderStats(resultat);
+        renderChartDepenses(resultat);
+        renderChartPatrimoine(resultat);
         renderTableSynthese(resultat);
+        // Au tout premier rendu, renderFields() a déjà tenté de fixer la
+        // hauteur de "Le financement" mais la case "Mensualité totale
+        // (achat)" n'existait pas encore (posée ici, par renderStats juste
+        // au-dessus) — on retente une fois qu'elle existe.
+        syncFinancementHeight();
       }
 
       function render() {
         renderFields();
         renderOutputs();
       }
-
-      // ---------------------------------------------------------------
-      // Actions et navigation
-      // ---------------------------------------------------------------
-
-      document.querySelector("#reset-fields").addEventListener("click", () => {
-        state.values = structuredClone(defaults);
-        withHeightTransition(document.querySelector(".tool-layout"), render);
-      });
 
       render();
     </script>

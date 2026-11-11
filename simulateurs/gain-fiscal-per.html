@@ -65,6 +65,17 @@
                 <table id="projection-table"></table>
               </div>
             </div>
+
+            <div class="tool-table-card" id="tmi-grid-panel">
+              <div class="tool-card-title">
+                <h2>Intérêt du PER selon le TMI d'entrée et de sortie</h2>
+              </div>
+              <div id="tmi-grid-fields" class="tmi-grid-fields"></div>
+              <div class="tool-table-wrap">
+                <table id="tmi-grid-table" class="tmi-grid"></table>
+              </div>
+              <p class="tool-page-note">Gain de capital net procuré par le PER par rapport à un placement financier classique (plus-value taxée à la flat tax de 30 %), à effort d'épargne net et rendement identiques. Hors cas où le TMI de sortie dépasse le TMI d'entrée.</p>
+            </div>
           </div>
         </section>
 
@@ -190,6 +201,52 @@
         return versement;
       }
 
+      // Grille "Intérêt du PER selon le TMI d'entrée et de sortie" — reprend
+      // le principe d'un tableau Eres (comparaison à rendement et effort
+      // d'épargne équivalents), mais calculée dynamiquement à partir du
+      // rendement et de la durée choisis par l'utilisateur plutôt que figée
+      // sur une seule hypothèse.
+      //
+      // Hypothèses de calcul (faute de préciser un produit de comparaison
+      // réel type assurance-vie, on compare à un placement financier non
+      // optimisé fiscalement à l'entrée, taxé à la flat tax de 30 % sur la
+      // seule plus-value à la sortie) :
+      // - PER : pour un effort net E, versement brut déductible
+      //   C0 = E / (1 - TMI entrée). Ce capital fructifie au taux choisi
+      //   pendant la durée choisie ; à la sortie (capital), la part des
+      //   versements déduits est réintégrée au revenu imposable et taxée au
+      //   barème au TMI de sortie, la plus-value est taxée à la flat tax
+      //   30 % (12,8 % IR + 17,2 % PS).
+      // - Référence : le même effort net E est investi directement (pas de
+      //   déduction), fructifie au même taux sur la même durée, et seule la
+      //   plus-value est taxée à la sortie, à la même flat tax 30 %.
+      // Le résultat (écart relatif de capital net) ne dépend pas de E, qui
+      // s'élimine dans le ratio — la valeur choisie ci-dessous est donc
+      // arbitraire.
+      const TMI_GRID_ENTREE = [0.45, 0.41, 0.30, 0.11];
+      const TMI_GRID_SORTIE = [0.45, 0.41, 0.30, 0.11, 0];
+      const TMI_GRID_FLAT_TAX = 0.30;
+      const TMI_GRID_EFFORT = 100;
+
+      function computeTmiGridGain(tmiEntree, tmiSortie, rendementPct, dureeAns) {
+        const growth = Math.pow(1 + rendementPct / 100, dureeAns);
+        const g = growth - 1;
+
+        const c0 = TMI_GRID_EFFORT / (1 - tmiEntree);
+        const gainPER = c0 * g;
+        const netPER = c0 * (1 - tmiSortie) + gainPER * (1 - TMI_GRID_FLAT_TAX);
+
+        const gainRef = TMI_GRID_EFFORT * g;
+        const netRef = TMI_GRID_EFFORT + gainRef * (1 - TMI_GRID_FLAT_TAX);
+
+        return netPER / netRef - 1;
+      }
+
+      const TMI_GRID_FIELD_DEFS = [
+        { key: "rendementTmiGrille", label: "Rendement annuel", min: 0, max: 12, step: 0.1, suffix: "%" },
+        { key: "dureeTmiGrille", label: "Durée de placement", min: 1, max: 40, step: 1, suffix: "ans" }
+      ];
+
       // Lignes du tableau, dans cet ordre précis (demandé par Victor) :
       // 0 € — 100 €/mois — 200 €/mois — 300 €/mois — [changement de tranche,
       // si atteignable entre 0 € et le plafond] — versement sélectionné dans
@@ -232,7 +289,9 @@
         revenuNet: 40000,
         versementPER: 4100,
         rattrapage: 0,
-        parts: 1
+        parts: 1,
+        rendementTmiGrille: 4,
+        dureeTmiGrille: 10
       };
 
       const state = {
@@ -426,19 +485,64 @@
         fields.append(renderPartsField());
       }
 
+      function renderTmiGridFields() {
+        const wrap = document.querySelector("#tmi-grid-fields");
+        const fieldRefreshers = [];
+        wrap.innerHTML = "";
+        TMI_GRID_FIELD_DEFS.forEach((field) => {
+          wrap.append(renderNumberField(field, state.values, fieldRefreshers, {
+            mini: true,
+            onValueChange: () => scheduleRenderOutputs(),
+            onCommit: () => renderOutputs()
+          }));
+        });
+      }
+
       // ---------------------------------------------------------------
       // Rendu des résultats
       // ---------------------------------------------------------------
 
       const ICON_CHECK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>';
 
-      function renderSummary(resultat) {
+      // N'anime l'apparition du bandeau "Changement de TMI" qu'au moment où
+      // il apparaît réellement (pas à chaque frappe/glissement pendant qu'il
+      // reste affiché, où il serait reconstruit à l'identique à chaque tick).
+      let trancheBannerShown = false;
+
+      // Quote-part du revenu imposable (total foyer) située dans la tranche
+      // marginale la plus élevée atteinte — hachurée uniquement à partir de
+      // la tranche à 30 % (demande de Victor : à 11 % ou 0 %, la quote-part
+      // n'est plus mise en évidence). Le seuil d'entrée dans cette tranche
+      // est exprimé par part dans TRANCHES_IR, donc remultiplié par le
+      // nombre de parts pour revenir à un montant total comparable à
+      // revenuImposable.
+      const TMI_HACHURE_MIN = 0.30;
+      function tmiTrancheSegment(revenuImposable, tmi, parts) {
+        if (!revenuImposable || tmi < TMI_HACHURE_MIN) return null;
+        const tranche = TRANCHES_IR.find((t) => t.taux === tmi);
+        if (!tranche) return null;
+        const seuil = tranche.min * parts;
+        if (seuil >= revenuImposable) return null;
+        return { seuil, montant: revenuImposable - seuil };
+      }
+
+      function renderSummary(resultat, avantSeg, apresSeg) {
         const { avant, apres, gain } = resultat;
         const summary = document.querySelector("#summary");
         const trancheChanged = avant.tmi !== apres.tmi;
+        const base = avant.revenuImposable;
 
+        const tmiOverlay = (seg) => seg && base > 0
+          ? `<span class="compare-race-bar-tmi" style="left:${(seg.seuil / base) * 100}%;width:${(seg.montant / base) * 100}%"></span>`
+          : "";
+        const tmiCaption = (seg, tmi) => seg
+          ? `<p class="compare-race-caption">Dont ${formatMoney(seg.montant)} imposés à ${Math.round(tmi * 100)} %</p>`
+          : "";
+
+        const bannerJustToggled = trancheChanged !== trancheBannerShown;
+        const trancheBannerClass = `tool-status-banner is-ok${trancheChanged && bannerJustToggled ? " tool-status-banner-enter" : ""}`;
         const trancheBanner = trancheChanged ? `
-          <div class="tool-status-banner is-ok" role="status">
+          <div class="${trancheBannerClass}" role="status">
             <span class="tool-status-icon" aria-hidden="true">${ICON_CHECK}</span>
             <div class="tool-status-copy">
               <strong>Changement de tranche marginale d'imposition (TMI)</strong>
@@ -446,7 +550,17 @@
             </div>
           </div>
         ` : "";
+        trancheBannerShown = trancheChanged;
 
+        // withHeightTransition touche directement le style inline de
+        // #summary (height/transition/overflow) : ne l'appeler qu'au moment
+        // précis où le bandeau apparaît/disparaît, jamais à chaque frappe
+        // pendant un glissement de curseur. Sinon chaque tick suivant
+        // réinitialisait ce style avant même que le navigateur n'ait eu le
+        // temps de peindre une seule frame de la transition précédente,
+        // l'annulant en plein vol — d'où l'effet "brutal" malgré une
+        // transition correctement déclenchée au premier tick.
+        const applySummaryHtml = () => {
         summary.innerHTML = `
           <article class="tool-result-card tool-result-editorial">
             <div class="tool-summary-title">
@@ -478,15 +592,30 @@
             <div class="compare-race" aria-label="Comparaison du revenu imposable avant et après versement PER">
               <div class="compare-race-row">
                 <div class="compare-race-head"><span>Avant PER</span><strong>${formatMoney(avant.revenuImposable)}</strong></div>
-                <div class="compare-race-track"><span class="compare-race-bar compare-race-bar-before" style="width:100%"></span></div>
+                <div class="compare-race-track">
+                  <span class="compare-race-bar compare-race-bar-before" style="width:100%"></span>
+                  ${tmiOverlay(avantSeg)}
+                </div>
+                ${tmiCaption(avantSeg, avant.tmi)}
               </div>
               <div class="compare-race-row">
                 <div class="compare-race-head"><span>Après PER</span><strong>${formatMoney(apres.revenuImposable)}</strong></div>
-                <div class="compare-race-track"><span class="compare-race-bar compare-race-bar-after" style="width:${avant.revenuImposable > 0 ? Math.max(2, (apres.revenuImposable / avant.revenuImposable) * 100) : 0}%"></span></div>
+                <div class="compare-race-track">
+                  <span class="compare-race-bar compare-race-bar-after" style="width:${avant.revenuImposable > 0 ? Math.max(2, (apres.revenuImposable / avant.revenuImposable) * 100) : 0}%"></span>
+                  ${tmiOverlay(apresSeg)}
+                </div>
+                ${tmiCaption(apresSeg, apres.tmi)}
               </div>
             </div>
           </div>
         `;
+        };
+
+        if (bannerJustToggled) {
+          withHeightTransition(summary, applySummaryHtml);
+        } else {
+          applySummaryHtml();
+        }
       }
 
       function renderScenarios() {
@@ -521,7 +650,7 @@
       // même code couleur bleu/doré que le reste de la page, graduations
       // "nice" via niceValueTicks (shared.js, déjà utilisé par le graphique en
       // ligne des autres simulateurs).
-      function renderMiniBarChart(title, avantValue, apresValue) {
+      function renderMiniBarChart(title, avantValue, apresValue, avantSeg, apresSeg) {
         const width = 300;
         const height = 190;
         const pad = { top: 12, right: 12, bottom: 26, left: 32 };
@@ -546,10 +675,27 @@
           <text x="${pad.left - 8}" y="${y(t) + 4}">${formatThousands(t)}</text>
         `).join("");
 
+        // La quote-part en tranche la plus élevée occupe toujours le sommet
+        // de la barre (seuil -> valeur) : même arrondi que le haut de la
+        // barre pleine, posé juste au-dessus. Hachures via <pattern> SVG
+        // (un dégradé CSS ne peut pas être appliqué à un fill SVG) ; id
+        // dérivé du titre pour rester unique si plusieurs graphiques
+        // cohabitent dans le DOM.
+        const patternId = `tmiHachure-${title.toLowerCase().replace(/[^a-z]+/g, "-")}`;
+        const tmiHachureMarkup = (center, value, seg) => seg
+          ? `<path class="mini-bar-tmi" fill="url(#${patternId})" d="${roundedTopBarPath(center - barWidth / 2, y(value), barWidth, y(seg.seuil) - y(value), 8)}"></path>`
+          : "";
+
         return `
           <div class="mini-bar-card">
             <h3 class="mini-bar-title">${title}</h3>
             <svg viewBox="0 0 ${width} ${height}" class="mini-bar-chart" role="img" aria-label="${title} — avant et après versement PER">
+              <defs>
+                <pattern id="${patternId}" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+                  <rect width="8" height="8" fill="rgba(43, 37, 30, 0.1)"></rect>
+                  <rect width="4" height="8" fill="rgba(43, 37, 30, 0.4)"></rect>
+                </pattern>
+              </defs>
               <g class="mini-bar-grid">
                 ${gridMarkup}
                 <line class="mini-bar-baseline" x1="${pad.left}" y1="${y(0)}" x2="${width - pad.right}" y2="${y(0)}"></line>
@@ -557,6 +703,8 @@
               </g>
               <path class="mini-bar-before" d="${roundedTopBarPath(centerA - barWidth / 2, y(avantValue), barWidth, y(0) - y(avantValue), 8)}"></path>
               <path class="mini-bar-after" d="${roundedTopBarPath(centerB - barWidth / 2, y(apresValue), barWidth, y(0) - y(apresValue), 8)}"></path>
+              ${tmiHachureMarkup(centerA, avantValue, avantSeg)}
+              ${tmiHachureMarkup(centerB, apresValue, apresSeg)}
               <text class="mini-bar-x-label" x="${centerA}" y="${height - 8}">Avant PER</text>
               <text class="mini-bar-x-label" x="${centerB}" y="${height - 8}">Après PER</text>
             </svg>
@@ -564,24 +712,66 @@
         `;
       }
 
-      function renderBarCharts(resultat) {
+      function formatTmiPct(tmi) {
+        return `${Math.round(tmi * 100)} %`;
+      }
+
+      function renderTmiGrid() {
+        const { rendementTmiGrille, dureeTmiGrille } = state.values;
+
+        const sortieHead = TMI_GRID_SORTIE.map((t) => `<th class="tmi-grid-col-head">${formatTmiPct(t)}</th>`).join("");
+
+        const rows = TMI_GRID_ENTREE.map((te, i) => {
+          const cells = TMI_GRID_SORTIE.map((ts) => {
+            if (ts > te) return `<td class="tmi-grid-cell is-na"></td>`;
+            const gain = computeTmiGridGain(te, ts, rendementTmiGrille, dureeTmiGrille);
+            const cls = gain >= 0 ? "is-gain" : "is-loss";
+            const sign = gain >= 0 ? "+" : "−";
+            return `<td class="tmi-grid-cell ${cls}">${sign} ${Math.round(Math.abs(gain) * 100)} %</td>`;
+          }).join("");
+
+          const entreeLabel = i === 0
+            ? `<th class="tmi-grid-entree-label" rowspan="${TMI_GRID_ENTREE.length}"><span>TMI d'entrée</span></th>`
+            : "";
+
+          return `<tr>${entreeLabel}<th class="tmi-grid-row-head">${formatTmiPct(te)}</th>${cells}</tr>`;
+        }).join("");
+
+        document.querySelector("#tmi-grid-table").innerHTML = `
+          <thead>
+            <tr>
+              <th class="tmi-grid-corner" colspan="2" rowspan="2"></th>
+              <th class="tmi-grid-sortie-label" colspan="${TMI_GRID_SORTIE.length}">TMI de sortie</th>
+            </tr>
+            <tr>${sortieHead}</tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        `;
+      }
+
+      function renderBarCharts(resultat, avantSeg, apresSeg) {
         const { avant, apres } = resultat;
         document.querySelector("#bar-charts").innerHTML =
           renderMiniBarChart("Impôt estimé", avant.impot, apres.impot) +
-          renderMiniBarChart("Revenu imposable", avant.revenuImposable, apres.revenuImposable);
+          renderMiniBarChart("Revenu imposable", avant.revenuImposable, apres.revenuImposable, avantSeg, apresSeg);
       }
 
       function renderOutputs() {
         syncVersementFields();
         const versementDeduit = versementDeductible(state.values);
         const resultat = computeIRWithPER(state.values.revenuNet, versementDeduit, state.values.parts);
-        renderSummary(resultat);
-        renderBarCharts(resultat);
+        const parts = state.values.parts;
+        const avantSeg = tmiTrancheSegment(resultat.avant.revenuImposable, resultat.avant.tmi, parts);
+        const apresSeg = tmiTrancheSegment(resultat.apres.revenuImposable, resultat.apres.tmi, parts);
+        renderSummary(resultat, avantSeg, apresSeg);
+        renderBarCharts(resultat, avantSeg, apresSeg);
         renderScenarios();
+        renderTmiGrid();
       }
 
       function render() {
         renderFields();
+        renderTmiGridFields();
         renderOutputs();
       }
 

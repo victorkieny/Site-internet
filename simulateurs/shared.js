@@ -15,6 +15,18 @@ const formatNumber = (value) => new Intl.NumberFormat("fr-FR", {
 
 const roundToHundred = (value) => Math.round((value || 0) / 100) * 100;
 
+// Mesure la largeur réelle (en px) d'un texte dans une police donnée — plus
+// fiable que l'attribut HTML `size` d'un <input>, dont le calcul (largeur
+// moyenne par caractère) varie selon le navigateur et la police au point de
+// laisser des écarts visibles avec une police serif à chasse négative.
+let measureTextCanvas = null;
+function measureTextWidth(text, font) {
+  if (!measureTextCanvas) measureTextCanvas = document.createElement("canvas");
+  const ctx = measureTextCanvas.getContext("2d");
+  ctx.font = font;
+  return ctx.measureText(text).width;
+}
+
 const formatPercent = (value) => new Intl.NumberFormat("fr-FR", {
   maximumFractionDigits: 1
 }).format(value || 0);
@@ -141,6 +153,19 @@ function updateRangeProgress(range) {
   range.style.setProperty("--range-progress", `${Math.max(0, Math.min(100, progress))}%`);
 }
 
+// Pour un champ "à plancher visible" (field.zeroBased) : la piste part de 0
+// (pas du plancher réel) pour que la portion 0→plancher reste visible mais
+// marquée comme inatteignable, au lieu de disparaître comme le ferait un
+// simple attribut min natif. Variable CSS lue directement par le dégradé de
+// ::-webkit-slider-runnable-track / ::-moz-range-track (cf. styles.css) :
+// la zone hachurée fait ainsi partie du même calque que le reste de la
+// piste plutôt que d'être un élément séparé qu'il faudrait repositionner
+// au pixel près pour qu'il recouvre exactement la bonne zone.
+function updateRangeFloor(range, floor, max) {
+  const pct = max > 0 ? Math.max(0, Math.min(100, (floor / max) * 100)) : 0;
+  range.style.setProperty("--range-floor", `${pct}%`);
+}
+
 // Bulle d'info générique : un petit bouton "i" qui affiche `text` au survol
 // ou au clic/focus (:hover/:focus-within, cf. styles.css). Appelable seule
 // (ex. à côté d'un titre de carte) ou via `field.info` sur renderNumberField.
@@ -182,7 +207,136 @@ function renderNumberField(field, values, fieldRefreshers, options = {}) {
   if (field.info) {
     span.append(renderInfoTooltip(typeof field.info === "function" ? field.info(values) : field.info));
   }
-  label.append(span);
+
+  // field.inlineSelect (optionnel) : un ou plusieurs menus déroulants
+  // compacts à côté du libellé plutôt qu'un champ séparé — pour un réglage
+  // qui qualifie directement ce champ-ci (ex. type de bien → frais de
+  // notaire, à côté de l'apport qu'ils plafonnent ; ou la destination du
+  // reste de l'apport). Un objet unique ou un tableau d'objets. Construit à
+  // la main (pas un <select> natif) : la liste déroulante d'un <select> est
+  // dessinée par l'OS, pas par la page, et détonnait avec le reste du site.
+  const inlineSelects = field.inlineSelect
+    ? (Array.isArray(field.inlineSelect) ? field.inlineSelect : [field.inlineSelect])
+    : [];
+  const dropdownSyncers = [];
+
+  // field.autoToggle (optionnel) : petit bouton "Auto" à côté du libellé —
+  // activé, le champ est piloté par l'appelant (ex. recalculé à partir d'un
+  // autre champ) et son curseur/texte se désactive ; désactivé, l'utilisateur
+  // reprend la main dessus. get()/set() délèguent l'état et le recalcul à
+  // l'appelant (logique métier), ce rendu générique ne fait qu'afficher et
+  // (dés)activer les contrôles en conséquence.
+  const autoToggle = field.autoToggle || null;
+  let autoButton = null;
+  const syncAutoToggle = () => {
+    if (!autoToggle) return;
+    const isAuto = autoToggle.get();
+    autoButton.classList.toggle("is-active", isAuto);
+    autoButton.setAttribute("aria-pressed", String(isAuto));
+    input.disabled = isAuto;
+    range.disabled = isAuto;
+  };
+
+  if (inlineSelects.length || autoToggle) {
+    const header = document.createElement("div");
+    header.className = "tool-field-header";
+    header.append(span);
+
+    if (autoToggle) {
+      autoButton = document.createElement("button");
+      autoButton.type = "button";
+      autoButton.className = "tool-auto-toggle";
+      autoButton.textContent = autoToggle.label || "Auto";
+      autoButton.addEventListener("click", () => {
+        autoToggle.set(!autoToggle.get());
+        syncAutoToggle();
+        refreshDependentFields();
+        onCommit?.();
+      });
+      header.append(autoButton);
+    }
+
+    inlineSelects.forEach((inlineSelect) => {
+      const dropdown = document.createElement("div");
+      dropdown.className = "tool-dropdown";
+
+      const trigger = document.createElement("button");
+      trigger.type = "button";
+      trigger.className = "tool-dropdown-trigger";
+      trigger.setAttribute("aria-haspopup", "listbox");
+      trigger.setAttribute("aria-expanded", "false");
+      const triggerLabel = document.createElement("span");
+      const chevron = document.createElement("span");
+      chevron.className = "tool-dropdown-chevron";
+      chevron.textContent = "⌄";
+      chevron.setAttribute("aria-hidden", "true");
+      trigger.append(triggerLabel, chevron);
+
+      const menu = document.createElement("div");
+      menu.className = "tool-dropdown-menu";
+      menu.setAttribute("role", "listbox");
+
+      const closeMenu = () => {
+        menu.classList.remove("is-open");
+        trigger.setAttribute("aria-expanded", "false");
+      };
+      const setDropdownSelected = (value) => {
+        const opt = inlineSelect.options.find((o) => o.value === value) || inlineSelect.options[0];
+        triggerLabel.textContent = opt.label;
+        menu.querySelectorAll(".tool-dropdown-option").forEach((btn) => {
+          btn.classList.toggle("is-active", btn.dataset.value === String(opt.value));
+        });
+      };
+      dropdownSyncers.push(() => setDropdownSelected(values[inlineSelect.key]));
+
+      inlineSelect.options.forEach((opt) => {
+        const optionButton = document.createElement("button");
+        optionButton.type = "button";
+        optionButton.className = "tool-dropdown-option";
+        optionButton.dataset.value = String(opt.value);
+        optionButton.setAttribute("role", "option");
+        const optionLabel = document.createElement("span");
+        optionLabel.textContent = opt.label;
+        const optionCheck = document.createElement("span");
+        optionCheck.className = "tool-dropdown-option-check";
+        optionCheck.textContent = "✓";
+        optionCheck.setAttribute("aria-hidden", "true");
+        optionButton.append(optionLabel, optionCheck);
+        optionButton.addEventListener("click", () => {
+          const { key } = inlineSelect;
+          const previousValue = values[key];
+          values[key] = opt.value;
+          setDropdownSelected(opt.value);
+          closeMenu();
+          onValueChange?.(key, previousValue, values[key]);
+          refreshDependentFields();
+          onCommit?.();
+        });
+        menu.append(optionButton);
+      });
+
+      trigger.addEventListener("click", (event) => {
+        event.stopPropagation();
+        const willOpen = !menu.classList.contains("is-open");
+        closeMenu();
+        if (willOpen) {
+          menu.classList.add("is-open");
+          trigger.setAttribute("aria-expanded", "true");
+        }
+      });
+      document.addEventListener("click", (event) => {
+        if (!dropdown.contains(event.target)) closeMenu();
+      });
+
+      setDropdownSelected(values[inlineSelect.key]);
+      dropdown.append(trigger, menu);
+      header.append(dropdown);
+    });
+
+    label.append(header);
+  } else {
+    label.append(span);
+  }
 
   // Curseur à valeurs discrètes (ex. tranches de TMI) : le curseur se déplace
   // par index dans `field.steps` plutôt que par pas régulier, pour n'autoriser
@@ -201,35 +355,125 @@ function renderNumberField(field, values, fieldRefreshers, options = {}) {
     return closest;
   };
 
+  // field.max peut être une fonction (ex. plafonné au prix du bien) : le
+  // plafond est alors recalculé et la valeur ramenée dedans à chaque
+  // rafraîchissement, plutôt que de figer une borne indépendante des autres
+  // champs du formulaire.
+  const getMax = () => typeof field.max === "function" ? field.max(values) : field.max;
+  const getMin = () => typeof field.min === "function" ? field.min(values) : field.min;
+
+  // Champ "à plancher visible" (ex. apport : le plancher, ce sont les frais
+  // de notaire, toujours dus). La piste du curseur part quand même de 0 —
+  // plutôt que du plancher réel — pour que cette zone reste visible et
+  // marquée comme inatteignable au lieu de disparaître.
+  const zeroBased = !!field.zeroBased;
+
   const control = document.createElement("div");
   control.className = "tool-input-wrap";
   const input = document.createElement("input");
   input.type = "text";
   input.inputMode = "decimal";
-  input.min = steps ? steps[0] : field.min;
-  input.max = steps ? steps[steps.length - 1] : field.max;
+  input.min = steps ? steps[0] : getMin();
+  input.max = steps ? steps[steps.length - 1] : getMax();
   input.step = field.step;
   input.value = formatInputNumber(values[field.key]);
+  // field.valueCaption (ex. "10 %, soit" devant la valeur, sur une seule
+  // ligne) : la largeur fixe habituelle (pensée pour aligner une colonne de
+  // valeurs empilées) laisse alors un vide entre la légende et le nombre.
+  // Mesure réelle du texte affiché (canvas, cf. measureTextWidth) plutôt que
+  // l'attribut HTML `size` : son calcul par largeur moyenne de caractère
+  // varie selon navigateur/police et laissait un écart visible sous Safari
+  // avec cette police serif à chasse négative.
+  const syncInputSize = () => {
+    if (!field.valueCaption) return;
+    const font = getComputedStyle(input).font;
+    // Vide (élément pas encore inséré dans le document) : la police calculée
+    // n'est pas encore résolue, on retentera via requestAnimationFrame.
+    if (!font) return;
+    input.style.width = `${measureTextWidth(input.value, font) + 4}px`;
+  };
+  syncInputSize();
+  requestAnimationFrame(syncInputSize);
+  const rangeWrap = document.createElement("div");
+  rangeWrap.className = "tool-range-wrap";
   const range = document.createElement("input");
   range.className = mini ? "tool-range tool-range-mini" : "tool-range";
   range.type = "range";
-  range.min = steps ? 0 : field.min;
-  range.max = steps ? steps.length - 1 : field.max;
+  range.min = steps ? 0 : (zeroBased ? 0 : getMin());
+  range.max = steps ? steps.length - 1 : getMax();
   range.step = steps ? 1 : field.step;
   range.value = steps ? closestStepIndex(values[field.key]) : values[field.key];
   updateRangeProgress(range);
+  rangeWrap.append(range);
+  if (zeroBased) updateRangeFloor(range, getMin(), getMax());
+  syncAutoToggle();
 
   const note = field.note ? document.createElement("small") : null;
   const updateNote = () => {
     if (!note) return;
     note.textContent = typeof field.note === "function" ? field.note(values) : field.note;
   };
+
+  // Pendant la frappe libre dans le champ texte, on ne recadre pas la valeur
+  // du champ dans ses propres bornes à chaque caractère (sinon, taper "24000"
+  // quand le plancher est 24000 se ferait bloquer dès le "2") : le recadrage
+  // n'a lieu qu'au blur (cf. plus bas), comme pour les valeurs à paliers.
+  let isTypingSelf = false;
+  const applyDynamicBounds = () => {
+    if (steps || (typeof field.max !== "function" && typeof field.min !== "function")) return;
+    const max = getMax();
+    const min = getMin();
+    const boundsChanged = Number(input.max) !== max || Number(input.min) !== min;
+    if (Number(input.max) !== max) input.max = max;
+    if (Number(range.max) !== max) range.max = max;
+    if (Number(input.min) !== min) input.min = min;
+    if (!zeroBased && Number(range.min) !== min) range.min = min;
+    if (!isTypingSelf && (values[field.key] > max || values[field.key] < min)) {
+      values[field.key] = Math.min(max, Math.max(min, values[field.key]));
+      input.value = formatInputNumber(values[field.key]);
+      range.value = values[field.key];
+      updateRangeProgress(range);
+    }
+    // Le remplissage doré (--range-progress) et, pour un plancher visible, la
+    // zone hachurée (--range-floor) dépendent de min/max/value : à recalculer
+    // dès que les bornes bougent, pas seulement quand la valeur elle-même est
+    // recadrée dedans.
+    if (boundsChanged) {
+      updateRangeProgress(range);
+      if (zeroBased) updateRangeFloor(range, min, max);
+    }
+  };
   const refreshField = () => {
     span.textContent = typeof field.label === "function" ? field.label(values) : field.label;
     if (field.info) {
       span.append(renderInfoTooltip(typeof field.info === "function" ? field.info(values) : field.info));
     }
+    dropdownSyncers.forEach((sync) => sync());
+    // Resynchronise l'affichage (texte + curseur) sur values[field.key] :
+    // couvre le cas où un autre champ a modifié cette valeur par effet de
+    // bord (ex. la taxe foncière recalculée à 1 % du prix du bien quand on
+    // déplace son curseur) plutôt que par une interaction directe sur CE
+    // champ, qui l'aurait déjà fait via ses propres écouteurs. Sans effet
+    // quand rien d'externe n'a changé (même valeur réécrite). Suspendu
+    // pendant la frappe libre dans ce même champ (cf. isTypingSelf) pour ne
+    // pas écraser ce que l'utilisateur est en train de taper.
+    if (!isTypingSelf) {
+      const displayValue = steps ? steps[closestStepIndex(values[field.key])] : values[field.key];
+      const rangeValue = steps ? closestStepIndex(values[field.key]) : displayValue;
+      const formatted = formatInputNumber(displayValue);
+      // Écritures évitées quand rien n'a changé : réaffecter range.value
+      // pendant son propre glissement (même à l'identique) peut, sur
+      // WebKit/Safari, interrompre le drag en cours (cf. même précaution
+      // pour min/max dans applyDynamicBounds).
+      if (Number(range.value) !== rangeValue) range.value = rangeValue;
+      if (input.value !== formatted) input.value = formatted;
+      updateRangeProgress(range);
+    }
+    applyDynamicBounds();
     updateNote();
+    updateValueCaption();
+    syncInputSize();
+    syncAutoToggle();
   };
   fieldRefreshers.push(refreshField);
   const refreshDependentFields = () => fieldRefreshers.forEach((refresh) => refresh());
@@ -250,19 +494,25 @@ function renderNumberField(field, values, fieldRefreshers, options = {}) {
       range.value = values[field.key];
     }
     updateRangeProgress(range);
+    isTypingSelf = true;
     refreshDependentFields();
+    isTypingSelf = false;
     updatePresets();
   });
   input.addEventListener("blur", () => {
     // En saisie libre, la valeur tapée est ramenée à la tranche autorisée la
-    // plus proche une fois la saisie terminée (pas à chaque frappe, pour ne
-    // pas gêner la frappe d'un nombre à deux chiffres comme "45").
+    // plus proche (ou au plancher/plafond dynamique) une fois la saisie
+    // terminée, pas à chaque frappe, pour ne pas gêner la frappe d'un nombre
+    // à plusieurs chiffres.
     if (steps) {
       values[field.key] = steps[closestStepIndex(values[field.key])];
       range.value = closestStepIndex(values[field.key]);
       updateRangeProgress(range);
+    } else {
+      applyDynamicBounds();
     }
     input.value = formatInputNumber(values[field.key]);
+    syncInputSize();
   });
   range.addEventListener("input", () => {
     const previousValue = values[field.key];
@@ -276,7 +526,26 @@ function renderNumberField(field, values, fieldRefreshers, options = {}) {
   const suffix = document.createElement("small");
   suffix.textContent = field.suffix;
   control.append(input, suffix);
-  label.append(control);
+
+  // field.valueCaption (optionnel) : petite légende au-dessus de la valeur
+  // (ex. "10 % du prix" au-dessus d'un apport en €) plutôt qu'une note en
+  // bas de champ — pour une lecture immédiate, au même endroit que l'œil
+  // regarde déjà pour la valeur elle-même.
+  const valueCaption = field.valueCaption ? document.createElement("small") : null;
+  const updateValueCaption = () => {
+    if (!valueCaption) return;
+    valueCaption.textContent = typeof field.valueCaption === "function" ? field.valueCaption(values) : field.valueCaption;
+  };
+  if (valueCaption) {
+    valueCaption.className = "tool-value-caption";
+    updateValueCaption();
+    const stack = document.createElement("div");
+    stack.className = "tool-input-stack";
+    stack.append(valueCaption, control);
+    label.append(stack);
+  } else {
+    label.append(control);
+  }
 
   let presetRow = null;
   if (field.presets) {
@@ -303,7 +572,7 @@ function renderNumberField(field, values, fieldRefreshers, options = {}) {
     label.append(presetRow);
   }
 
-  label.append(range);
+  label.append(rangeWrap);
 
   if (note) {
     note.className = "tool-field-note";
@@ -355,7 +624,11 @@ function renderLineChart(rows, config) {
   const legend = config.legend || series.map((s) => ({ role: s.role, label: s.label }));
 
   const width = 960;
-  const height = 380;
+  // config.height (optionnel) : plus de hauteur donne plus d'écart vertical
+  // entre deux courbes qui se frôlent sans vraiment se distinguer (ex. un
+  // croisement serré) — sans affecter les autres graphiques du site, qui
+  // gardent la hauteur par défaut.
+  const height = config.height || 380;
   const pad = { top: 28, right: 36, bottom: 54, left: 128 };
 
   const allValues = series.flatMap((s) => s.values);
@@ -393,9 +666,17 @@ function renderLineChart(rows, config) {
       </g>
     `;
   }).join("");
+  // config.startYear (optionnel, défaut 1) : par défaut rows[0] = année 1,
+  // comme partout ailleurs sur le site. Un appelant dont rows[0] est une
+  // "année 0" (ex. point de départ réel avant le premier mois, cf.
+  // acheter-louer.html) passe startYear: 0 pour que l'axe affiche les bonnes
+  // années sans toucher au calcul des graduations lui-même (niceYearTicks
+  // continue de raisonner en "1..rows.length", seul le libellé affiché est
+  // décalé).
+  const yearLabelOffset = (config.startYear ?? 1) - 1;
   const ticks = niceYearTicks(rows.length).map((annee) => {
     const tickX = x(annee - 1);
-    return `<text x="${tickX}" y="${height - 10}">${annee}</text>`;
+    return `<text x="${tickX}" y="${height - 10}">${annee + yearLabelOffset}</text>`;
   }).join("");
 
   const totalsMarkup = totals.length ? `
@@ -436,7 +717,7 @@ function renderLineChart(rows, config) {
 
   chart.innerHTML = `
     ${totalsMarkup}
-    <div class="chart-canvas">
+    <div class="chart-canvas" style="aspect-ratio: ${width} / ${height}">
       <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="${ariaLabel}">
         ${defsMarkup}
         <g class="chart-grid">${grid}</g>

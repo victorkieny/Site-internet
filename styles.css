@@ -2351,6 +2351,13 @@ body.resources-modal-open {
     linear-gradient(112deg, #324450 0%, #3e3d39 54%, #62502f 100%);
 }
 
+.simulator-choice-achetelouer2 {
+  background:
+    radial-gradient(circle at 10% 4%, rgba(140, 181, 210, 0.2), transparent 38%),
+    radial-gradient(circle at 92% 94%, rgba(210, 169, 101, 0.16), transparent 42%),
+    linear-gradient(112deg, #2d3d48 0%, #3a3a37 52%, #5c4a30 100%);
+}
+
 .simulator-choice-featured::before {
   content: "";
   position: absolute;
@@ -2958,6 +2965,7 @@ body.resources-modal-open {
 }
 
 .compare-race-track {
+  position: relative;
   overflow: hidden;
   height: 15px;
   border-radius: 999px;
@@ -2973,6 +2981,31 @@ body.resources-modal-open {
   height: 100%;
   border-radius: inherit;
   transition: width 750ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Quote-part du revenu imposable logée dans la tranche marginale la plus
+   élevée (PER) : hachures posées au-dessus de la barre pleine. */
+.compare-race-bar-tmi {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: inherit;
+  background: repeating-linear-gradient(
+    135deg,
+    rgba(43, 37, 30, 0.34) 0px,
+    rgba(43, 37, 30, 0.34) 4px,
+    rgba(43, 37, 30, 0.1) 4px,
+    rgba(43, 37, 30, 0.1) 8px
+  );
+  transition: left 750ms cubic-bezier(0.22, 1, 0.36, 1), width 750ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.compare-race-caption {
+  margin: 0;
+  color: var(--ink);
+  font-size: 0.82rem;
+  text-align: right;
+  white-space: nowrap;
 }
 
 .compare-race-bar-livret {
@@ -3279,6 +3312,175 @@ body.resources-modal-open {
   color: #2f6b52;
   font-size: 0.92rem;
   font-weight: 700;
+}
+
+/* Case-chiffre individuelle (Acheter ou louer ?, simulateurs/acheter-louer.html)
+   — même recette de carte que .comparateur-results (span/small/strong),
+   mais une case par carte de champs (Le bien, Le financement, Location &
+   placement), empilée juste en dessous d'elle (cf. renderCardStack) plutôt
+   qu'un bandeau de 4 colonnes : repliée, chaque carte fait remonter sa
+   propre case, indépendamment des deux autres colonnes. */
+.tool-stat-tile {
+  display: grid;
+  gap: 5px;
+  padding: 13px 14px;
+  border: 1px solid rgba(43, 37, 30, 0.075);
+  border-radius: 20px;
+  background: rgba(255, 253, 250, 0.58);
+  box-shadow: 0 16px 32px rgba(43, 37, 30, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.75);
+}
+
+.tool-stat-tile small {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 500;
+}
+
+.tool-stat-tile strong {
+  color: var(--ink);
+  font-size: clamp(1.1rem, 1.5vw, 1.4rem);
+  font-weight: 600;
+}
+
+.tool-stat-tile .tool-stat-sub {
+  color: rgba(43, 37, 30, 0.5);
+  font-size: 0.72rem;
+  font-weight: 450;
+}
+
+/* Code couleur reliant "Le bien" à sa case "Mensualité totale (achat)", et
+   "Location & placement" à sa case "Mensualité totale (location)" — mêmes
+   teintes que le graphique "Patrimoine net dans le temps" (bleu = coûts
+   propriétaire, doré = loyers locataire, cf. --invested-blue/--interest-gold)
+   pour qu'un seul code couleur relie card/case et légende du graphique.
+   Ciblé par position (1ʳᵉ/3ᵉ colonne de #fields-row) plutôt que par classe :
+   pas besoin de toucher renderFieldCard, l'ordre des cartes suffit. */
+body[data-mode="acheter-louer"] #fields-row > .contract-card-stack:nth-child(1) .tool-result-card {
+  background:
+    linear-gradient(180deg, rgba(255, 253, 250, 0.88), rgba(255, 253, 250, 0.66)),
+    radial-gradient(circle at 20% 0%, rgba(199, 174, 137, 0.18), transparent 34%),
+    rgba(111, 139, 167, 0.16);
+}
+
+body[data-mode="acheter-louer"] #fields-row > .contract-card-stack:nth-child(3) .tool-result-card {
+  background:
+    linear-gradient(180deg, rgba(255, 253, 250, 0.88), rgba(255, 253, 250, 0.66)),
+    radial-gradient(circle at 20% 0%, rgba(199, 174, 137, 0.18), transparent 34%),
+    rgba(185, 151, 97, 0.16);
+}
+
+/* "Le financement" n'a plus de case-chiffre sous sa carte (l'écart d'effort
+   est parti vivre sous la mensualité totale la plus petite, à gauche ou à
+   droite selon le résultat) : sa carte doit retomber au niveau du bas des
+   cases "Mensualité totale" elles-mêmes, pas de la case Écart d'effort qui
+   s'ajoute parfois en dessous de l'une d'elles (et la rend plus haute que
+   l'autre). Un align-content: stretch générique suit la colonne la PLUS
+   HAUTE des trois, ce qui n'est pas ce qu'on veut ici — hauteur fixée en JS
+   à la place (cf. syncFinancementHeight, acheter-louer.html), mesurée sur
+   la case "Mensualité totale" directement.) */
+body[data-mode="acheter-louer"] #fields-row > .contract-card-stack:nth-child(2) .tool-result-card {
+  box-sizing: border-box;
+  /* Son propre contenu (3 champs pleins, sans groupe replié comme les deux
+     autres cartes) dépassait légèrement la cible (bas de "Mensualité
+     totale"), le plancher anti-chevauchement de syncFinancementHeight
+     l'emportait alors sur la cible — d'où un fin espace blanc sous "Durée du
+     crédit" avant que la carte ne retombe trop bas. Padding du bas réduit
+     pour que son contenu naturel repasse sous la cible dans le cas courant. */
+  padding-bottom: 8px;
+}
+
+/* La mensualité totale (1ʳᵉ case de chaque groupe) garde la teinte de sa
+   colonne ; l'écart d'effort, quand il atterrit en 2ᵉ case du même groupe
+   (cf. renderStats, sous la mensualité la plus petite), est toujours vert
+   (.is-gain plus bas) — jamais la teinte bleue/dorée de la colonne. */
+body[data-mode="acheter-louer"] #stat-achat-group > .tool-stat-tile:first-child {
+  background-color: rgba(111, 139, 167, 0.22);
+}
+
+body[data-mode="acheter-louer"] #stat-location-group > .tool-stat-tile:first-child {
+  background-color: rgba(185, 151, 97, 0.22);
+}
+
+/* Libellé ("Mensualité totale (achat)"/"(location)") en noir plutôt que gris
+   atténué — demandé par Victor pour ces deux cases précisément. */
+body[data-mode="acheter-louer"] #stat-achat-group > .tool-stat-tile:first-child > small:not(.tool-stat-sub),
+body[data-mode="acheter-louer"] #stat-location-group > .tool-stat-tile:first-child > small:not(.tool-stat-sub) {
+  color: var(--ink);
+}
+
+.tool-stat-tile.is-ok strong {
+  color: #2f6b52;
+}
+
+.tool-stat-tile.is-bad strong {
+  color: #a5493c;
+}
+
+/* field.autoToggle plus haut gère déjà le vert/rouge des curseurs Coûts/
+   Gains ; ici, l'écart d'effort réel vs loyer (cf. renderStats) est toujours
+   présenté comme un gain, posé sous la mensualité totale la plus petite :
+   fond vert plutôt que la coloration rouge/vert conditionnelle d'avant. */
+.tool-stat-tile.is-gain {
+  background-color: rgba(111, 163, 110, 0.22);
+}
+
+.tool-stat-tile.is-gain strong {
+  color: #2f6b52;
+}
+
+/* Mise en avant façon .tool-hero (simulateur PER) — même dégradé sombre,
+   mêmes couleurs de texte (libellé or, valeur crème) — mais sans reprendre
+   sa mise en page (min-height 204px, gros chiffre serif) : .tool-stat-tile
+   garde ici la taille d'une case normale, alignée sur l'écart d'effort. */
+.tool-stat-tile.is-highlight {
+  border-color: rgba(214, 183, 130, 0.46);
+  background:
+    radial-gradient(circle at 50% 38%, rgba(255, 246, 226, 0.08), transparent 34%),
+    linear-gradient(100deg, #344955 0%, #403f3a 50%, #624e33 100%);
+  box-shadow:
+    0 0 0 1px rgba(255, 253, 250, 0.11) inset,
+    0 16px 32px rgba(43, 37, 30, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+.tool-stat-tile.is-highlight > small:not(.tool-stat-sub) {
+  color: #e5c17e;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.tool-stat-tile.is-highlight strong {
+  color: #fff6e7;
+}
+
+.tool-stat-tile.is-highlight .tool-stat-sub {
+  color: rgba(255, 246, 231, 0.7);
+}
+
+/* Emplacement de la case "Mensualité totale", juste sous sa carte (Le bien
+   ou Location & placement) — même espacement vertical que
+   .contract-card-stack, pour une colonne visuellement cohérente de haut en
+   bas. */
+.tool-stat-group {
+  display: grid;
+  gap: 14px;
+}
+
+/* "Point d'équilibre" et "Écart d'effort d'épargne mensuel" occupent à elles
+   deux toute la largeur sous les trois cartes (Le bien/Le financement/
+   Location & placement), split 50/50 — comme les trois colonnes au-dessus
+   ont la même largeur, ce milieu tombe exactement au milieu de "Le
+   financement", sans calcul JS nécessaire (cf. renderStats). flex (plutôt
+   que grid) donne aussi, par défaut (align-items: stretch), la même hauteur
+   aux deux cases quel que soit leur nombre de lignes. */
+#stat-split-row {
+  display: flex;
+  gap: 14px;
+}
+
+#stat-split-row > .tool-stat-tile {
+  flex: 1 1 0;
 }
 
 .capital-legend span:first-child strong,
@@ -3653,6 +3855,27 @@ body.resources-modal-open {
   border: 1px solid rgba(43, 37, 30, 0.075);
   border-radius: 18px;
   background: rgba(255, 253, 250, 0.58);
+}
+
+/* Apparition du bandeau au moment précis où il devient pertinent (ex.
+   changement de TMI sur le PER) — posée sur une classe à part, ajoutée par
+   le JS uniquement à l'apparition réelle (pas à chaque frappe pendant qu'il
+   reste affiché), sinon cette même animation rejouerait en boucle pendant
+   un glissement de curseur. */
+.tool-status-banner-enter {
+  animation: toolStatusBannerIn 360ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes toolStatusBannerIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scaleY(0.94);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scaleY(1);
+  }
 }
 
 .tool-status-icon {
@@ -4439,6 +4662,7 @@ body.resources-modal-open {
 
 .tool-card-title h2,
 .tool-params-title h2 {
+  min-width: 0;
   color: var(--ink);
   font-family: var(--serif);
   font-size: clamp(1.38rem, 2vw, 1.78rem);
@@ -4446,6 +4670,18 @@ body.resources-modal-open {
   line-height: 0.96;
   transform: scaleX(1.06);
   transform-origin: left center;
+}
+
+/* Le scaleX ci-dessus étire le rendu visuel du titre sans jamais agrandir
+   sa boîte de mise en page (les transforms n'affectent jamais le flux ni
+   les voisins) : à côté d'un chevron replier/déplier, un titre un peu long
+   peut donc visuellement chevaucher le chevron sans qu'aucun retour à la
+   ligne n'ait eu l'occasion de s'en charger. On désactive l'étirement là où
+   un chevron est présent — l'effet typographique est de toute façon surtout
+   sensible sur les plus grands titres, pas ceux, plus courts, des cartes
+   repliables. */
+.tool-card-title:has(.tool-collapsible-chevron-btn) h2 {
+  transform: none;
 }
 
 .tool-zero-fields {
@@ -4799,18 +5035,22 @@ body.resources-modal-open {
   text-anchor: end;
 }
 
-/* Repère vertical optionnel (ex. année d'autofinancement atteinte). */
+/* Repère vertical optionnel (ex. année d'autofinancement atteinte, ou
+   croisement entre deux courbes déjà colorées) : encre atténuée plutôt que
+   doré/gras, pour rester un repère discret au milieu de courbes qui portent
+   déjà leurs propres couleurs. */
 .chart-marker-line {
-  stroke: var(--interest-gold);
+  stroke: rgba(43, 37, 30, 0.38);
   stroke-width: 1.5;
   stroke-dasharray: 5 4;
 }
 
 .chart-marker-label {
-  fill: var(--interest-gold);
+  fill: rgba(43, 37, 30, 0.68);
+  stroke: none;
   font-family: var(--sans);
-  font-size: 15px;
-  font-weight: 650;
+  font-size: 14px;
+  font-weight: 540;
   text-anchor: middle;
 }
 
@@ -5926,13 +6166,72 @@ body[data-mode="scpi"] #chart-panel .chart-tooltip-gains strong {
   display: none;
 }
 
-/* Léger espace avant "Frais de notaire & garantie" (Acheter ou louer) :
-   marque visuellement que ce champ et "Apport personnel" juste au-dessus
-   forment un même sous-groupe (l'apport couvre d'abord les frais de
-   notaire, cf. simulerAchatLocation), avant le bloc financement/charges
-   qui suit. */
-body[data-mode="acheter-louer"] [data-field="fraisNotairePct"] {
-  margin-top: 22px;
+/* Bloc teinté par groupe de curseurs au sein d'une même carte (field.group,
+   ex. "Coûts" / "Gains" sur Acheter ou louer) — même vocabulaire de couleur
+   que .tool-status-banner.is-ok/is-bad (vert = positif, terracotta =
+   négatif), pour que la distinction se voie vraiment plutôt que de reposer
+   sur la seule typographie. */
+.tool-field-group {
+  margin: 10px 0;
+  padding: 2px 14px 8px;
+  border-radius: 16px;
+}
+
+.tool-field-group:first-child {
+  margin-top: 0;
+}
+
+.tool-field-group:last-child {
+  margin-bottom: 0;
+}
+
+.tool-field-group-couts {
+  background: rgba(178, 92, 79, 0.07);
+}
+
+.tool-field-group-gains {
+  background: rgba(111, 163, 110, 0.09);
+}
+
+/* Devenu un <button> (repli Coûts/Gains, cf. renderFieldCard) : le libellé
+   garde son habillage existant, en y ajoutant juste la mise en page
+   bouton-pleine-largeur + chevron (même recette que
+   .tool-collapsible-chevron-btn, pour un groupe plutôt qu'une carte entière).
+   */
+.tool-field-group-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 12px 0 2px;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 620;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  cursor: pointer;
+  text-align: left;
+}
+
+.tool-field-group-label:hover,
+.tool-field-group-label:focus-visible {
+  color: var(--ink);
+}
+
+.tool-field-group-label .tool-collapsible-chevron {
+  width: 15px;
+  height: 15px;
+}
+
+.tool-field-group-label:hover .tool-collapsible-chevron,
+.tool-field-group-label:focus-visible .tool-collapsible-chevron {
+  stroke: var(--ink);
+}
+
+.tool-field-group-label[aria-expanded="true"] .tool-collapsible-chevron {
+  transform: rotate(180deg);
 }
 
 .tool-field {
@@ -5951,12 +6250,201 @@ body[data-mode="acheter-louer"] [data-field="fraisNotairePct"] {
   border-bottom: 0;
 }
 
-.tool-field > span {
+.tool-field > span,
+.tool-field-header > span {
   color: rgba(43, 37, 30, 0.62);
   font-size: 0.9rem;
   font-weight: 520;
   letter-spacing: 0.01em;
   white-space: nowrap;
+}
+
+/* Champ avec menu déroulant intégré à côté du libellé (field.inlineSelect,
+   ex. "Apport" + type de bien) : label + menu sur la même ligne, dans la
+   même cellule de grille qu'occuperait le libellé seul. */
+.tool-field-header {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+/* field.static + field.inlineSelect (ex. "Frais de notaire" + Neuf/Ancien) :
+   le menu déroulant prend sa propre ligne pleine largeur, comme le ferait un
+   curseur — pas nichée à côté du libellé (.tool-field-header), sinon la
+   valeur se centre verticalement sur libellé+menu empilés au lieu de rester
+   sur la ligne du libellé seul. */
+.tool-dropdown-row {
+  grid-column: 1 / -1;
+}
+
+.tool-dropdown {
+  position: relative;
+  display: inline-flex;
+}
+
+.tool-dropdown-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 13px;
+  border: 1px solid rgba(43, 37, 30, 0.13);
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(255, 253, 250, 0.9), rgba(250, 246, 239, 0.7));
+  color: var(--ink);
+  font: 560 0.78rem var(--sans);
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(43, 37, 30, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  transition: border-color 160ms ease, background 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.tool-dropdown-trigger:hover {
+  border-color: rgba(185, 151, 97, 0.5);
+  background: linear-gradient(180deg, rgba(255, 253, 250, 1), rgba(253, 249, 241, 0.92));
+  box-shadow: 0 3px 8px rgba(43, 37, 30, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.tool-dropdown-trigger[aria-expanded="true"] {
+  border-color: rgba(185, 151, 97, 0.75);
+  background: rgba(255, 253, 250, 0.98);
+  box-shadow: 0 4px 14px rgba(43, 37, 30, 0.1), 0 0 0 3px rgba(185, 151, 97, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.85);
+}
+
+.tool-dropdown-chevron {
+  color: rgba(185, 151, 97, 0.85);
+  font-size: 0.72rem;
+  line-height: 1;
+  transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.tool-dropdown-trigger[aria-expanded="true"] .tool-dropdown-chevron {
+  transform: rotate(180deg);
+}
+
+.tool-dropdown-menu {
+  position: absolute;
+  z-index: 8;
+  top: calc(100% + 11px);
+  left: 4px;
+  display: grid;
+  gap: 1px;
+  width: max-content;
+  min-width: calc(100% - 8px);
+  padding: 7px;
+  border: 1px solid rgba(43, 37, 30, 0.1);
+  border-radius: 15px;
+  background: rgba(255, 253, 250, 0.98);
+  box-shadow: 0 22px 40px rgba(43, 37, 30, 0.18), 0 2px 8px rgba(43, 37, 30, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(14px) saturate(1.1);
+  opacity: 0;
+  transform: translateY(-5px) scale(0.97);
+  transform-origin: top left;
+  pointer-events: none;
+  transition: opacity 160ms ease, transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.tool-dropdown-menu::before {
+  content: "";
+  position: absolute;
+  top: -5px;
+  left: 17px;
+  width: 9px;
+  height: 9px;
+  border-top: 1px solid rgba(43, 37, 30, 0.1);
+  border-left: 1px solid rgba(43, 37, 30, 0.1);
+  border-radius: 2px 0 0 0;
+  background: rgba(255, 253, 250, 0.98);
+  transform: rotate(45deg);
+}
+
+.tool-dropdown-menu.is-open {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+.tool-dropdown-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  padding: 9px 10px 9px 12px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: rgba(43, 37, 30, 0.76);
+  font: 520 0.82rem var(--sans);
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 140ms ease, color 140ms ease;
+}
+
+.tool-dropdown-option:hover {
+  background: rgba(185, 151, 97, 0.1);
+  color: var(--ink);
+}
+
+.tool-dropdown-option-check {
+  width: 13px;
+  color: var(--button);
+  font-size: 0.74rem;
+  opacity: 0;
+  transition: opacity 140ms ease;
+}
+
+.tool-dropdown-option.is-active {
+  background: rgba(185, 151, 97, 0.14);
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.tool-dropdown-option.is-active .tool-dropdown-option-check {
+  opacity: 1;
+}
+
+/* field.autoToggle (ex. "Auto" à côté de Taxe foncière annuelle) : même
+   pilule que .tool-preset — actif (champ piloté par un autre champ, ex. le
+   prix du bien) en plein, inactif (repris en main par l'utilisateur) en
+   contour. Le curseur/texte du champ se désactive pendant qu'il est actif
+   (cf. syncAutoToggle, shared.js), d'où le style ci-dessous. */
+.tool-auto-toggle {
+  flex-shrink: 0;
+  padding: 2px 6px;
+  border: 1px solid rgba(43, 37, 30, 0.12);
+  border-radius: 999px;
+  background: rgba(255, 253, 250, 0.6);
+  color: var(--muted);
+  font-size: 0.64rem;
+  font-weight: 560;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: background 160ms ease, color 160ms ease, border-color 160ms ease;
+}
+
+.tool-auto-toggle:hover {
+  border-color: rgba(43, 37, 30, 0.24);
+  color: var(--ink);
+}
+
+.tool-auto-toggle.is-active {
+  border-color: transparent;
+  background: linear-gradient(180deg, #332d25 0%, var(--button) 54%, #211c17 100%);
+  color: var(--white);
+}
+
+/* Le champ reste lisible (chiffre en pleine couleur) pendant que "Auto" le
+   pilote : seul le curseur (non pertinent à faire glisser tant que le champ
+   est piloté) se grise. */
+.tool-range:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.tool-range:disabled::-webkit-slider-thumb {
+  cursor: not-allowed;
 }
 
 .tool-input-wrap {
@@ -5991,6 +6479,22 @@ body[data-mode="acheter-louer"] [data-field="fraisNotairePct"] {
   text-align: right;
 }
 
+/* field.static (ex. "Frais de notaire" dans Le bien) : même alignement
+   que la valeur d'un champ réglable, sans l'interactivité. */
+.tool-static-value {
+  display: inline-block;
+  width: clamp(74px, 7vw, 104px);
+  color: var(--ink);
+  font-size: 1.12rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 560;
+  text-align: right;
+}
+
+.tool-field-static {
+  padding-bottom: 17px;
+}
+
 .tool-input-wrap input::-webkit-outer-spin-button,
 .tool-input-wrap input::-webkit-inner-spin-button {
   margin: 0;
@@ -6002,6 +6506,36 @@ body[data-mode="acheter-louer"] [data-field="fraisNotairePct"] {
   color: var(--muted);
   font-size: 0.76rem;
   font-weight: 520;
+}
+
+/* field.valueCaption (ex. "10 % du prix" au-dessus d'un apport en €) :
+   empile la légende et .tool-input-wrap, alignés à droite comme la valeur
+   elle-même. */
+.tool-input-stack {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+/* La valeur garde sa largeur fixe (cf. .tool-input-wrap input, 78px) pour
+   aligner des colonnes de nombres empilées — mais ici, légende et valeur sont
+   sur la même ligne ("10 %, soit 20 000 €") : cette boîte, plus large que le
+   nombre qu'elle contient, laissait un vide (avant le nombre si aligné à
+   droite, avant le "€" sinon). width:auto ici en secours ; la largeur réelle
+   est fixée en JS (syncInputSize, shared.js) par mesure canvas du texte
+   affiché, recalculée à chaque changement de valeur. */
+body[data-mode="acheter-louer"] .tool-input-stack .tool-input-wrap input {
+  width: auto;
+}
+
+.tool-value-caption {
+  color: rgba(43, 37, 30, 0.9);
+  font-family: var(--serif);
+  font-size: 1.16rem;
+  font-weight: 500;
+  letter-spacing: -0.025em;
 }
 
 .tool-select-field {
@@ -6046,8 +6580,12 @@ body[data-mode="acheter-louer"] [data-field="fraisNotairePct"] {
   box-shadow: 0 0 0 3px rgba(185, 151, 97, 0.12);
 }
 
-.tool-range {
+.tool-range-wrap {
+  position: relative;
   grid-column: 1 / -1;
+}
+
+.tool-range {
   width: 100%;
   height: 16px;
   margin: 3px 0 0;
@@ -6055,13 +6593,31 @@ body[data-mode="acheter-louer"] [data-field="fraisNotairePct"] {
   background: transparent;
   cursor: pointer;
   --range-progress: 0%;
+  /* Reste à 0% pour l'immense majorité des curseurs (champs sans plancher
+     "visible", cf. field.zeroBased) : la zone hachurée ci-dessous a alors
+     une largeur nulle et ne change rien à leur rendu. */
+  --range-floor: 0%;
 }
 
+/* Zone "plancher visible" (field.zeroBased, ex. apport : frais de notaire
+   toujours dus) : hachure directement intégrée au dégradé de la piste
+   (et non un élément séparé superposé) pour épouser exactement la même
+   zone — même hauteur, même arrondi, aucun risque de décalage au pixel
+   près entre les deux. Le calque du dessus est transparent sur 0→plancher
+   pour laisser voir la hachure en dessous, puis pleinement opaque au-delà
+   (doré puis piste neutre) pour la masquer ; les teintes sont opaques pour
+   ne jamais se mélanger avec elle en un ton boueux à la jonction. */
 .tool-range::-webkit-slider-runnable-track {
   height: 3px;
   border-radius: 999px;
   background:
-    linear-gradient(90deg, rgba(185, 151, 97, 0.88) 0 var(--range-progress), rgba(111, 139, 167, 0.28) var(--range-progress) 100%);
+    linear-gradient(90deg,
+      transparent 0 var(--range-floor),
+      rgb(185, 151, 97) var(--range-floor),
+      rgb(185, 151, 97) var(--range-progress),
+      rgb(111, 139, 167) var(--range-progress),
+      rgb(111, 139, 167) 100%),
+    repeating-linear-gradient(127deg, #c9c0b0 0 2px, #a89e8c 2px 5px);
 }
 
 .tool-range::-webkit-slider-thumb {
@@ -6079,7 +6635,13 @@ body[data-mode="acheter-louer"] [data-field="fraisNotairePct"] {
   height: 3px;
   border-radius: 999px;
   background:
-    linear-gradient(90deg, rgba(185, 151, 97, 0.88) 0 var(--range-progress), rgba(111, 139, 167, 0.28) var(--range-progress) 100%);
+    linear-gradient(90deg,
+      transparent 0 var(--range-floor),
+      rgb(185, 151, 97) var(--range-floor),
+      rgb(185, 151, 97) var(--range-progress),
+      rgb(111, 139, 167) var(--range-progress),
+      rgb(111, 139, 167) 100%),
+    repeating-linear-gradient(127deg, #c9c0b0 0 2px, #a89e8c 2px 5px);
 }
 
 .tool-range::-moz-range-thumb {
@@ -6370,6 +6932,84 @@ body[data-mode="acheter-louer"] [data-field="fraisNotairePct"] {
   margin: 0 auto;
 }
 
+/* Grille "Intérêt du PER selon le TMI d'entrée et de sortie" (gain-fiscal-
+   per.html) : deux curseurs compacts (rendement/durée) au-dessus d'un
+   tableau à en-têtes croisés, sur le modèle d'un tableau Eres. Spécificité
+   portée sur #tmi-grid-table pour l'isoler des règles génériques
+   .tool-table-wrap th/td (largeurs en %, table-layout: fixed) qui, sinon,
+   s'appliqueraient aussi à ce tableau-ci avec une structure différente. */
+.tmi-grid-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px 24px;
+  margin-bottom: 18px;
+}
+
+#tmi-grid-table {
+  table-layout: auto;
+  font-size: 0.86rem;
+}
+
+#tmi-grid-table th,
+#tmi-grid-table td {
+  width: auto;
+  text-align: center;
+  white-space: nowrap;
+  padding: 9px 12px;
+}
+
+#tmi-grid-table .tmi-grid-corner {
+  border: none;
+  background: transparent;
+}
+
+#tmi-grid-table .tmi-grid-sortie-label {
+  background: var(--button);
+  color: var(--white);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+#tmi-grid-table .tmi-grid-entree-label {
+  background: var(--button);
+  color: var(--white);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  vertical-align: middle;
+}
+
+#tmi-grid-table .tmi-grid-entree-label span {
+  display: inline-block;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  white-space: nowrap;
+}
+
+#tmi-grid-table .tmi-grid-col-head,
+#tmi-grid-table .tmi-grid-row-head {
+  background: rgba(199, 174, 137, 0.2);
+  color: var(--ink);
+  font-weight: 600;
+}
+
+#tmi-grid-table .tmi-grid-cell {
+  font-weight: 600;
+}
+
+#tmi-grid-table .tmi-grid-cell.is-gain {
+  background: rgba(111, 163, 110, 0.16);
+  color: #2f6b52;
+}
+
+#tmi-grid-table .tmi-grid-cell.is-loss {
+  background: rgba(178, 92, 79, 0.1);
+  color: #a5493c;
+}
+
+#tmi-grid-table .tmi-grid-cell.is-na {
+  background: rgba(43, 37, 30, 0.05);
+}
+
 .tool-page-notes .tool-page-note {
   margin: 0;
 }
@@ -6455,6 +7095,10 @@ body[data-mode="acheter-louer"] [data-field="fraisNotairePct"] {
 
 .mini-bar-after {
   fill: rgba(185, 151, 97, 0.92);
+  stroke: none;
+}
+
+.mini-bar-tmi {
   stroke: none;
 }
 
@@ -6651,6 +7295,17 @@ body[data-mode="per"] .tool-params {
 body[data-mode="per"] .tool-summary,
 body[data-mode="per"] .tool-secondary-column {
   gap: 16px;
+}
+
+/* renderSummary() remplace #summary.innerHTML à chaque frappe/glissement de
+   curseur (versement PER) : .tool-result-card rejouait alors son animation
+   d'apparition (toolFadeUp) à chaque tick, donnant un effet de "rebond"
+   pendant le drag — demandé par Victor de rendre ça stable. Désactivée ici,
+   pas globalement, pour ne pas affecter les pages où ce même bloc n'est
+   reconstruit qu'une fois (apparition réelle, pas une mise à jour de
+   valeur). */
+body[data-mode="per"] .tool-result-card {
+  animation: none;
 }
 
 /* Bandeau "Gain fiscal" moins haut que le gabarit générique (min-height
@@ -9685,15 +10340,18 @@ body[data-mode="comparateur"] .tool-nav {
 }
 
 /* Pages simulateur "hors gabarit" (Une pierre deux coups, Comparateur de
-   contrats — simulateurs/une-pierre-deux-coups.html et
-   simulateurs/comparateur-contrats.html) — même traitement des
-   curseurs/champs et des titres de section que .tool-fields sous
-   body[data-mode="av"], repris tel quel (structure DOM identique via
-   renderNumberField, partagé) pour ne pas retomber sur le style de base
-   .tool-range/.tool-field, moins abouti. Un seul bloc, scopé sur les deux
-   valeurs de data-mode, pour ne pas dupliquer cette règle une 3e fois. */
+   contrats, Acheter ou louer — simulateurs/une-pierre-deux-coups.html,
+   simulateurs/comparateur-contrats.html et simulateurs/acheter-louer.html)
+   — même traitement des curseurs/champs et des titres de section que
+   .tool-fields sous body[data-mode="av"], repris tel quel (structure DOM
+   identique via renderNumberField, partagé) pour ne pas retomber sur le
+   style de base .tool-range/.tool-field, moins abouti. Un seul bloc, scopé
+   sur les trois valeurs de data-mode, pour ne pas dupliquer cette règle une
+   4e fois. */
 body[data-mode="pierre2coups"] .tool-fields,
-body[data-mode="comparateur"] .tool-fields {
+body[data-mode="comparateur"] .tool-fields,
+body[data-mode="financer-rp-locatif"] .tool-fields,
+body[data-mode="acheter-louer"] .tool-fields {
   gap: 0;
 }
 
@@ -9702,7 +10360,13 @@ body[data-mode="pierre2coups"] .tool-field:hover,
 body[data-mode="pierre2coups"] .tool-field:focus-within,
 body[data-mode="comparateur"] .tool-field,
 body[data-mode="comparateur"] .tool-field:hover,
-body[data-mode="comparateur"] .tool-field:focus-within {
+body[data-mode="comparateur"] .tool-field:focus-within,
+body[data-mode="financer-rp-locatif"] .tool-field,
+body[data-mode="acheter-louer"] .tool-field,
+body[data-mode="financer-rp-locatif"] .tool-field:hover,
+body[data-mode="acheter-louer"] .tool-field:hover,
+body[data-mode="financer-rp-locatif"] .tool-field:focus-within,
+body[data-mode="acheter-louer"] .tool-field:focus-within {
   gap: 7px 12px;
   padding: 15px 2px 17px;
   border: 0;
@@ -9712,8 +10376,22 @@ body[data-mode="comparateur"] .tool-field:focus-within {
   box-shadow: none;
 }
 
+/* La règle ci-dessus, plus spécifique (body[data-mode]) que le générique
+   .tool-field:last-child, réintroduisait le séparateur sous le dernier champ
+   d'une carte — invisible la plupart du temps (absorbé par le fond teinté
+   d'un groupe Coûts/Gains juste après), mais bien visible sous "Durée du
+   crédit" (Le financement), qui n'a pas de groupe à sa suite. */
+body[data-mode="financer-rp-locatif"] .tool-field:last-child,
+body[data-mode="acheter-louer"] .tool-field:last-child {
+  border-bottom: 0;
+}
+
 body[data-mode="pierre2coups"] .tool-field > span,
-body[data-mode="comparateur"] .tool-field > span {
+body[data-mode="comparateur"] .tool-field > span,
+body[data-mode="financer-rp-locatif"] .tool-field > span,
+body[data-mode="acheter-louer"] .tool-field > span,
+body[data-mode="financer-rp-locatif"] .tool-field-header > span,
+body[data-mode="acheter-louer"] .tool-field-header > span {
   color: rgba(43, 37, 30, 0.68);
   font-size: 0.86rem;
   font-weight: 540;
@@ -9723,10 +10401,48 @@ body[data-mode="comparateur"] .tool-field > span {
   white-space: normal;
 }
 
+/* Réserve toujours la même hauteur pour la zone libellé (jusqu'à 2 lignes) :
+   sans ça, un champ dont le libellé passe à la ligne pousse son curseur
+   plus bas que celui du champ voisin dans l'autre colonne. */
+body[data-mode="financer-rp-locatif"] .tool-field > span {
+  display: block;
+  min-height: 2.6em;
+}
+
+/* La bulle Neuf/Ancien ne doit jamais passer sous le libellé (elle est bien
+   plus haute qu'une ligne de texte quand elle y passe, ce qu'aucune
+   réserve de hauteur raisonnable ne peut compenser) : elle reste à côté,
+   quitte à ce que le libellé se tronque en ellipse plutôt que de pousser
+   le curseur plus bas que celui du champ voisin. Spécifique à "Financer sa
+   RP..." (deux colonnes parallèles qui doivent s'aligner ligne à ligne) —
+   "Acheter ou louer ?" n'a qu'une seule carte par champ (pas de colonne
+   voisine à aligner) et garde donc le comportement de base de
+   .tool-field-header (flex-wrap: wrap) : la bulle passe sous le libellé
+   plutôt que de le tronquer, demandé par Victor. */
+body[data-mode="financer-rp-locatif"] .tool-field-header {
+  flex-wrap: nowrap;
+  min-height: 2.6em;
+}
+
+body[data-mode="financer-rp-locatif"] .tool-field-header > span {
+  overflow: hidden;
+  min-width: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+body[data-mode="financer-rp-locatif"] .tool-field-header .tool-dropdown {
+  flex-shrink: 0;
+}
+
 body[data-mode="pierre2coups"] .tool-input-wrap,
 body[data-mode="pierre2coups"] .tool-input-wrap:focus-within,
 body[data-mode="comparateur"] .tool-input-wrap,
-body[data-mode="comparateur"] .tool-input-wrap:focus-within {
+body[data-mode="comparateur"] .tool-input-wrap:focus-within,
+body[data-mode="financer-rp-locatif"] .tool-input-wrap,
+body[data-mode="acheter-louer"] .tool-input-wrap,
+body[data-mode="financer-rp-locatif"] .tool-input-wrap:focus-within,
+body[data-mode="acheter-louer"] .tool-input-wrap:focus-within {
   min-width: 100px;
   min-height: 29px;
   padding: 0;
@@ -9738,7 +10454,10 @@ body[data-mode="comparateur"] .tool-input-wrap:focus-within {
 }
 
 body[data-mode="pierre2coups"] .tool-input-wrap input,
-body[data-mode="comparateur"] .tool-input-wrap input {
+body[data-mode="comparateur"] .tool-input-wrap input,
+body[data-mode="financer-rp-locatif"] .tool-input-wrap input,
+body[data-mode="acheter-louer"] .tool-input-wrap input,
+body[data-mode="acheter-louer"] .tool-static-value {
   width: 78px;
   min-height: 29px;
   color: rgba(43, 37, 30, 0.9);
@@ -9748,22 +10467,51 @@ body[data-mode="comparateur"] .tool-input-wrap input {
   letter-spacing: -0.025em;
 }
 
+/* Un <input> centre nativement son texte dans sa hauteur de boîte ; un
+   simple <span> (.tool-static-value) non — son texte reste collé en haut,
+   ce qui le désaligne visuellement du "€" qui le suit dès que min-height
+   dépasse la hauteur d'une ligne. line-height = min-height reproduit le
+   même centrage que l'input, sans dépendre d'un display:flex à part. */
+body[data-mode="acheter-louer"] .tool-static-value {
+  line-height: 29px;
+}
+
 body[data-mode="pierre2coups"] .tool-input-wrap small,
-body[data-mode="comparateur"] .tool-input-wrap small {
+body[data-mode="comparateur"] .tool-input-wrap small,
+body[data-mode="financer-rp-locatif"] .tool-input-wrap small {
   padding-left: 6px;
   color: rgba(43, 37, 30, 0.5);
   font-size: 0.7rem;
 }
 
+/* "Acheter ou louer ?" seulement : l'unité (€, €/an, %/an, ans...) dans
+   exactement la même police, taille, graisse et couleur que le nombre —
+   pas seulement la même police (cf. tentative précédente) : Victor voulait
+   vraiment aucune différence visuelle, comme pour "Frais de notaire" (une
+   valeur figée où le symbole fait partie de la même chaîne de caractères
+   que le nombre, cf. field.static). */
+body[data-mode="acheter-louer"] .tool-input-wrap small {
+  padding-left: 6px;
+  color: rgba(43, 37, 30, 0.9);
+  font-family: var(--serif);
+  font-size: 1.16rem;
+  font-weight: 500;
+  letter-spacing: -0.025em;
+}
+
 body[data-mode="pierre2coups"] .tool-range,
-body[data-mode="comparateur"] .tool-range {
+body[data-mode="comparateur"] .tool-range,
+body[data-mode="financer-rp-locatif"] .tool-range,
+body[data-mode="acheter-louer"] .tool-range {
   height: 22px;
   margin-top: 2px;
   outline: none;
 }
 
 body[data-mode="pierre2coups"] .tool-range::-webkit-slider-runnable-track,
-body[data-mode="comparateur"] .tool-range::-webkit-slider-runnable-track {
+body[data-mode="comparateur"] .tool-range::-webkit-slider-runnable-track,
+body[data-mode="financer-rp-locatif"] .tool-range::-webkit-slider-runnable-track,
+body[data-mode="acheter-louer"] .tool-range::-webkit-slider-runnable-track {
   height: 7px;
   border: 0;
   border-radius: 999px;
@@ -9777,8 +10525,82 @@ body[data-mode="comparateur"] .tool-range::-webkit-slider-runnable-track {
   box-shadow: inset 0 1px 2px rgba(43, 37, 30, 0.08);
 }
 
+/* "Acheter ou louer ?" : un curseur dont le champ appartient à un bloc
+   "Coûts"/"Gains" (field.group, cf. .tool-field-group-couts/-gains) prend
+   une teinte pleine rouge/verte plutôt que le dégradé bleu→doré par
+   défaut — même rouge que la part "frais de notaire" de l'apport, même
+   vert que "Versement initial" (ci-dessous), pour que la couleur de la
+   piste redise ce que dit déjà le bandeau de la carte. Les curseurs hors
+   groupe (Prix d'achat, TAEG, Durée du crédit...) gardent le dégradé
+   d'origine. Placé avant les règles [data-field="apport"] plus bas : à
+   spécificité égale, si l'apport devait un jour appartenir à un groupe, sa
+   propre règle (plus ciblée) continuerait à l'emporter. */
+body[data-mode="acheter-louer"] .tool-field-group-couts .tool-range::-webkit-slider-runnable-track {
+  background: linear-gradient(90deg,
+    #a5493c 0 var(--range-progress),
+    rgb(232, 228, 221) var(--range-progress),
+    rgb(232, 228, 221) 100%);
+}
+
+body[data-mode="acheter-louer"] .tool-field-group-gains .tool-range::-webkit-slider-runnable-track {
+  background: linear-gradient(90deg,
+    #7fb27f 0 var(--range-progress),
+    rgb(232, 228, 221) var(--range-progress),
+    rgb(232, 228, 221) 100%);
+}
+
+/* Apport (field.zeroBased) seulement : le dégradé ci-dessus est pensé en
+   teintes semi-transparentes (un seul calque sur fond crème) — ici elles
+   sont remplacées par leur équivalent opaque (même rendu visuel sur ce
+   fond) pour pouvoir glisser une hachure en second calque sans qu'elle ne
+   transparaisse au-delà de la zone 0→plancher. Rayures *dans* ce même
+   dégradé plutôt qu'un élément séparé superposé : même hauteur, même
+   arrondi, aucun décalage possible avec la piste. Règle plus spécifique
+   que celle juste au-dessus (ajout de [data-field]) : les autres curseurs
+   de la page, qui n'ont pas de plancher, gardent le dégradé semi-transparent
+   d'origine. */
+body[data-mode="financer-rp-locatif"] [data-field="apport"] .tool-range::-webkit-slider-runnable-track {
+  background:
+    linear-gradient(90deg,
+      transparent 0 var(--range-floor),
+      rgb(107, 132, 155) var(--range-floor),
+      rgb(189, 158, 107) var(--range-progress),
+      rgb(232, 228, 221) var(--range-progress),
+      rgb(232, 228, 221) 100%),
+    repeating-linear-gradient(127deg, #c9c0b0 0 2px, #a89e8c 2px 5px);
+}
+
+/* "Acheter ou louer ?" : même plancher (frais de notaire) que ci-dessus,
+   mais coloré coût/gain plutôt que RP/SCPI — rouge de 0 au plancher
+   (perdu à fonds perdus), vert du plancher à la valeur actuelle (finance
+   le bien ou s'investit, selon la carte), gris au-delà (non utilisé).
+   Rend visible, sur la piste elle-même, que l'apport se scinde en deux
+   natures différentes plutôt que de ne l'expliquer que dans la note. */
+body[data-mode="acheter-louer"] [data-field="apport"] .tool-range::-webkit-slider-runnable-track {
+  background: linear-gradient(90deg,
+    #a5493c 0 var(--range-floor),
+    #7fb27f var(--range-floor) var(--range-progress),
+    rgb(232, 228, 221) var(--range-progress),
+    rgb(232, 228, 221) 100%);
+}
+
+/* field.investedFully (le même apport, affiché une 2e fois dans "Location
+   & placement" comme "Versement initial") : rien n'y est perdu en frais de
+   notaire — tout vert jusqu'à la valeur actuelle, pas de plancher rouge.
+   Sélecteur plus spécifique que la règle [data-field="apport"] ci-dessus
+   (ajout de .tool-field-all-gains) pour l'emporter dessus quel que soit
+   l'ordre des règles dans la feuille de style. */
+body[data-mode="acheter-louer"] .tool-field-all-gains[data-field="apport"] .tool-range::-webkit-slider-runnable-track {
+  background: linear-gradient(90deg,
+    #7fb27f 0 var(--range-progress),
+    rgb(232, 228, 221) var(--range-progress),
+    rgb(232, 228, 221) 100%);
+}
+
 body[data-mode="pierre2coups"] .tool-range::-webkit-slider-thumb,
-body[data-mode="comparateur"] .tool-range::-webkit-slider-thumb {
+body[data-mode="comparateur"] .tool-range::-webkit-slider-thumb,
+body[data-mode="financer-rp-locatif"] .tool-range::-webkit-slider-thumb,
+body[data-mode="acheter-louer"] .tool-range::-webkit-slider-thumb {
   width: 4px;
   height: 17px;
   margin-top: -5px;
@@ -9795,7 +10617,11 @@ body[data-mode="comparateur"] .tool-range::-webkit-slider-thumb {
 body[data-mode="pierre2coups"] .tool-range:hover::-webkit-slider-thumb,
 body[data-mode="pierre2coups"] .tool-range:focus-visible::-webkit-slider-thumb,
 body[data-mode="comparateur"] .tool-range:hover::-webkit-slider-thumb,
-body[data-mode="comparateur"] .tool-range:focus-visible::-webkit-slider-thumb {
+body[data-mode="comparateur"] .tool-range:focus-visible::-webkit-slider-thumb,
+body[data-mode="financer-rp-locatif"] .tool-range:hover::-webkit-slider-thumb,
+body[data-mode="acheter-louer"] .tool-range:hover::-webkit-slider-thumb,
+body[data-mode="financer-rp-locatif"] .tool-range:focus-visible::-webkit-slider-thumb,
+body[data-mode="acheter-louer"] .tool-range:focus-visible::-webkit-slider-thumb {
   transform: scaleY(1.12);
   box-shadow:
     0 0 0 1px rgba(164, 124, 68, 0.9),
@@ -9804,7 +10630,9 @@ body[data-mode="comparateur"] .tool-range:focus-visible::-webkit-slider-thumb {
 }
 
 body[data-mode="pierre2coups"] .tool-range::-moz-range-track,
-body[data-mode="comparateur"] .tool-range::-moz-range-track {
+body[data-mode="comparateur"] .tool-range::-moz-range-track,
+body[data-mode="financer-rp-locatif"] .tool-range::-moz-range-track,
+body[data-mode="acheter-louer"] .tool-range::-moz-range-track {
   height: 7px;
   border: 0;
   border-radius: 999px;
@@ -9813,14 +10641,18 @@ body[data-mode="comparateur"] .tool-range::-moz-range-track {
 }
 
 body[data-mode="pierre2coups"] .tool-range::-moz-range-progress,
-body[data-mode="comparateur"] .tool-range::-moz-range-progress {
+body[data-mode="comparateur"] .tool-range::-moz-range-progress,
+body[data-mode="financer-rp-locatif"] .tool-range::-moz-range-progress,
+body[data-mode="acheter-louer"] .tool-range::-moz-range-progress {
   height: 7px;
   border-radius: 999px;
   background: linear-gradient(90deg, rgba(91, 119, 146, 0.9), rgba(185, 151, 97, 0.92));
 }
 
 body[data-mode="pierre2coups"] .tool-range::-moz-range-thumb,
-body[data-mode="comparateur"] .tool-range::-moz-range-thumb {
+body[data-mode="comparateur"] .tool-range::-moz-range-thumb,
+body[data-mode="financer-rp-locatif"] .tool-range::-moz-range-thumb,
+body[data-mode="acheter-louer"] .tool-range::-moz-range-thumb {
   width: 4px;
   height: 17px;
   border: 0;
@@ -9894,21 +10726,6 @@ body[data-mode="comparateur"] #chart-panel .chart-line-capital {
 body[data-mode="comparateur"] #chart-panel .chart-line-invested {
   stroke-width: 4;
   opacity: 1;
-}
-
-/* Repère "Croisement" plus sobre que le style doré/gras par défaut
-   (.chart-marker-label), pensé à l'origine pour un repère isolé — ici sur
-   fond de deux courbes déjà colorées. Même traitement que le libellé d'un
-   curseur (.tool-field > span en mode comparateur) : encre atténuée,
-   graisse 540, plutôt que le doré/gras d'origine. */
-body[data-mode="comparateur"] #chart-panel .chart-marker-line {
-  stroke: rgba(43, 37, 30, 0.38);
-}
-
-body[data-mode="comparateur"] #chart-panel .chart-marker-label {
-  fill: rgba(43, 37, 30, 0.68);
-  font-size: 14px;
-  font-weight: 540;
 }
 
 /* Colonne de droite propre à une page hors gabarit à 2 colonnes (Une
@@ -9987,6 +10804,13 @@ body[data-mode="comparateur"] .tool-layout {
   width: min(100%, 1450px);
 }
 
+/* Acheter ou louer ? : trois cartes côte à côte (.tool-fields-row) restaient
+   étroites et longilignes dans le cadre à 1120px partagé avec projection.html
+   — élargi ici pour leur laisser plus de respiration horizontale. */
+body[data-mode="acheter-louer"] .tool-layout {
+  width: min(100%, 1480px);
+}
+
 /* Pas de grand cadre derrière Hypothèses/Synthèse : chacune de ces cases
    garde son propre fond (cf. la règle partagée .tool-result-card,
    .tool-table-card, .tool-params plus haut), posé directement sur le fond
@@ -10057,6 +10881,32 @@ body[data-mode="pierre2coups"] .chart-canvas {
   min-width: 0;
 }
 
+/* Acheter ou louer ? (simulateurs/acheter-louer.html) : un seul scénario
+   (pas de "deux camps" comme .contract-fields) — trois cartes côte à côte
+   plutôt qu'empilées, chacune réutilisant .tool-result-card tel quel. */
+.tool-fields-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  min-width: 0;
+}
+
+/* Acheter ou louer (simulateurs/acheter-louer.html) : chaque colonne de
+   .contract-fields (RP, SCPI + location) tient dans une seule cellule de
+   grille mais regroupe deux cartes empilées (ex. Le bien / Le financement)
+   plutôt qu'une seule — même recette d'empilement que .contract-fields
+   lui-même (gap identique), à l'intérieur d'une seule cellule de grille. */
+.contract-card-stack {
+  display: grid;
+  /* align-content: start — sans ça, le surplus de hauteur de la colonne
+     (étirée par l'autre colonne, plus haute) se répartit sur les rangées
+     de cette grille interne : repliées, les cartes se retrouvaient avec un
+     grand vide sous leur titre au lieu de se réduire à leur hauteur réelle. */
+  align-content: start;
+  gap: 14px;
+  min-width: 0;
+}
+
 /* Versement initial / horizon de placement, les deux seuls champs communs
    aux deux contrats — empilés et centrés au milieu de la page plutôt que
    côte à côte : mis l'un sur l'autre, ils ne laissent pas croire que l'un
@@ -10086,6 +10936,347 @@ body[data-mode="pierre2coups"] .chart-canvas {
 
 .contract-card-b {
   border-color: rgba(111, 139, 167, 0.5);
+}
+
+/* Récit "Effort d'épargne" (acheter-louer.html) : sort volontairement de la
+   DA claire des cartes d'hypothèses — fond sombre, frise numérotée — pour se
+   lire comme une conclusion qu'on déroule à l'oral, pas comme un réglage de
+   plus. Demande explicite de Victor : contraster, pas juste réorganiser. */
+.tool-effort-story {
+  position: relative;
+  padding: clamp(28px, 3.4vw, 44px) clamp(22px, 3vw, 40px);
+  border: 1px solid rgba(255, 253, 250, 0.08);
+  border-radius: 26px;
+  background:
+    radial-gradient(circle at 14% 0%, rgba(185, 151, 97, 0.22), transparent 46%),
+    radial-gradient(circle at 100% 100%, rgba(111, 139, 167, 0.16), transparent 52%),
+    var(--ink);
+  box-shadow: 0 34px 70px rgba(43, 37, 30, 0.28);
+}
+
+.tool-effort-story-header {
+  margin-bottom: clamp(22px, 3vw, 32px);
+}
+
+.tool-effort-story-header h2 {
+  margin: 0 0 8px;
+  color: var(--surface);
+  font-size: clamp(1.35rem, 2.2vw, 1.7rem);
+  transform: scaleX(1.06);
+  transform-origin: left center;
+}
+
+.tool-effort-story-header p {
+  margin: 0;
+  color: rgba(242, 238, 230, 0.6);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.tool-effort-steps {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tool-effort-step {
+  display: flex;
+  gap: clamp(14px, 2vw, 24px);
+}
+
+.tool-effort-step-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.tool-effort-step-number {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--interest-gold);
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.tool-effort-step-line {
+  flex: 1;
+  width: 1px;
+  min-height: 24px;
+  margin: 8px 0;
+  background: linear-gradient(rgba(255, 253, 250, 0.3), rgba(255, 253, 250, 0.05));
+}
+
+.tool-effort-step:last-child .tool-effort-step-line {
+  display: none;
+}
+
+.tool-effort-step-body {
+  padding-bottom: clamp(26px, 3.4vw, 38px);
+  min-width: 0;
+}
+
+.tool-effort-step-title {
+  margin-bottom: 6px;
+  color: var(--surface);
+  font-size: 1.02rem;
+  font-weight: 640;
+  letter-spacing: 0.005em;
+}
+
+.tool-effort-step-detail {
+  max-width: 52em;
+  color: rgba(242, 238, 230, 0.56);
+  font-size: 0.86rem;
+  line-height: 1.55;
+}
+
+.tool-effort-step-result {
+  margin-top: 14px;
+  color: var(--surface);
+  font-variant-numeric: tabular-nums;
+}
+
+.tool-effort-step-result strong {
+  font-family: var(--serif);
+  font-size: clamp(1.7rem, 2.6vw, 2.1rem);
+  font-weight: 500;
+}
+
+.tool-effort-step-result small {
+  margin-left: 6px;
+  color: rgba(242, 238, 230, 0.55);
+  font-family: var(--sans);
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.tool-effort-step-ecart {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  font-size: 0.84rem;
+  font-weight: 600;
+}
+
+.tool-effort-step-ecart.is-ok {
+  background: rgba(142, 196, 140, 0.16);
+  color: #9fd49c;
+}
+
+.tool-effort-step-ecart.is-bad {
+  background: rgba(214, 140, 126, 0.18);
+  color: #e2a398;
+}
+
+/* Variante "barres" du récit Effort d'épargne (à comparer avec la frise
+   numérotée ci-dessus) : chaque poste devient une barre dont la longueur est
+   proportionnelle au montant, sur une échelle commune aux deux camps. */
+.tool-waterfall-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: clamp(24px, 3vw, 48px);
+  margin-bottom: 4px;
+}
+
+.tool-waterfall-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.tool-waterfall-col-title {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 18px;
+  color: var(--surface);
+  font-family: var(--serif);
+  font-size: clamp(1.35rem, 2.2vw, 1.7rem);
+}
+
+.tool-waterfall-col-title::before {
+  content: "";
+  flex-shrink: 0;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+.tool-waterfall-col-title.is-a::before {
+  background: var(--interest-gold);
+}
+
+.tool-waterfall-col-title.is-b::before {
+  background: var(--invested-blue);
+}
+
+.tool-waterfall-row {
+  margin-bottom: 14px;
+}
+
+.tool-waterfall-row-label {
+  margin-bottom: 5px;
+  color: rgba(242, 238, 230, 0.56);
+  font-size: 0.82rem;
+}
+
+.tool-waterfall-row-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tool-waterfall-fill {
+  height: 14px;
+  min-width: 3px;
+  border-radius: 7px;
+  background: #a5493c;
+}
+
+.tool-waterfall-row.is-income .tool-waterfall-fill {
+  background: #7fb27f;
+}
+
+.tool-waterfall-row-value {
+  flex-shrink: 0;
+  color: rgba(242, 238, 230, 0.75);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.86rem;
+  white-space: nowrap;
+}
+
+.tool-waterfall-row.is-total {
+  margin-top: auto;
+  margin-bottom: 0;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 253, 250, 0.16);
+}
+
+.tool-waterfall-row.is-total .tool-waterfall-row-label {
+  color: var(--surface);
+  font-weight: 640;
+}
+
+.tool-waterfall-total-track {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.tool-waterfall-row.is-total .tool-waterfall-fill {
+  height: 20px;
+  background: var(--surface);
+}
+
+/* Prolongement hachuré de la barre SCPI jusqu'à la longueur de la barre RP :
+   montre "voilà ce qui manque" directement sur la barre, sans encart séparé.
+   Même angle de hachure que la zone grisée des curseurs (127deg), teintes
+   adaptées au fond sombre de ce récit. Jonction aplatie entre les deux
+   segments (seules les extrémités extérieures restent arrondies), pour lire
+   une seule barre continue plutôt que deux blocs côte à côte. */
+.tool-waterfall-fill-ghost {
+  height: 20px;
+  min-width: 3px;
+  border-radius: 0 7px 7px 0;
+  background: repeating-linear-gradient(127deg, rgba(255, 253, 250, 0.2) 0 3px, rgba(255, 253, 250, 0.05) 3px 7px);
+  /* Halo vert — même teinte que "+964 €/mois" plus bas (.is-ok) — pour
+     relier visuellement la zone manquante à l'écart qu'elle chiffre, sans
+     flèche ni cercle à dessiner. */
+  box-shadow: 0 0 18px 4px rgba(159, 212, 156, 0.55);
+}
+
+.tool-waterfall-total-track:has(.tool-waterfall-fill-ghost) .tool-waterfall-fill {
+  border-radius: 7px 0 0 7px;
+}
+
+.tool-waterfall-row.is-total .tool-waterfall-row-value {
+  color: var(--surface);
+  font-family: var(--serif);
+  font-size: 1.3rem;
+}
+
+/* Code couleur respecté jusque dans le récit : le total RP en bleu, le
+   total SCPI en doré (même vocabulaire que .contract-card-a/b partout
+   ailleurs sur la page). */
+.tool-waterfall-col.is-b .tool-waterfall-row.is-total .tool-waterfall-fill {
+  background: var(--invested-blue);
+}
+
+.tool-waterfall-col.is-b .tool-waterfall-row.is-total .tool-waterfall-row-value {
+  color: var(--invested-blue);
+}
+
+.tool-waterfall-col.is-a .tool-waterfall-row.is-total .tool-waterfall-fill {
+  background: var(--interest-gold);
+}
+
+.tool-waterfall-col.is-a .tool-waterfall-row.is-total .tool-waterfall-row-value {
+  color: var(--interest-gold);
+}
+
+.tool-waterfall-row.is-total .tool-waterfall-row-value small {
+  margin-left: 4px;
+  color: rgba(242, 238, 230, 0.55);
+  font-family: var(--sans);
+  font-size: 0.72rem;
+}
+
+.tool-waterfall-verdict {
+  position: relative;
+  margin-top: 8px;
+  padding-top: 28px;
+  text-align: center;
+}
+
+.tool-waterfall-verdict-stat strong {
+  display: inline-block;
+  font-family: var(--serif);
+  font-size: clamp(2.2rem, 4vw, 2.9rem);
+  font-weight: 500;
+  line-height: 1.1;
+}
+
+.tool-waterfall-verdict-stat small {
+  display: block;
+  margin-top: 4px;
+  color: rgba(242, 238, 230, 0.56);
+  font-family: var(--sans);
+  font-size: 0.86rem;
+}
+
+.tool-waterfall-verdict-stat.is-ok strong {
+  color: #9fd49c;
+}
+
+.tool-waterfall-verdict-stat.is-bad strong {
+  color: #e2a398;
+}
+
+.tool-waterfall-verdict-stat.is-capital strong {
+  color: var(--interest-gold);
+}
+
+.tool-waterfall-verdict-down {
+  margin: 10px 0;
+  color: rgba(242, 238, 230, 0.4);
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.tool-waterfall-verdict-caption {
+  margin: 0 auto 18px;
+  max-width: 38em;
+  color: rgba(242, 238, 230, 0.56);
+  font-size: 0.86rem;
+  line-height: 1.5;
 }
 
 /* Trait pointillé visible par défaut (pas seulement au survol/focus comme
@@ -10168,6 +11359,25 @@ body[data-mode="comparateur"] .table-row-highlight:hover td {
    1 colonne à toutes les tailles, pas besoin d'y ajouter une règle ici. */
 @media (max-width: 980px) {
   .contract-fields {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* .tool-fields-row (Acheter ou louer ?) reste à 3 colonnes bien plus
+   longtemps que .contract-fields : son conteneur (.tool-layout) plafonne à
+   1480px (élargi ci-dessus), donc une bascule à 1240px de largeur de FENÊTRE
+   (plutôt que de contenu) collapsait à 2 colonnes sur quasiment toutes les
+   tailles d'écran réelles — demandé par Victor, les trois cartes doivent
+   rester côte à côte. Les seuils ci-dessous raisonnent sur la largeur de
+   contenu réelle (jusqu'à ~1480px) plutôt que sur la largeur de fenêtre. */
+@media (max-width: 900px) {
+  .tool-fields-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .tool-fields-row {
     grid-template-columns: 1fr;
   }
 }
