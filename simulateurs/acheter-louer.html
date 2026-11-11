@@ -7,7 +7,7 @@
     <link rel="icon" href="../favicon.ico" sizes="any">
     <link rel="icon" href="../assets/favicon-96x96.png" type="image/png" sizes="96x96">
     <link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
-    <link rel="stylesheet" href="../styles.css?v=38">
+    <link rel="stylesheet" href="../styles.css?v=58">
   </head>
   <body class="tool-body">
     <main class="tool-page" aria-labelledby="tool-page-title">
@@ -44,18 +44,26 @@
 
         <div id="stat-split-row"></div>
 
-        <div class="tool-chart-card" id="chart-panel-depenses">
-          <div class="tool-card-title">
-            <h2>Dépenses cumulées</h2>
+        <div class="tool-charts-row">
+          <div class="tool-chart-card" id="chart-panel-patrimoine">
+            <div class="tool-card-title">
+              <h2>Patrimoine net réel</h2>
+              <button type="button" class="tool-chart-expand-btn" aria-label="Agrandir le graphique">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4H4v5M15 4h5v5M9 20H4v-5M15 20h5v-5"></path></svg>
+              </button>
+            </div>
+            <div class="line-chart" id="chart-patrimoine" aria-label="Graphique comparant le patrimoine net du propriétaire et celui du locataire dans le temps"></div>
           </div>
-          <div class="line-chart" id="chart-depenses" aria-label="Graphique comparant les coûts cumulés du propriétaire et les loyers cumulés du locataire"></div>
-        </div>
 
-        <div class="tool-chart-card" id="chart-panel-patrimoine">
-          <div class="tool-card-title">
-            <h2>Patrimoine net réel</h2>
+          <div class="tool-chart-card" id="chart-panel-depenses">
+            <div class="tool-card-title">
+              <h2>Dépenses cumulées</h2>
+              <button type="button" class="tool-chart-expand-btn" aria-label="Agrandir le graphique">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4H4v5M15 4h5v5M9 20H4v-5M15 20h5v-5"></path></svg>
+              </button>
+            </div>
+            <div class="line-chart" id="chart-depenses" aria-label="Graphique comparant les coûts cumulés du propriétaire et les loyers cumulés du locataire"></div>
           </div>
-          <div class="line-chart" id="chart-patrimoine" aria-label="Graphique comparant le patrimoine net du propriétaire et celui du locataire dans le temps"></div>
         </div>
 
         <div class="tool-table-card" id="table-panel">
@@ -68,16 +76,15 @@
         </div>
 
         <div class="tool-page-notes">
-          <p class="tool-page-note">Les frais de notaire sont financés par le crédit (pas payés cash en plus de l'apport), mais comptent immédiatement dans les coûts cumulés du propriétaire : ils sont perdus dès la signature, bien avant que le capital restant dû ne commence à baisser.</p>
-          <p class="tool-page-note">En mode Auto, les charges annuelles (taxe foncière + taxe d'enlèvement des ordures ménagères, copropriété, assurance habitation, entretien courant) sont estimées à 1,7 % du prix du bien — une hypothèse moyenne entre grande métropole (~1 %) et ville moyenne (~2,5 %), pour un appartement ancien de 60 m². Répartition indicative : 0,9 % copropriété, 0,4 % taxe foncière, 0,3 % entretien courant, 0,1 % assurance habitation.</p>
-          <p class="tool-page-note">L'écart d'effort (mensualité + charges, moins le loyer) n'est investi que lorsqu'il est positif, et capitalisé une fois par an — une approximation plus simple que le modèle du simulateur "Financer sa RP ou financer de l'immobilier locatif", qui capitalise mois par mois sur un vrai second crédit immobilier.</p>
-          <p class="tool-page-note">Le capital du locataire (apport non dépensé + écart d'effort investi) est placé sur un seul support générique, au taux de rendement renseigné, sans fiscalité ni frais de gestion.</p>
-          <p class="tool-page-note">Cette simulation ne valorise pas les avantages non financiers du logement en propre (stabilité, liberté d'aménagement) ni la contrainte de mobilité propre à la propriété.</p>
+          <p class="tool-page-note">Les frais de notaire sont payés cash via l'apport (qui ne peut jamais être inférieur à leur montant) — le reste de l'apport, lui, réduit d'autant le prêt sur le prix du bien. Ils comptent immédiatement dans les coûts cumulés du propriétaire : perdus dès la signature, bien avant que le capital restant dû ne commence à baisser.</p>
+          <p class="tool-page-note">En mode Auto, les charges annuelles (taxe foncière + taxe d'enlèvement des ordures ménagères, copropriété, assurance habitation, entretien courant) sont estimées à 1,7 % du prix du bien. Cette hypothèse reflète la réalité d'une métropole régionale : à Paris, les prix plus élevés de l'immobilier portent cette valeur à ~1 %. À l'inverse, dans des villes moyennes, cette valeur se rapproche de ~2,5 %.</p>
+          <p class="tool-page-note">L'écart d'effort d'épargne mensuel investi est capitalisé une fois par an.</p>
+          <p class="tool-page-note">Le capital investi du locataire se compose de l'apport initial, ainsi que de l'écart d'effort d'épargne investi mensuellement.</p>
         </div>
       </section>
     </main>
 
-    <script src="shared.js?v=15"></script>
+    <script src="shared.js?v=29"></script>
     <script>
       // ---------------------------------------------------------------
       // Calcul — achat de la résidence principale à crédit, comparé à la
@@ -102,10 +109,15 @@
       function simulerAcheterLouer(p) {
         const fraisNotaire = p.prixBien * p.fraisNotairePct / 100;
         const coutTotalAchat = p.prixBien + fraisNotaire;
-        // Les frais de notaire sont financés par le crédit, net de
-        // l'apport — ils ne sont pas payés cash en plus. Ça ne les rend pas
-        // moins perdus pour autant : ils comptent dans les coûts cumulés du
-        // propriétaire dès la première ligne, plus bas.
+        // Les frais de notaire sont payés cash via l'apport (dont le
+        // plancher, cf. fieldDefinitionsFinancement, ne peut jamais être
+        // inférieur à leur montant) : le reste de l'apport, lui, réduit
+        // d'autant le prêt sur le prix du bien. Plus l'apport est gros,
+        // plus le prêt est petit — ce qui est déjà le cas ici, puisque
+        // apport et fraisNotaire sont tous deux soustraits du même total
+        // avant d'emprunter. Ils comptent dans les coûts cumulés du
+        // propriétaire dès la première ligne, plus bas : perdus, qu'ils
+        // soient vus comme payés par l'apport ou par le prêt.
         const montantEmprunte = Math.max(0, coutTotalAchat - p.apport);
         const dureeMois = p.dureeCredit * 12;
         const mensualiteCredit = calculerMensualiteCreditMois(montantEmprunte, p.tauxInteretPct, dureeMois);
@@ -130,6 +142,24 @@
         let anneeSeuil = null;
 
         const annees = [];
+
+        // Point de départ réel (jour de la signature, avant le premier
+        // mois) : mêmes variables qu'à l'entrée de la boucle, avant qu'un
+        // seul mois de crédit/charges/loyer n'ait eu lieu. Sans ce point,
+        // le graphique démarrait visuellement à "année 1" — déjà 12 mois
+        // écoulés — ce qui rendait le survol ("Année 1, mois 1") trompeur
+        // (cf. échange avec Victor : il attendait un vrai point "année 0").
+        const positionProprietaireInitiale = valeurBien - Math.max(0, capitalRestant) - coutsCumules - p.apport;
+        const positionLocataireInitiale = capitalLocataire - loyersCumules;
+        if (positionProprietaireInitiale - positionLocataireInitiale >= 0) anneeSeuil = 0;
+        annees.push({
+          annee: 0,
+          coutsCumulesProprietaire: coutsCumules + p.apport,
+          loyersCumulesLocataire: loyersCumules,
+          patrimoineProprietaire: positionProprietaireInitiale,
+          patrimoineLocataire: positionLocataireInitiale,
+          patrimoineNet: positionProprietaireInitiale - positionLocataireInitiale
+        });
 
         // La durée simulée est celle du crédit (p.dureeCredit) : pas
         // d'horizon distinct, donc le crédit est toujours en cours sur
@@ -208,7 +238,7 @@
         dureeCredit: 25,
         loyerMensuel: 900,
         revalorisationLoyerPct: 1.5,
-        rendementPlacementPct: 4
+        rendementPlacementPct: 5
       };
 
       const state = {
@@ -270,6 +300,22 @@
         { key: "prixBien", label: "Prix d'achat du bien", min: 50000, max: 900000, step: 5000, suffix: "€" },
         {
           static: true,
+          label: "Frais de notaire",
+          value: (values) => formatNumber(values.prixBien * values.fraisNotairePct / 100),
+          suffix: "€",
+          group: "couts",
+          inlineSelect: {
+            key: "fraisNotairePct",
+            label: "Frais de notaire & garantie",
+            options: [
+              { value: 3, label: "Frais de notaire dans le neuf : 3 %" },
+              { value: 8, label: "Frais de notaire dans l'ancien : 8 %" }
+            ]
+          },
+          note: "Payés à fonds perdus dès la signature."
+        },
+        {
+          static: true,
           label: "Mensualité totale du crédit",
           value: (values) => {
             const fraisNotaire = values.prixBien * values.fraisNotairePct / 100;
@@ -278,8 +324,7 @@
             return formatNumber(calculerMensualiteCreditMois(montantEmprunte, values.tauxInteretPct, dureeMois));
           },
           suffix: "€",
-          group: "couts",
-          note: "Calculée sur le montant emprunté (prix + frais de notaire − apport), cf. Le financement."
+          group: "couts"
         },
         {
           key: "chargesAnnuelles",
@@ -302,22 +347,6 @@
               .join(", ");
             return `Dont ${detail}. Soit ${formatMoney(values.chargesAnnuelles / 12)}/mois.`;
           }
-        },
-        {
-          static: true,
-          label: "Frais de notaire",
-          value: (values) => formatNumber(values.prixBien * values.fraisNotairePct / 100),
-          suffix: "€",
-          group: "couts",
-          inlineSelect: {
-            key: "fraisNotairePct",
-            label: "Frais de notaire & garantie",
-            options: [
-              { value: 3, label: "Frais de notaire dans le neuf : 3 %" },
-              { value: 8, label: "Frais de notaire dans l'ancien : 8 %" }
-            ]
-          },
-          note: "Payés à fonds perdus dès la signature — réglés via l'apport, cf. Le financement."
         },
         { key: "revalorisationBienPct", label: "Revalorisation annuelle du bien", min: 0, max: 4, step: 0.1, suffix: "%/an", group: "gains" }
       ];
@@ -347,7 +376,7 @@
         { key: "revalorisationLoyerPct", label: "Revalorisation du loyer", min: 0, max: 4, step: 0.1, suffix: "%/an", group: "couts" },
         {
           key: "apport",
-          label: "Versement initial (identique à l'apport)",
+          label: "Versement initial",
           min: (values) => values.prixBien * values.fraisNotairePct / 100,
           max: (values) => values.prixBien,
           zeroBased: true,
@@ -355,7 +384,7 @@
           suffix: "€",
           group: "gains",
           investedFully: true,
-          note: "Le même apport, investi ici plutôt que dépensé en frais de notaire : il capitalise dès le premier jour, sans attendre l'écart d'effort."
+          note: "Le même montant que celui de l'apport pour l'achat, investi ici plutôt que dépensé en frais de notaire."
         },
         { key: "rendementPlacementPct", label: "Rendement du placement", min: 0, max: 10, step: 0.1, suffix: "%/an", group: "gains", note: "Capital du locataire (apport non dépensé + écart d'effort investi), capitalisé une fois par an." }
       ];
@@ -635,44 +664,7 @@
         fieldsRow.append(renderCardStack(renderFieldCard("Le financement", fieldDefinitionsFinancement, allFieldRefreshers, true), null));
         fieldsRow.append(renderCardStack(renderFieldCard("Location & placement", fieldDefinitionsLocation, allFieldRefreshers, true), "stat-location-group"));
 
-        // Le bas de "Le financement" doit toucher le bas de la case
-        // "Mensualité totale" elle-même — pas celui de l'écart d'effort qui
-        // s'ajoute parfois sous l'une des deux (cf. renderStats), ce qui la
-        // rendrait plus haute que l'autre. Un align-content: stretch suivrait
-        // la colonne la PLUS HAUTE des trois (donc celle avec l'écart) :
-        // pas ce qu'on veut. À la place, hauteur de la carte fixée en JS sur
-        // la position réelle de la case "Mensualité totale (achat)" — invariante
-        // que l'écart s'y ajoute ou non, puisqu'il vient toujours APRÈS elle.
-        // Un ResizeObserver sur "Le bien" (plutôt qu'un appel ponctuel) garde
-        // ça vrai pendant l'animation de repli/dépli d'une carte ou d'un
-        // groupe Coûts/Gains, et au redimensionnement de la fenêtre.
-        const bienCard = fieldsRow.querySelector(".contract-card-stack:nth-child(1) .tool-result-card");
-        financementHeightObserver.disconnect();
-        if (bienCard) financementHeightObserver.observe(bienCard);
-        syncFinancementHeight();
       }
-
-      function syncFinancementHeight() {
-        const stacks = document.querySelectorAll("#fields-row > .contract-card-stack");
-        const financementStack = stacks[1];
-        const financementCard = financementStack?.querySelector(".tool-result-card");
-        const achatTile = document.querySelector("#stat-achat-group > .tool-stat-tile:first-child");
-        if (!financementCard || !achatTile) return;
-        const stackTop = financementStack.getBoundingClientRect().top;
-        const targetBottom = achatTile.getBoundingClientRect().bottom;
-        const targetHeight = targetBottom - stackTop;
-        // Jamais plus bas que son propre contenu (Apport, Taux, Durée) :
-        // si "Le bien" est replié, le niveau de sa case "Mensualité totale"
-        // remonte bien plus haut que la hauteur réelle dont "Le financement"
-        // a besoin pour afficher ses champs — sans ce plancher, ses derniers
-        // champs se retrouvaient coupés. scrollHeight reste fiable même
-        // pendant qu'une hauteur explicite plus petite est déjà appliquée.
-        financementCard.style.height = "auto";
-        const naturalHeight = financementCard.scrollHeight;
-        financementCard.style.height = `${Math.max(naturalHeight, targetHeight, 0)}px`;
-      }
-
-      const financementHeightObserver = new ResizeObserver(() => syncFinancementHeight());
 
       // ---------------------------------------------------------------
       // Rendu des résultats
@@ -769,16 +761,45 @@
             { role: "invested", label: "Cumul coûts propriétaire", values: rows.map((r) => r.coutsCumulesProprietaire) },
             { role: "gains", label: "Cumul loyers locataire", values: rows.map((r) => r.loyersCumulesLocataire) }
           ],
+          // rows[0] est "année 0" (point de départ, cf. simulerAcheterLouer)
+          // : startYear 0 décale les libellés d'axe en conséquence, sinon le
+          // premier point afficherait "1" au lieu de "0".
+          startYear: 0,
           height: 460,
           ariaLabel: "Évolution des coûts cumulés du propriétaire et des loyers cumulés du locataire dans le temps"
         });
       }
 
+      // Position interpolée (fraction d'année) du passage à un patrimoine
+      // net non négatif — resultat.seuilRentabilite est lui un NOMBRE
+      // D'ANNÉES ENTIER (cohérent pour "Point d'équilibre"/le tableau), donc
+      // décalé du vrai croisement visuel des deux courbes, lui-même
+      // interpolé (cf. compareFill dans shared.js). Même logique de calcul
+      // que anneeSeuil dans simulerAcheterLouer, mais au pixel près.
+      function findSeuilIndex(patrimoineNetValues) {
+        if (patrimoineNetValues[0] >= 0) return 0;
+        for (let i = 0; i < patrimoineNetValues.length - 1; i++) {
+          if (patrimoineNetValues[i] < 0 && patrimoineNetValues[i + 1] >= 0) {
+            const t = -patrimoineNetValues[i] / (patrimoineNetValues[i + 1] - patrimoineNetValues[i]);
+            return i + t;
+          }
+        }
+        return null;
+      }
+
       function renderChartPatrimoine(resultat) {
         const rows = resultat.annees;
-        const marker = resultat.seuilRentabilite !== null ? {
-          index: resultat.seuilRentabilite - 1,
-          label: "Seuil"
+        const seuilIndex = findSeuilIndex(rows.map((r) => r.patrimoineNet));
+        const marker = seuilIndex !== null ? {
+          index: seuilIndex,
+          label: "Seuil",
+          // Année ronde (celle de "Point d'équilibre"/du tableau), pour que
+          // l'axe mette en valeur exactement la même année qu'ailleurs sur
+          // la page — distincte de seuilIndex, lui interpolé au pixel près.
+          // +1 : renderLineChart compare highlightYear à sa position dans le
+          // tableau (1-based), pas au champ "annee" lui-même (décalé de 1
+          // depuis l'ajout du point "année 0").
+          highlightYear: resultat.seuilRentabilite + 1
         } : null;
 
         renderLineChart(rows, {
@@ -787,6 +808,14 @@
             { role: "invested", label: "Patrimoine net (achat)", values: rows.map((r) => r.patrimoineProprietaire) },
             { role: "gains", label: "Patrimoine net (location)", values: rows.map((r) => r.patrimoineLocataire) }
           ],
+          // rows[0] est "année 0" (point de départ, cf. simulerAcheterLouer).
+          startYear: 0,
+          // Zone colorée entre les deux courbes (vert quand l'achat est
+          // devant, doré quand c'est la location) — rend "qui gagne, et de
+          // combien" visible d'un coup d'œil, en écho à la colonne verdict
+          // du tableau plus bas. Pas repris sur "Dépenses cumulées" : son
+          // croisement n'a pas le même sens (cf. échange avec Victor).
+          compareFill: { roleA: "invested", roleB: "gains", classA: "achat", classB: "location" },
           marker,
           height: 460,
           ariaLabel: "Évolution du patrimoine net du propriétaire et du locataire dans le temps"
@@ -795,23 +824,30 @@
 
       function renderTableSynthese(resultat) {
         const horizonAnnees = state.values.dureeCredit;
-        const echeances = [1, 2, 3, 5, 7, 10, 12, 15, 20, 25, 30].filter((a) => a <= horizonAnnees);
+        const echeances = [0, 1, 2, 3, 5, 7, 10, 12, 15, 20, 25, 30].filter((a) => a <= horizonAnnees);
         if (!echeances.includes(horizonAnnees)) echeances.push(horizonAnnees);
         if (resultat.seuilRentabilite !== null && resultat.seuilRentabilite <= horizonAnnees && !echeances.includes(resultat.seuilRentabilite)) {
           echeances.push(resultat.seuilRentabilite);
         }
         echeances.sort((a, b) => a - b);
-        const rows = echeances.map((an) => resultat.annees[an - 1]);
+        // resultat.annees[0] est désormais "année 0" (point de départ), donc
+        // l'index dans le tableau est l'année elle-même, plus l'offset d'un
+        // cran d'avant (pas "an - 1" comme quand annees[0] était "année 1").
+        const rows = echeances.map((an) => resultat.annees[an]);
 
-        const headers = ["Année", "Cumul coûts propriétaire", "Cumul loyers locataire", "Patrimoine net", "Statut"];
+        // Ce qui compte pour Victor, ce n'est pas l'écart chiffré (déjà sur
+        // le graphique "Patrimoine net réel") mais QUI, du propriétaire ou
+        // du locataire, a le plus de patrimoine net à cette échéance —
+        // d'où les deux patrimoines bruts plutôt que leur différence, et un
+        // verdict plutôt qu'un simple positif/négatif.
+        const headers = ["Année", "Patrimoine net propriétaire", "Patrimoine net locataire", "Patrimoine le plus grand"];
         const mapper = (row) => [
           row.annee,
-          formatMoney(row.coutsCumulesProprietaire),
-          formatMoney(row.loyersCumulesLocataire),
-          formatEcart(row.patrimoineNet),
-          row.patrimoineNet >= 0
-            ? `<span style="color: #2f6b52">Patrimoine net positif</span>`
-            : `<span style="color: #a5493c">Patrimoine net négatif</span>`
+          formatMoney(row.patrimoineProprietaire),
+          formatMoney(row.patrimoineLocataire),
+          row.patrimoineProprietaire >= row.patrimoineLocataire
+            ? `<span style="color: var(--invested-blue)">Propriétaire</span>`
+            : `<span style="color: var(--interest-gold)">Locataire</span>`
         ];
 
         renderTable(headers, mapper, rows, {
@@ -825,11 +861,6 @@
         renderChartDepenses(resultat);
         renderChartPatrimoine(resultat);
         renderTableSynthese(resultat);
-        // Au tout premier rendu, renderFields() a déjà tenté de fixer la
-        // hauteur de "Le financement" mais la case "Mensualité totale
-        // (achat)" n'existait pas encore (posée ici, par renderStats juste
-        // au-dessus) — on retente une fois qu'elle existe.
-        syncFinancementHeight();
       }
 
       function render() {
@@ -838,6 +869,7 @@
       }
 
       render();
+      setupChartExpandButtons();
     </script>
   </body>
 </html>

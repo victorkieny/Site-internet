@@ -57,24 +57,25 @@
 
             <div class="mini-bar-row" id="bar-charts"></div>
 
-            <div class="tool-table-card" id="table-panel">
-              <div class="tool-card-title">
-                <h2>Exemples chiffrés</h2>
+            <div class="tool-table-card" id="scenarios-panel">
+              <div class="tool-tabs" role="tablist" aria-label="Tableaux complémentaires">
+                <button type="button" class="tool-tab is-active" role="tab" aria-selected="true" data-tab="exemples">Exemples chiffrés</button>
+                <button type="button" class="tool-tab" role="tab" aria-selected="false" data-tab="tmi">Intérêt du PER selon la TMI d'entrée et de sortie</button>
               </div>
-              <div class="tool-table-wrap">
-                <table id="projection-table"></table>
-              </div>
-            </div>
 
-            <div class="tool-table-card" id="tmi-grid-panel">
-              <div class="tool-card-title">
-                <h2>Intérêt du PER selon le TMI d'entrée et de sortie</h2>
+              <div class="tool-tab-panel" data-panel="exemples">
+                <div class="tool-table-wrap">
+                  <table id="projection-table"></table>
+                </div>
               </div>
-              <div id="tmi-grid-fields" class="tmi-grid-fields"></div>
-              <div class="tool-table-wrap">
-                <table id="tmi-grid-table" class="tmi-grid"></table>
+
+              <div class="tool-tab-panel" data-panel="tmi" hidden>
+                <div id="tmi-grid-fields" class="tmi-grid-fields"></div>
+                <div class="tool-table-wrap">
+                  <table id="tmi-grid-table" class="tmi-grid"></table>
+                </div>
+                <p class="tool-page-note">Grâce à l'économie d'impôt immédiate, l'effort d'épargne réellement supporté est inférieur au montant versé sur le PER, ce qui dope sa rentabilité.<br>Le tableau compare le capital net obtenu à celui d'un placement financier classique (plus-value taxée à 30 %), à effort d'épargne net et rendement identiques.</p>
               </div>
-              <p class="tool-page-note">Gain de capital net procuré par le PER par rapport à un placement financier classique (plus-value taxée à la flat tax de 30 %), à effort d'épargne net et rendement identiques. Hors cas où le TMI de sortie dépasse le TMI d'entrée.</p>
             </div>
           </div>
         </section>
@@ -201,7 +202,7 @@
         return versement;
       }
 
-      // Grille "Intérêt du PER selon le TMI d'entrée et de sortie" — reprend
+      // Grille "Intérêt du PER selon la TMI d'entrée et de sortie" — reprend
       // le principe d'un tableau Eres (comparaison à rendement et effort
       // d'épargne équivalents), mais calculée dynamiquement à partir du
       // rendement et de la durée choisis par l'utilisateur plutôt que figée
@@ -243,8 +244,8 @@
       }
 
       const TMI_GRID_FIELD_DEFS = [
-        { key: "rendementTmiGrille", label: "Rendement annuel", min: 0, max: 12, step: 0.1, suffix: "%" },
-        { key: "dureeTmiGrille", label: "Durée de placement", min: 1, max: 40, step: 1, suffix: "ans" }
+        { key: "rendementTmiGrille", label: "Rendement annuel", min: 2, max: 10, step: 0.1, suffix: "%" },
+        { key: "dureeTmiGrille", label: "Durée de placement", min: 5, max: 50, step: 1, suffix: "ans" }
       ];
 
       // Lignes du tableau, dans cet ordre précis (demandé par Victor) :
@@ -787,6 +788,23 @@
       document.querySelector("#reset-fields").addEventListener("click", () => {
         state.values = structuredClone(defaults);
         withHeightTransition(document.querySelector(".tool-params"), render);
+      });
+
+      // Onglets "Exemples chiffrés" / "Intérêt du PER selon la TMI d'entrée
+      // et de sortie" — un seul panneau visible à la fois pour éviter le
+      // long défilement vertical des deux tableaux l'un sous l'autre.
+      const scenarioTabs = document.querySelectorAll("#scenarios-panel .tool-tab");
+      scenarioTabs.forEach((tab) => {
+        tab.addEventListener("click", () => {
+          scenarioTabs.forEach((t) => {
+            const isActive = t === tab;
+            t.classList.toggle("is-active", isActive);
+            t.setAttribute("aria-selected", String(isActive));
+          });
+          document.querySelectorAll("#scenarios-panel .tool-tab-panel").forEach((panel) => {
+            panel.hidden = panel.dataset.panel !== tab.dataset.tab;
+          });
+        });
       });
 
       render();

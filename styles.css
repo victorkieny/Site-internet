@@ -2932,6 +2932,20 @@ body.resources-modal-open {
     radial-gradient(circle at 100% 0%, rgba(193, 112, 63, 0.16), transparent 42%);
 }
 
+/* Panneau d'onglet (ex. "Exemples chiffrés" / "Intérêt du PER selon la TMI
+   d'entrée et de sortie" — gain-fiscal-per.html) : même espacement interne
+   que .tool-table-card lui-même (gap 18px), perdu sinon puisque ce gap ne
+   s'applique qu'entre enfants directs de la grille, pas aux petits-enfants
+   une fois le contenu déplacé dans un panneau. */
+.tool-tab-panel {
+  display: grid;
+  gap: 18px;
+}
+
+.tool-tab-panel[hidden] {
+  display: none;
+}
+
 .compare-race {
   display: grid;
   gap: 16px;
@@ -3367,26 +3381,6 @@ body[data-mode="acheter-louer"] #fields-row > .contract-card-stack:nth-child(3) 
     linear-gradient(180deg, rgba(255, 253, 250, 0.88), rgba(255, 253, 250, 0.66)),
     radial-gradient(circle at 20% 0%, rgba(199, 174, 137, 0.18), transparent 34%),
     rgba(185, 151, 97, 0.16);
-}
-
-/* "Le financement" n'a plus de case-chiffre sous sa carte (l'écart d'effort
-   est parti vivre sous la mensualité totale la plus petite, à gauche ou à
-   droite selon le résultat) : sa carte doit retomber au niveau du bas des
-   cases "Mensualité totale" elles-mêmes, pas de la case Écart d'effort qui
-   s'ajoute parfois en dessous de l'une d'elles (et la rend plus haute que
-   l'autre). Un align-content: stretch générique suit la colonne la PLUS
-   HAUTE des trois, ce qui n'est pas ce qu'on veut ici — hauteur fixée en JS
-   à la place (cf. syncFinancementHeight, acheter-louer.html), mesurée sur
-   la case "Mensualité totale" directement.) */
-body[data-mode="acheter-louer"] #fields-row > .contract-card-stack:nth-child(2) .tool-result-card {
-  box-sizing: border-box;
-  /* Son propre contenu (3 champs pleins, sans groupe replié comme les deux
-     autres cartes) dépassait légèrement la cible (bas de "Mensualité
-     totale"), le plancher anti-chevauchement de syncFinancementHeight
-     l'emportait alors sur la cible — d'où un fin espace blanc sous "Durée du
-     crédit" avant que la carte ne retombe trop bas. Padding du bas réduit
-     pour que son contenu naturel repasse sous la cible dans le cas courant. */
-  padding-bottom: 8px;
 }
 
 /* La mensualité totale (1ʳᵉ case de chaque groupe) garde la teinte de sa
@@ -4786,6 +4780,79 @@ body[data-mode="acheter-louer"] #stat-location-group > .tool-stat-tile:first-chi
   transform: rotate(180deg);
 }
 
+/* Bouton "agrandir" d'une carte graphique (cf. setupChartExpandButtons,
+   shared.js) — même recette minimale que le chevron replier/déplier. */
+.tool-chart-expand-btn {
+  all: unset;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  margin: -4px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.tool-chart-expand-btn svg {
+  width: 18px;
+  height: 18px;
+  stroke: var(--muted);
+  stroke-width: 2;
+  fill: none;
+  transition: stroke 180ms ease;
+}
+
+.tool-chart-expand-btn:hover svg,
+.tool-chart-expand-btn:focus-visible svg {
+  stroke: var(--ink);
+}
+
+/* Fond assombri derrière la carte agrandie (cf. setupChartExpandButtons) —
+   créé une fois, réutilisé pour n'importe laquelle des cartes graphiques de
+   la page. La carte agrandie devient son ENFANT RÉEL (déplacée dans le DOM,
+   pas clonée, pas juste repositionnée en CSS) : centrage au simple flex,
+   sans transform/position:fixed sur la carte elle-même — cf. le commentaire
+   sur setupChartExpandButtons pour pourquoi ce choix plutôt qu'un
+   position:fixed appliqué in place. */
+.chart-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(20, 16, 12, 0.6);
+  z-index: 900;
+  /* display défini seulement sur :not([hidden]) ci-dessous, jamais ici :
+     un display posé directement sur ce sélecteur de classe l'emporte sur le
+     display:none de [hidden] (les styles auteur gagnent sur ceux du
+     navigateur, même à spécificité égale) — l'attribut hidden devenait
+     alors sans effet, et ce fond assombri + sa zone de clic couvraient tout
+     l'écran en permanence, même "fermé" (le vrai bug derrière le "ça bug
+     encore" : le bouton Agrandir ne recevait jamais le clic, intercepté par
+     ce fond invisible mais bien présent par-dessus). */
+}
+
+.chart-modal-backdrop:not([hidden]) {
+  display: flex;
+  animation: toolFadeUp 160ms ease both;
+}
+
+body.chart-modal-open {
+  overflow: hidden;
+}
+
+.tool-chart-card.is-chart-expanded {
+  width: min(1100px, 92vw);
+  max-height: 88vh;
+  overflow: auto;
+  box-shadow: 0 30px 60px rgba(20, 16, 12, 0.35);
+  /* Le fond habituel de la carte (dégradé semi-transparent, pensé pour
+     laisser filtrer le fond de la page en temps normal) laisserait voir le
+     fond assombri à travers une fois la carte au premier plan — fond plein
+     et opaque ici uniquement. */
+  background: #fffdfa;
+}
+
 .line-chart {
   display: grid;
   gap: 18px;
@@ -4866,13 +4933,48 @@ body[data-mode="acheter-louer"] #stat-location-group > .tool-stat-tile:first-chi
   fill: var(--muted);
   stroke: none;
   font-family: var(--sans);
-  font-size: 17px;
+  font-size: 20px;
   font-weight: 400;
   text-anchor: end;
 }
 
 .chart-axis text {
   text-anchor: middle;
+}
+
+/* Ligne d'axe pleine (bas + gauche), plus marquée que les lignes de grille
+   fines et en retrait, et petits traits de graduation perpendiculaires à
+   chaque étiquette — plutôt que des graduations qui semblaient flotter sans
+   rien pour les porter. */
+.chart-axis-line {
+  stroke: rgba(43, 37, 30, 0.28);
+  stroke-width: 1.5;
+}
+
+.chart-axis-tick {
+  stroke: rgba(43, 37, 30, 0.28);
+  stroke-width: 1.5;
+}
+
+/* marker.highlightYear (cf. renderLineChart) : l'année seuil se distingue
+   des autres graduations de l'axe des abscisses — doré, même teinte que le
+   repère vertical (.chart-marker-*). Le chiffre lui-même garde le même
+   style que les autres graduations (9, 14...) : seul un cadre doré
+   l'entoure, pas de pastille pleine ni de texte agrandi (essayé, moins
+   lisible/trop lourd selon Victor). */
+.chart-axis-tick-highlight {
+  stroke: var(--interest-gold);
+  stroke-width: 2;
+}
+
+/* Cadre doré (dimensionné en JS via getBBox, cf. renderLineChart) autour de
+   l'année mise en valeur — même teinte et même épaisseur que le trait
+   pointillé (.chart-marker-line), pour que les deux se lisent comme un seul
+   repère, sans alourdir le chiffre lui-même. */
+.chart-axis-label-pill {
+  fill: none;
+  stroke: var(--interest-gold);
+  stroke-width: 2.5;
 }
 
 .chart-area {
@@ -4906,6 +5008,34 @@ body[data-mode="acheter-louer"] #stat-location-group > .tool-stat-tile:first-chi
 
 .chart-line-gains {
   stroke: var(--interest-gold);
+}
+
+/* .chart-line-invested est plus fine/transparente par défaut (1.5 vs 4,
+   75 % d'opacité) — pensé pour les pages où elle sert de ligne secondaire
+   derrière "gains". Sur "Acheter ou louer ?", les deux rôles sont deux
+   courbes de poids égal (coûts propriétaire/loyers locataire, ou patrimoine
+   achat/location) : remise à l'épaisseur et l'opacité pleines de .chart-line. */
+body[data-mode="acheter-louer"] .chart-line-invested {
+  stroke-width: 4;
+  opacity: 1;
+}
+
+/* config.compareFill (cf. shared.js renderLineChart) : zone entre les deux
+   courbes de "Patrimoine net réel", colorée selon qui est devant — bleu
+   quand l'achat (RP) l'emporte, doré quand c'est la location : mêmes
+   teintes que les courbes elles-mêmes (chart-line-invested/-gains), pour
+   que la zone y renvoie directement plutôt que d'introduire une 3ᵉ couleur
+   (le vert "gain", déjà pris par la case "Écart d'effort..."). */
+.chart-compare-fill {
+  stroke: none;
+}
+
+body[data-mode="acheter-louer"] .chart-compare-fill-achat {
+  fill: rgba(111, 139, 167, 0.32);
+}
+
+body[data-mode="acheter-louer"] .chart-compare-fill-location {
+  fill: rgba(185, 151, 97, 0.32);
 }
 
 .chart-hover-line {
@@ -4991,20 +5121,89 @@ body[data-mode="acheter-louer"] #stat-location-group > .tool-stat-tile:first-chi
   flex-wrap: wrap;
   justify-content: center;
   gap: 16px;
-  color: var(--muted);
+  color: var(--ink);
   font-size: 0.86rem;
 }
 
-.chart-legend span {
+.chart-legend-item {
   display: inline-flex;
   align-items: center;
   gap: 7px;
+  cursor: pointer;
 }
 
 .chart-legend i {
   width: 9px;
   height: 9px;
   border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Interrupteur style iOS à côté de chaque entrée de légende (cf.
+   renderLineChart dans shared.js) : masque/affiche la série correspondante
+   sans recharger le graphique. Checkbox natif caché, visuel entièrement
+   porté par .chart-legend-track/::before pour garder le survol clavier
+   (focus-visible) et le comportement natif d'un vrai input. */
+.chart-legend-switch {
+  position: relative;
+  display: inline-flex;
+  width: 30px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.chart-legend-switch input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.chart-legend-track {
+  position: absolute;
+  inset: 0;
+  background: rgba(43, 37, 30, 0.22);
+  border-radius: 999px;
+  transition: background 180ms ease;
+}
+
+.chart-legend-track::before {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  background: #fffdfa;
+  border-radius: 50%;
+  box-shadow: 0 1px 2px rgba(43, 37, 30, 0.3);
+  transition: transform 180ms ease;
+}
+
+.chart-legend-switch input:checked + .chart-legend-track {
+  background: var(--ink);
+}
+
+/* Assorti à la couleur de la série elle-même (même mapping que les puces
+   .legend-invested/.legend-gains) plutôt qu'un gris neutre générique — se
+   lit comme "éteindre LA série bleue/dorée", pas juste un interrupteur
+   anonyme. */
+.chart-legend-switch input[data-role="invested"]:checked + .chart-legend-track {
+  background: var(--invested-blue);
+}
+
+.chart-legend-switch input[data-role="gains"]:checked + .chart-legend-track {
+  background: var(--interest-gold);
+}
+
+.chart-legend-switch input:checked + .chart-legend-track::before {
+  transform: translateX(12px);
+}
+
+.chart-legend-switch input:focus-visible + .chart-legend-track {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
 }
 
 .legend-capital {
@@ -5040,17 +5239,27 @@ body[data-mode="acheter-louer"] #stat-location-group > .tool-stat-tile:first-chi
    doré/gras, pour rester un repère discret au milieu de courbes qui portent
    déjà leurs propres couleurs. */
 .chart-marker-line {
-  stroke: rgba(43, 37, 30, 0.38);
-  stroke-width: 1.5;
-  stroke-dasharray: 5 4;
+  stroke: var(--interest-gold);
+  stroke-width: 2.5;
+  stroke-dasharray: 8 5;
+  opacity: 0.85;
+}
+
+/* Pastille pleine derrière le libellé (dimensionnée en JS via getBBox,
+   cf. renderLineChart) plutôt qu'un texte nu flottant — se lit comme une
+   annotation délibérée, pas comme un détail d'interface oublié là. */
+.chart-marker-pill {
+  fill: var(--ink);
 }
 
 .chart-marker-label {
-  fill: rgba(43, 37, 30, 0.68);
+  fill: var(--interest-gold);
   stroke: none;
   font-family: var(--sans);
-  font-size: 14px;
-  font-weight: 540;
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   text-anchor: middle;
 }
 
@@ -5461,7 +5670,7 @@ body[data-mode="scpi"] #chart-panel .chart-legend {
   line-height: 1.25;
 }
 
-body[data-mode="scpi"] #chart-panel .chart-legend span {
+body[data-mode="scpi"] #chart-panel .chart-legend-item {
   gap: 9px;
 }
 
@@ -6918,6 +7127,14 @@ body[data-mode="acheter-louer"] .tool-input-stack .tool-input-wrap input {
   text-align: center;
 }
 
+/* Légende du tableau TMI d'entrée/sortie (gain-fiscal-per.html) : alignée à
+   gauche et justifiée, contrairement au centrage par défaut de
+   .tool-page-note (texte plus long, sur deux phrases avec saut de ligne). */
+#scenarios-panel .tool-page-note {
+  text-align: justify;
+  text-align-last: left;
+}
+
 /* Regroupe plusieurs .tool-page-note (une-pierre-deux-coups.html en a 3) en
    un seul bloc, plutôt que des <p> dispersés en enfants directs de
    .tool-layout : sinon chacun héritait du gap de section entière
@@ -6930,6 +7147,25 @@ body[data-mode="acheter-louer"] .tool-input-stack .tool-input-wrap input {
   gap: 6px;
   width: min(100%, 1080px);
   margin: 0 auto;
+}
+
+/* Sur "Acheter ou louer ?", les notes doivent occuper toute la largeur des
+   cartes au-dessus (jusqu'à 1480px, cf. .tool-layout plus haut) plutôt que
+   la largeur de lecture resserrée à 1080px voulue ailleurs — demandé par
+   Victor. Alignées à gauche comme le contenu de ces cartes, pas centrées :
+   un paragraphe centré sur une telle largeur serait peu lisible. */
+body[data-mode="acheter-louer"] .tool-page-notes {
+  width: 100%;
+}
+
+/* .tool-page-note (singulier, la balise <p> elle-même) fixe son propre
+   text-align: center — la régler sur le conteneur .tool-page-notes
+   au-dessus ne suffit pas, l'enfant garde la main sur sa propre valeur.
+   Justifié plutôt que simplement aligné à gauche : sur une largeur pleine
+   (jusqu'à 1480px), un texte juste aligné à gauche laisse un bord droit
+   très irrégulier d'une ligne à l'autre. */
+body[data-mode="acheter-louer"] .tool-page-note {
+  text-align: justify;
 }
 
 /* Grille "Intérêt du PER selon le TMI d'entrée et de sortie" (gain-fiscal-
@@ -7937,7 +8173,7 @@ body[data-mode="av"] #chart-panel .chart-legend {
   font-size: 0.86rem;
 }
 
-body[data-mode="av"] #chart-panel .chart-legend span {
+body[data-mode="av"] #chart-panel .chart-legend-item {
   gap: 8px;
 }
 
@@ -10891,6 +11127,23 @@ body[data-mode="pierre2coups"] .chart-canvas {
   min-width: 0;
 }
 
+/* "Patrimoine net réel" et "Dépenses cumulées" côte à côte, le premier à
+   gauche (demandé par Victor : c'est la réponse, "Dépenses" n'est que le
+   contexte) — empilés en dessous d'une certaine largeur, cf. media query
+   plus bas, comme .tool-fields-row. */
+.tool-charts-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  min-width: 0;
+}
+
+@media (max-width: 900px) {
+  .tool-charts-row {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Acheter ou louer (simulateurs/acheter-louer.html) : chaque colonne de
    .contract-fields (RP, SCPI + location) tient dans une seule cellule de
    grille mais regroupe deux cartes empilées (ex. Le bien / Le financement)
@@ -11348,6 +11601,15 @@ body[data-mode="comparateur"] .tool-table-wrap tbody tr:hover td {
 }
 
 body[data-mode="comparateur"] .table-row-highlight:hover td {
+  background: rgba(199, 174, 137, 0.34);
+}
+
+/* Même recette pour "Synthèse par échéance" (Acheter ou louer). */
+body[data-mode="acheter-louer"] .tool-table-wrap tbody tr:hover td {
+  background: rgba(43, 37, 30, 0.035);
+}
+
+body[data-mode="acheter-louer"] .table-row-highlight:hover td {
   background: rgba(199, 174, 137, 0.34);
 }
 

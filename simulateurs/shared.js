@@ -607,8 +607,15 @@ function renderNumberField(field, values, fieldRefreshers, options = {}) {
 // pour un "effort net" qui devient un revenu net) : min = 0 si toutes les
 // valeurs sont positives (comportement historique inchangé), sinon min
 // descend jusqu'à la valeur la plus basse.
+// Séries masquées via les interrupteurs de légende (cf. plus bas), par
+// chartId — en dehors de renderLineChart pour survivre à ses ré-appels
+// (chaque changement de curseur reconstruit tout le HTML du graphique via
+// innerHTML, ce qui perdrait l'état sans ça).
+const chartHiddenSeries = new Map();
+
 function renderLineChart(rows, config) {
-  const chart = document.querySelector(`#${config.chartId || "chart"}`);
+  const chartId = config.chartId || "chart";
+  const chart = document.querySelector(`#${chartId}`);
   if (!rows.length) {
     chart.innerHTML = `
       <div class="chart-zero-state" role="status">
@@ -622,6 +629,7 @@ function renderLineChart(rows, config) {
   // fournit sa propre liste (ex. une aire sans ligne tracée, comme "gains",
   // qui a quand même besoin d'une puce de légende).
   const legend = config.legend || series.map((s) => ({ role: s.role, label: s.label }));
+  const hiddenRoles = chartHiddenSeries.get(chartId) || new Set();
 
   const width = 960;
   // config.height (optionnel) : plus de hauteur donne plus d'écart vertical
@@ -662,10 +670,19 @@ function renderLineChart(rows, config) {
     return `
       <g>
         <line x1="${pad.left}" y1="${lineY}" x2="${width - pad.right}" y2="${lineY}" />
+        <line class="chart-axis-tick" x1="${pad.left - 6}" y1="${lineY}" x2="${pad.left}" y2="${lineY}" />
         <text x="${pad.left - 16}" y="${lineY + 5}">${formatMoney(value)}</text>
       </g>
     `;
   }).join("");
+  // Une vraie ligne d'axe (plus marquée que les lignes de grille, fines et
+  // en retrait) en bas et à gauche, plutôt que des graduations qui semblent
+  // flotter sans rien pour les porter — demandé par Victor, répercuté sur
+  // tous les graphiques en ligne du site (fonction partagée).
+  const axisLinesMarkup = `
+    <line class="chart-axis-line" x1="${pad.left}" y1="${height - pad.bottom}" x2="${width - pad.right}" y2="${height - pad.bottom}"></line>
+    <line class="chart-axis-line" x1="${pad.left}" y1="${pad.top}" x2="${pad.left}" y2="${height - pad.bottom}"></line>
+  `;
   // config.startYear (optionnel, défaut 1) : par défaut rows[0] = année 1,
   // comme partout ailleurs sur le site. Un appelant dont rows[0] est une
   // "année 0" (ex. point de départ réel avant le premier mois, cf.
@@ -674,9 +691,32 @@ function renderLineChart(rows, config) {
   // continue de raisonner en "1..rows.length", seul le libellé affiché est
   // décalé).
   const yearLabelOffset = (config.startYear ?? 1) - 1;
-  const ticks = niceYearTicks(rows.length).map((annee) => {
-    const tickX = x(annee - 1);
-    return `<text x="${tickX}" y="${height - 10}">${annee + yearLabelOffset}</text>`;
+  // marker.highlightYear (optionnel, même échelle "1..rows.length" que les
+  // graduations elles-mêmes — ex. resultat.seuilRentabilite) : garantit que
+  // cette année précise apparaît sur l'axe même si niceYearTicks ne l'aurait
+  // pas choisie, et la distingue visuellement des autres graduations —
+  // demandé par Victor pour repérer l'année seuil directement sur l'axe,
+  // pas seulement via le repère vertical en haut du graphique.
+  const highlightYear = marker?.highlightYear ?? null;
+  const tickYears = niceYearTicks(rows.length);
+  if (highlightYear != null && !tickYears.includes(highlightYear)) tickYears.push(highlightYear);
+  tickYears.sort((a, b) => a - b);
+  const ticks = tickYears.map((annee) => {
+    const isHighlight = annee === highlightYear;
+    // Le repère mis en valeur se positionne sur marker.index (la position
+    // interpolée exacte du repère vertical "Seuil"), pas sur x(annee - 1)
+    // (la grille entière) — sinon le trait et l'étiquette "12" de l'axe
+    // tombent à deux endroits différents, visiblement désaligné du repère.
+    const tickX = isHighlight && marker?.index != null ? x(marker.index) : x(annee - 1);
+    // Cadre doré autour de l'année mise en valeur (dimensionné en JS via
+    // getBBox, cf. plus bas) — le chiffre garde le style normal des autres
+    // graduations, seul le cadre le distingue.
+    const pillMarkup = isHighlight ? `<rect class="chart-axis-label-pill" rx="4"></rect>` : "";
+    return `
+      <line class="chart-axis-tick${isHighlight ? " chart-axis-tick-highlight" : ""}" x1="${tickX}" y1="${height - pad.bottom}" x2="${tickX}" y2="${height - pad.bottom + 6}"></line>
+      ${pillMarkup}
+      <text class="${isHighlight ? "chart-axis-label-highlight" : ""}" x="${tickX}" y="${height - 10}">${annee + yearLabelOffset}</text>
+    `;
   }).join("");
 
   const totalsMarkup = totals.length ? `
@@ -697,22 +737,69 @@ function renderLineChart(rows, config) {
       </linearGradient>
     </defs>
   ` : "";
-  const areasMarkup = areas.map((a) => `<path class="chart-area chart-area-${a.role}" d="${areaPath(a.lower, a.upper)}"></path>`).join("");
+  const areasMarkup = areas.map((a) => `<path class="chart-area chart-area-${a.role}" data-role="${a.role}" d="${areaPath(a.lower, a.upper)}"></path>`).join("");
+
+  // config.compareFill (optionnel) : remplit la zone ENTRE deux séries de
+  // `series` (pas sous une seule, comme `areas`) avec une couleur qui
+  // bascule à chaque croisement — qui est devant se lit d'un coup d'œil,
+  // sans attendre un survol. Le point de croisement est interpolé
+  // linéairement entre les deux années qui l'encadrent, pour une bascule
+  // au pixel près plutôt que calée sur la grille annuelle des données.
+  const compareFillMarkup = (() => {
+    if (!config.compareFill) return "";
+    const { roleA, roleB, classA, classB } = config.compareFill;
+    const seriesA = series.find((s) => s.role === roleA);
+    const seriesB = series.find((s) => s.role === roleB);
+    if (!seriesA || !seriesB) return "";
+    const valuesA = seriesA.values;
+    const valuesB = seriesB.values;
+    const segmentPath = (points) => {
+      const top = points.map(([idx, a, b]) => `${x(idx)},${y(Math.max(a, b))}`);
+      const bottom = points.map(([idx, a, b]) => `${x(idx)},${y(Math.min(a, b))}`).reverse();
+      return `M${top.join(" L")} L${bottom.join(" L")} Z`;
+    };
+    const segments = [];
+    let current = [];
+    for (let i = 0; i < valuesA.length; i++) {
+      current.push([i, valuesA[i], valuesB[i]]);
+      if (i === valuesA.length - 1) continue;
+      const diffHere = valuesA[i] - valuesB[i];
+      const diffNext = valuesA[i + 1] - valuesB[i + 1];
+      if ((diffHere >= 0) !== (diffNext >= 0) && diffHere !== diffNext) {
+        const t = diffHere / (diffHere - diffNext);
+        const crossIndex = i + t;
+        const crossValue = valuesA[i] + (valuesA[i + 1] - valuesA[i]) * t;
+        current.push([crossIndex, crossValue, crossValue]);
+        segments.push(current);
+        current = [[crossIndex, crossValue, crossValue]];
+      }
+    }
+    segments.push(current);
+    return segments.map((points) => {
+      const sample = points.find(([, a, b]) => a !== b) || points[0];
+      const cls = sample[1] >= sample[2] ? classA : classB;
+      return `<path class="chart-compare-fill chart-compare-fill-${cls}" data-role-a="${roleA}" data-role-b="${roleB}" d="${segmentPath(points)}"></path>`;
+    }).join("");
+  })();
   // Étiquetée comme les autres graduations (et non simplement laissée comme
   // un trait nu) : sur un domaine négatif, 0 ne tombe pas nécessairement sur
   // une graduation "ronde" de niceRangeTicks, la ligne de référence a donc
   // besoin de son propre label pour rester lisible.
+  // Pas de texte "0 €" ici : la grille (niceRangeTicks) place déjà sa
+  // propre étiquette "0 €" à cette hauteur quand min < 0 < max, ce qui
+  // doublait le chiffre (une fois gras ici, une fois non gras dans la
+  // grille) — on ne garde que le trait, la grille porte le texte.
   const zeroLineMarkup = min < 0 ? `
     <line class="chart-zero-line" x1="${pad.left}" y1="${y(0)}" x2="${width - pad.right}" y2="${y(0)}"></line>
-    <text class="chart-zero-line-label" x="${pad.left - 16}" y="${y(0) + 5}">${formatMoney(0)}</text>
   ` : "";
-  const linesMarkup = series.map((s) => `<polyline class="chart-line chart-line-${s.role}" points="${pointsFor(s.values)}"></polyline>`).join("");
+  const linesMarkup = series.map((s) => `<polyline class="chart-line chart-line-${s.role}" data-role="${s.role}" points="${pointsFor(s.values)}"></polyline>`).join("");
   const markerMarkup = marker ? `
     <line class="chart-marker-line" x1="${x(marker.index)}" y1="${pad.top}" x2="${x(marker.index)}" y2="${height - pad.bottom}"></line>
-    <text class="chart-marker-label" x="${x(marker.index)}" y="${pad.top - 10}">${marker.label}</text>
+    <rect class="chart-marker-pill" rx="8"></rect>
+    <text class="chart-marker-label" x="${x(marker.index)}" y="${pad.top - 6}">${marker.label}</text>
   ` : "";
-  const hoverDotsMarkup = series.map((s) => `<circle class="chart-hover-dot chart-hover-dot-${s.role}" r="4"></circle>`).join("");
-  const tooltipRowsMarkup = series.map((s) => `<div class="chart-tooltip-row chart-tooltip-${s.role}"><small>${s.label}</small><strong></strong></div>`).join("")
+  const hoverDotsMarkup = series.map((s) => `<circle class="chart-hover-dot chart-hover-dot-${s.role}" data-role="${s.role}" r="4"></circle>`).join("");
+  const tooltipRowsMarkup = series.map((s) => `<div class="chart-tooltip-row chart-tooltip-${s.role}" data-role="${s.role}"><small>${s.label}</small><strong></strong></div>`).join("")
     + tooltipExtras.map((t) => `<div class="chart-tooltip-row chart-tooltip-${t.role}"><small>${t.label}</small><strong></strong></div>`).join("");
 
   chart.innerHTML = `
@@ -721,8 +808,10 @@ function renderLineChart(rows, config) {
       <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="${ariaLabel}">
         ${defsMarkup}
         <g class="chart-grid">${grid}</g>
+        ${axisLinesMarkup}
         ${zeroLineMarkup}
         ${areasMarkup}
+        ${compareFillMarkup}
         ${linesMarkup}
         ${markerMarkup}
         <g class="chart-axis">${ticks}</g>
@@ -737,9 +826,48 @@ function renderLineChart(rows, config) {
       </div>
     </div>
     <div class="chart-legend">
-      ${legend.map((l) => `<span><i class="legend-${l.role}"></i>${l.label}</span>`).join("")}
+      ${legend.map((l) => `
+        <label class="chart-legend-item">
+          <i class="legend-${l.role}"></i>${l.label}
+          <span class="chart-legend-switch">
+            <input type="checkbox" data-role="${l.role}" ${hiddenRoles.has(l.role) ? "" : "checked"}>
+            <span class="chart-legend-track"></span>
+          </span>
+        </label>
+      `).join("")}
     </div>
   `;
+
+  // Interrupteurs de légende : affiche/masque la ligne (et l'aire, le point
+  // de survol, la ligne du tooltip) de la série correspondante. L'état
+  // persiste dans chartHiddenSeries (par chartId), appliqué ici à chaque
+  // rendu — sinon un simple changement de curseur (qui reconstruit tout le
+  // HTML du graphique) réafficherait une série qu'on venait de masquer.
+  const applySeriesVisibility = () => {
+    const hidden = chartHiddenSeries.get(chartId) || new Set();
+    chart.querySelectorAll("[data-role]").forEach((el) => {
+      el.style.display = hidden.has(el.dataset.role) ? "none" : "";
+    });
+    // Le remplissage entre deux courbes (compareFill) n'a de sens que si
+    // les DEUX séries qu'il compare sont visibles.
+    chart.querySelectorAll("[data-role-a]").forEach((el) => {
+      el.style.display = (hidden.has(el.dataset.roleA) || hidden.has(el.dataset.roleB)) ? "none" : "";
+    });
+  };
+  applySeriesVisibility();
+
+  chart.querySelectorAll(".chart-legend-switch input").forEach((input) => {
+    input.addEventListener("change", () => {
+      let hidden = chartHiddenSeries.get(chartId);
+      if (!hidden) {
+        hidden = new Set();
+        chartHiddenSeries.set(chartId, hidden);
+      }
+      if (input.checked) hidden.delete(input.dataset.role);
+      else hidden.add(input.dataset.role);
+      applySeriesVisibility();
+    });
+  });
 
   if (totals.length) {
     const alignTotalsWithYAxisLabel = () => {
@@ -756,7 +884,66 @@ function renderLineChart(rows, config) {
     document.fonts?.ready.then(alignTotalsWithYAxisLabel);
   }
 
+  if (marker) {
+    // Dimensionne la pastille sur la taille réelle du texte (getBBox,
+    // connue seulement une fois le SVG posé dans le DOM) plutôt qu'une
+    // largeur fixe — reste juste pour "Seuil" comme pour un libellé plus
+    // long si un autre graphique du site réutilise un marker un jour.
+    const sizeMarkerPill = () => {
+      const label = chart.querySelector(".chart-marker-label");
+      const pill = chart.querySelector(".chart-marker-pill");
+      if (!label || !pill) return;
+      const box = label.getBBox();
+      const padX = 8;
+      const padY = 4;
+      pill.setAttribute("x", box.x - padX);
+      pill.setAttribute("y", box.y - padY);
+      pill.setAttribute("width", box.width + padX * 2);
+      pill.setAttribute("height", box.height + padY * 2);
+    };
+
+    // Même mécanique pour la mini-pastille de l'année mise en valeur sur
+    // l'axe des abscisses (cf. chart-axis-label-pill plus haut).
+    const sizeAxisLabelPill = () => {
+      const label = chart.querySelector(".chart-axis-label-highlight");
+      const pill = chart.querySelector(".chart-axis-label-pill");
+      if (!label || !pill) return;
+      const box = label.getBBox();
+      const padX = 7;
+      const padTop = 3;
+      // Marge basse réduite (pas symétrique) : le chiffre est tout près du
+      // bord bas du viewBox SVG (overflow: hidden par défaut sur <svg>), un
+      // padding égal au padding haut poussait le trait du cadre pile sur ce
+      // bord — son épaisseur (moitié dessinée à l'extérieur du tracé)
+      // dépassait alors et se faisait couper net.
+      const padBottom = 1;
+      pill.setAttribute("x", box.x - padX);
+      pill.setAttribute("y", box.y - padTop);
+      pill.setAttribute("width", box.width + padX * 2);
+      pill.setAttribute("height", box.height + padTop + padBottom);
+    };
+
+    requestAnimationFrame(sizeMarkerPill);
+    document.fonts?.ready.then(sizeMarkerPill);
+    requestAnimationFrame(sizeAxisLabelPill);
+    document.fonts?.ready.then(sizeAxisLabelPill);
+  }
+
   setupChartHover(chart, rows, { x, y, pad, width, height, series, tooltipExtras, tooltipExact });
+}
+
+// "Année 6" si continuousYear tombe pile sur une année entière, "Année 6,
+// mois 4" sinon — utilisé par le survol de renderLineChart pour afficher la
+// position exacte du curseur entre deux années de données plutôt
+// qu'arrondir à la plus proche.
+function formatYearMonth(continuousYear) {
+  let year = Math.floor(continuousYear);
+  let month = Math.round((continuousYear - year) * 12);
+  if (month === 12) {
+    year += 1;
+    month = 0;
+  }
+  return month === 0 ? `Année ${year}` : `Année ${year}, mois ${month}`;
 }
 
 function setupChartHover(chart, rows, ctx) {
@@ -774,17 +961,30 @@ function setupChartHover(chart, rows, ctx) {
   hoverGroup.style.display = "none";
   tooltip.hidden = true;
 
-  const updateAt = (clientX, clientY) => {
-    const point = svg.createSVGPoint();
-    point.x = clientX;
-    point.y = clientY;
-    const ctm = svg.getScreenCTM();
-    if (!ctm) return;
-    const local = point.matrixTransform(ctm.inverse());
-    const ratio = (local.x - ctx.pad.left) / (ctx.width - ctx.pad.left - ctx.pad.right);
-    const index = Math.max(0, Math.min(rows.length - 1, Math.round(ratio * (rows.length - 1))));
-    const row = rows[index];
-    const px = ctx.x(index);
+  const updateAt = (clientX) => {
+    // getBoundingClientRect() plutôt que svg.getScreenCTM() : ce dernier
+    // renvoie une matrice fausse quand la page est zoomée (bug connu de
+    // Chrome/Safari), ce qui décalait le trait/tooltip par rapport à la
+    // souris dès que Victor zoomait la page. Un simple rapport de tailles
+    // CSS (rect.width, en pixels écran déjà post-zoom) reste exact à tout
+    // niveau de zoom, car clientX est dans le même repère.
+    const svgRect = svg.getBoundingClientRect();
+    if (!svgRect.width) return;
+    const localX = (clientX - svgRect.left) * (ctx.width / svgRect.width);
+    const ratio = (localX - ctx.pad.left) / (ctx.width - ctx.pad.left - ctx.pad.right);
+    // Position continue (pas arrondie à l'année la plus proche) : le trait,
+    // les points et le libellé suivent la souris au pixel près entre deux
+    // années de données, plutôt que de sauter d'un point à l'autre — permet
+    // de lire "Année N, mois M" quand le seuil (ou tout autre repère) ne
+    // tombe pas pile sur une année entière.
+    const fractional = Math.max(0, Math.min(rows.length - 1, ratio * (rows.length - 1)));
+    const i0 = Math.min(rows.length - 2, Math.floor(fractional));
+    const i1 = Math.min(i0 + 1, rows.length - 1);
+    const frac = rows.length > 1 ? fractional - i0 : 0;
+    const row0 = rows[i0];
+    const row1 = rows[i1];
+    const interp = (v0, v1) => v0 + (v1 - v0) * frac;
+    const px = ctx.x(fractional);
 
     hoverGroup.style.display = "";
     hoverLine.setAttribute("x1", px);
@@ -792,28 +992,28 @@ function setupChartHover(chart, rows, ctx) {
 
     let topY = ctx.y(0);
     ctx.series.forEach((s, i) => {
-      const py = ctx.y(s.values[index]);
+      const value = interp(s.values[i0], s.values[i1]);
+      const py = ctx.y(value);
       if (dots[i]) {
         dots[i].setAttribute("cx", px);
         dots[i].setAttribute("cy", py);
       }
-      if (tooltipValues[i]) tooltipValues[i].textContent = formatMoney(ctx.tooltipExact ? s.values[index] : roundToHundred(s.values[index]));
+      if (tooltipValues[i]) tooltipValues[i].textContent = formatMoney(ctx.tooltipExact ? value : roundToHundred(value));
       topY = Math.min(topY, py);
     });
     ctx.tooltipExtras.forEach((t, i) => {
-      if (tooltipExtraValues[i]) tooltipExtraValues[i].textContent = formatMoney(ctx.tooltipExact ? row[t.key] : roundToHundred(row[t.key]));
+      const value = interp(row0[t.key], row1[t.key]);
+      if (tooltipExtraValues[i]) tooltipExtraValues[i].textContent = formatMoney(ctx.tooltipExact ? value : roundToHundred(value));
     });
 
-    tooltipYear.textContent = `Année ${row.annee}`;
+    tooltipYear.textContent = formatYearMonth(interp(row0.annee, row1.annee));
 
-    const screenPoint = svg.createSVGPoint();
-    screenPoint.x = px;
-    screenPoint.y = topY;
-    const screenPos = screenPoint.matrixTransform(ctm);
     const canvasRect = canvas.getBoundingClientRect();
+    const screenX = svgRect.left + px * (svgRect.width / ctx.width);
+    const screenY = svgRect.top + topY * (svgRect.height / ctx.height);
     tooltip.hidden = false;
-    tooltip.style.left = `${screenPos.x - canvasRect.left}px`;
-    tooltip.style.top = `${screenPos.y - canvasRect.top}px`;
+    tooltip.style.left = `${screenX - canvasRect.left}px`;
+    tooltip.style.top = `${screenY - canvasRect.top}px`;
   };
 
   const hide = () => {
@@ -928,4 +1128,80 @@ function renderTable(headers, mapper, rows, options = {}) {
     <thead><tr>${headers.map((head) => `<th>${head}</th>`).join("")}</tr></thead>
     <tbody>${bodyRows}</tbody>
   `;
+}
+
+// Bouton "agrandir" sur une carte .tool-chart-card (cf. .tool-chart-expand-btn
+// dans le HTML de la page) : ouvre le graphique au premier plan, centré,
+// fond assombri derrière — comme un "peek" Notion.
+//
+// Essayé d'abord : laisser la carte à sa place dans la grille et juste lui
+// ajouter position:fixed + une classe. Ça ouvrait "en deux temps" (surtout
+// visible sous Safari) — la carte réapparaissait d'abord à peu près à sa
+// largeur de colonne de grille d'origine, avant de sauter à sa largeur de
+// modale un instant plus tard. Cause probable : passer un même élément de
+// "item de grille" à "position:fixed" dans la même frame est un cas que les
+// moteurs de rendu ne traitent pas tous proprement du premier coup.
+//
+// Plus robuste : déplacer réellement la carte (déjà dans le DOM, jamais
+// clonée) dans un conteneur dédié TOUJOURS en dehors de toute grille —
+// aucune transition "item de grille vers position:fixed" n'a donc jamais
+// lieu, la carte est mise en page une seule fois, proprement, dès son
+// insertion. Elle garde son id (#chart-panel-...) donc un changement de
+// curseur pendant qu'elle est agrandie continue de la mettre à jour
+// normalement. À la fermeture, on la replace exactement là où elle était
+// (juste avant son prochain frère d'origine, ou en dernier si elle n'en
+// avait pas).
+function setupChartExpandButtons() {
+  const buttons = document.querySelectorAll(".tool-chart-expand-btn");
+  if (!buttons.length) return;
+
+  let backdrop = document.querySelector(".chart-modal-backdrop");
+  if (!backdrop) {
+    backdrop = document.createElement("div");
+    backdrop.className = "chart-modal-backdrop";
+    backdrop.hidden = true;
+    document.body.appendChild(backdrop);
+  }
+
+  let expanded = null;
+
+  const close = () => {
+    if (!expanded) return;
+    const { card, parent, next } = expanded;
+    card.classList.remove("is-chart-expanded");
+    card.querySelector(".tool-chart-expand-btn")?.setAttribute("aria-label", "Agrandir le graphique");
+    parent.insertBefore(card, next);
+    expanded = null;
+    backdrop.hidden = true;
+    document.body.classList.remove("chart-modal-open");
+  };
+
+  // La carte est maintenant un enfant réel du backdrop (cf. plus haut) : un
+  // clic dessus remonte aussi jusqu'ici par bubbling. Ne fermer que sur un
+  // clic sur le fond lui-même (target === backdrop), jamais sur un de ses
+  // descendants (la carte, ses interrupteurs de légende, etc.).
+  backdrop.addEventListener("click", (event) => {
+    if (event.target === backdrop) close();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") close();
+  });
+
+  buttons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const card = btn.closest(".tool-chart-card");
+      if (!card) return;
+      if (expanded?.card === card) {
+        close();
+        return;
+      }
+      if (expanded) close();
+      expanded = { card, parent: card.parentElement, next: card.nextElementSibling };
+      card.classList.add("is-chart-expanded");
+      btn.setAttribute("aria-label", "Réduire le graphique");
+      backdrop.appendChild(card);
+      backdrop.hidden = false;
+      document.body.classList.add("chart-modal-open");
+    });
+  });
 }
