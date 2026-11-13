@@ -7,7 +7,7 @@
     <link rel="icon" href="../favicon.ico" sizes="any">
     <link rel="icon" href="../assets/favicon-96x96.png" type="image/png" sizes="96x96">
     <link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
-    <link rel="stylesheet" href="../styles.css?v=58">
+    <link rel="stylesheet" href="../styles.css?v=66">
   </head>
   <body class="tool-body">
     <main class="tool-page" aria-labelledby="tool-page-title">
@@ -660,7 +660,7 @@
         // Un seul fieldRefreshers partagé par les trois cartes : l'apport
         // (dans Le financement) dépend du prix du bien (dans Le bien).
         const allFieldRefreshers = [];
-        fieldsRow.append(renderCardStack(renderFieldCard("Le bien", fieldDefinitionsBien, allFieldRefreshers, true), "stat-achat-group"));
+        fieldsRow.append(renderCardStack(renderFieldCard("Achat résidence principale", fieldDefinitionsBien, allFieldRefreshers, true), "stat-achat-group"));
         fieldsRow.append(renderCardStack(renderFieldCard("Le financement", fieldDefinitionsFinancement, allFieldRefreshers, true), null));
         fieldsRow.append(renderCardStack(renderFieldCard("Location & placement", fieldDefinitionsLocation, allFieldRefreshers, true), "stat-location-group"));
 

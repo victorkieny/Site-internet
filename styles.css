@@ -3283,6 +3283,13 @@ body.resources-modal-open {
   gap: 12px;
 }
 
+/* Plus que 2 cases ici (RP / SCPI) depuis que "Écart à l'échéance" a migré
+   dans #stat-split-row (cf. renderSummary, financer-rp-ou-locatif.html) —
+   sinon la grille à 3 colonnes héritée laisserait un vide à droite. */
+body[data-mode="financer-rp-locatif"] .comparateur-results {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .capital-legend span,
 .capital-metrics span,
 .capital-shares span,
@@ -5038,6 +5045,16 @@ body[data-mode="acheter-louer"] .chart-compare-fill-location {
   fill: rgba(185, 151, 97, 0.32);
 }
 
+/* Même recette sur "RP ou locatif ?" (financer-rp-ou-locatif.html) — mêmes
+   teintes, classes renommées rp/scpi pour rester lisibles sur cette page. */
+body[data-mode="financer-rp-locatif"] .chart-compare-fill-rp {
+  fill: rgba(111, 139, 167, 0.32);
+}
+
+body[data-mode="financer-rp-locatif"] .chart-compare-fill-scpi {
+  fill: rgba(185, 151, 97, 0.32);
+}
+
 .chart-hover-line {
   stroke: rgba(43, 37, 30, 0.3);
   stroke-width: 1;
@@ -6731,12 +6748,46 @@ body[data-mode="scpi"] #chart-panel .chart-tooltip-gains strong {
 /* La valeur garde sa largeur fixe (cf. .tool-input-wrap input, 78px) pour
    aligner des colonnes de nombres empilées — mais ici, légende et valeur sont
    sur la même ligne ("10 %, soit 20 000 €") : cette boîte, plus large que le
-   nombre qu'elle contient, laissait un vide (avant le nombre si aligné à
-   droite, avant le "€" sinon). width:auto ici en secours ; la largeur réelle
-   est fixée en JS (syncInputSize, shared.js) par mesure canvas du texte
-   affiché, recalculée à chaque changement de valeur. */
+   nombre qu'elle contient, laissait un vide (avant le nombre, aligné à
+   droite). field-sizing: content laisse le NAVIGATEUR ajuster la largeur de
+   l'input au pixel près sur son propre rendu du texte — contrairement à
+   l'ancienne méthode (largeur calculée en JS par mesure canvas, cf.
+   syncInputSize, shared.js), qui ne fait qu'approcher ce rendu et pouvait
+   encore laisser un écart résiduel (observé par Victor malgré le correctif
+   Safari déjà appliqué). width:auto + le JS restent en secours pour les
+   navigateurs sans field-sizing (ignorent la propriété inconnue, retombent
+   sur l'ancien calcul approché plutôt que de casser l'alignement).
+   .tool-input-wrap lui-même doit AUSSI s'ajuster : sa 1ʳᵉ colonne de grille
+   (minmax(0,1fr), pensée pour qu'un input à largeur fixe remplisse l'espace
+   dispo) restait large même une fois l'input rétréci, laissant le vide
+   réapparaître entre la carte input (right-aligné dedans) et "soit" — d'où
+   width: fit-content ici, pour que le conteneur entier se resserre lui
+   aussi sur son contenu réel. */
+body[data-mode="acheter-louer"] .tool-input-stack .tool-input-wrap {
+  width: fit-content;
+  /* La 1ʳᵉ colonne de .tool-input-wrap (minmax(0,1fr), pensée pour qu'un
+     input à largeur FIXE remplisse l'espace dispo) se dimensionnait encore
+     sur la largeur déclarée de l'input (clamp(74px,7vw,104px), ~100px),
+     pas sur sa largeur RÉELLEMENT RÉTRÉCIE par field-sizing: content — les
+     pistes "fr" d'une grille se calculent sur la taille préférée DÉCLARÉE
+     de leur contenu, pas sur son rendu une fois field-sizing appliqué.
+     auto auto (deux colonnes qui épousent chacune leur contenu) évite ce
+     calcul de piste flexible et republié vraiment le vide observé. */
+  grid-template-columns: auto auto;
+  /* min-width: 100px vient de la règle générique .tool-input-wrap (partagée
+     avec les autres pages, pensée pour garder un input tactile même avec
+     une valeur courte). Sur une grille à colonnes "auto", un conteneur dont
+     le min-width dépasse la somme des pistes force l'algorithme de grille à
+     redistribuer l'espace libre DANS les pistes auto (stretch) — ça regonfle
+     la piste de l'input bien au-delà de "20 000" et recrée exactement le
+     vide qu'on cherche à éliminer ici. Annulé : ce champ a déjà une largeur
+     confortable via sa légende, pas besoin du plancher tactile. */
+  min-width: 0;
+}
+
 body[data-mode="acheter-louer"] .tool-input-stack .tool-input-wrap input {
   width: auto;
+  field-sizing: content;
 }
 
 .tool-value-caption {
@@ -7165,6 +7216,15 @@ body[data-mode="acheter-louer"] .tool-page-notes {
    (jusqu'à 1480px), un texte juste aligné à gauche laisse un bord droit
    très irrégulier d'une ligne à l'autre. */
 body[data-mode="acheter-louer"] .tool-page-note {
+  text-align: justify;
+}
+
+/* Même traitement pour "RP ou locatif ?" (cf. les deux règles ci-dessus). */
+body[data-mode="financer-rp-locatif"] .tool-page-notes {
+  width: 100%;
+}
+
+body[data-mode="financer-rp-locatif"] .tool-page-note {
   text-align: justify;
 }
 
@@ -11160,6 +11220,18 @@ body[data-mode="pierre2coups"] .chart-canvas {
   min-width: 0;
 }
 
+/* Acheter ou louer, "Le financement" (2ᵉ colonne, une seule carte, pas de
+   case-chiffre en dessous) : quand "Le bien"/"Location & placement" sont
+   repliés, leur case-chiffre remonte au plus près de leur carte réduite —
+   "Le financement" doit donc, lui, être juste assez court pour atterrir au
+   même niveau, plutôt que de dépasser dessous. Padding du bas réduit pour
+   cela (ses 3 champs + leurs notes n'ont pas besoin d'autant de marge que
+   le padding par défaut) — pas de JS de mesure/forçage de hauteur : la
+   carte reste toujours à sa propre hauteur naturelle, juste plus courte. */
+body[data-mode="acheter-louer"] #fields-row > .contract-card-stack:nth-child(2) .tool-result-card {
+  padding-bottom: 8px;
+}
+
 /* Versement initial / horizon de placement, les deux seuls champs communs
    aux deux contrats — empilés et centrés au milieu de la page plutôt que
    côte à côte : mis l'un sur l'autre, ils ne laissent pas croire que l'un
@@ -11610,6 +11682,15 @@ body[data-mode="acheter-louer"] .tool-table-wrap tbody tr:hover td {
 }
 
 body[data-mode="acheter-louer"] .table-row-highlight:hover td {
+  background: rgba(199, 174, 137, 0.34);
+}
+
+/* Même recette pour "Synthèse par échéance" (RP ou locatif ?). */
+body[data-mode="financer-rp-locatif"] .tool-table-wrap tbody tr:hover td {
+  background: rgba(43, 37, 30, 0.035);
+}
+
+body[data-mode="financer-rp-locatif"] .table-row-highlight:hover td {
   background: rgba(199, 174, 137, 0.34);
 }
 
