@@ -735,6 +735,10 @@ function renderLineChart(rows, config) {
         <stop offset="0%" stop-color="#b99761" stop-opacity="0.55"></stop>
         <stop offset="100%" stop-color="#b99761" stop-opacity="0.08"></stop>
       </linearGradient>
+      <linearGradient id="chartAreaGreen" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#4f8f52" stop-opacity="0.5"></stop>
+        <stop offset="100%" stop-color="#4f8f52" stop-opacity="0.05"></stop>
+      </linearGradient>
     </defs>
   ` : "";
   const areasMarkup = areas.map((a) => `<path class="chart-area chart-area-${a.role}" data-role="${a.role}" d="${areaPath(a.lower, a.upper)}"></path>`).join("");
@@ -1203,5 +1207,50 @@ function setupChartExpandButtons() {
       backdrop.hidden = false;
       document.body.classList.add("chart-modal-open");
     });
+  });
+}
+
+// Bouton "Exporter en PDF" : fige l'état actuel du simulateur (réglages +
+// résultats tels qu'affichés) via l'impression du navigateur plutôt qu'une
+// génération côté serveur — ce site est entièrement statique. La mise en
+// page dédiée (masque les curseurs/boutons, déplie tout, affiche les deux
+// panneaux) vit dans @media print (styles.css), pas ici : cette fonction ne
+// fait que brancher le bouton et injecter le nom du client/la date, à la
+// fois dans un bandeau visible seulement à l'impression et dans le titre du
+// document (suggéré par le navigateur comme nom de fichier PDF). `pageTitle`
+// identifie le simulateur (ex. "SCPI en financement — Simulation") ; appel
+// unique, `setupPdfExport("export-pdf", "...")`, pour brancher ce même
+// bouton sur un autre simulateur.
+function setupPdfExport(buttonId, pageTitle) {
+  const button = document.querySelector(`#${buttonId}`);
+  if (!button) return;
+
+  let printHeader = document.querySelector(".tool-print-header");
+  if (!printHeader) {
+    printHeader = document.createElement("div");
+    printHeader.className = "tool-print-header";
+    printHeader.append(document.createElement("strong"), document.createElement("span"), document.createElement("span"));
+    document.body.prepend(printHeader);
+  }
+  const [titleEl, clientEl, dateEl] = printHeader.children;
+  const originalTitle = document.title;
+
+  button.addEventListener("click", () => {
+    const saisie = window.prompt("Nom du client pour cette simulation (laisser vide pour ne pas en mettre) :", "");
+    if (saisie === null) return;
+    const client = saisie.trim();
+    const date = new Date().toLocaleDateString("fr-FR");
+    titleEl.textContent = pageTitle;
+    clientEl.textContent = client;
+    dateEl.textContent = date;
+    document.title = [pageTitle, client, date].filter(Boolean).join(" — ");
+    window.print();
+  });
+
+  // Restaure le titre d'onglet d'origine une fois la boîte de dialogue
+  // d'impression refermée (annulée ou non) — sinon il resterait affublé du
+  // nom du dernier client exporté tant que la page reste ouverte.
+  window.addEventListener("afterprint", () => {
+    document.title = originalTitle;
   });
 }

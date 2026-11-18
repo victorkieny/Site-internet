@@ -72,21 +72,23 @@
             <div class="tool-summary" id="summary"></div>
 
             <section class="tool-detail" aria-label="Projection détaillée">
-              <div class="tool-view-toggle" aria-label="Affichage des résultats">
-                <button class="is-active" type="button" data-view="table" aria-label="Calendrier" title="Calendrier">
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg>
-                </button>
-                <button type="button" data-view="fiscalite" aria-label="Fiscalité" title="Fiscalité">
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3v18h18"></path><path d="M18 17V9"></path><path d="M13 17V5"></path><path d="M8 17v-3"></path></svg>
-                </button>
+              <div class="tool-detail-toolbar">
+                <div class="tool-view-toggle" aria-label="Affichage des résultats">
+                  <button class="is-active" type="button" data-view="table" aria-label="Calendrier" title="Calendrier">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg>
+                  </button>
+                  <button type="button" data-view="fiscalite" aria-label="Fiscalité" title="Fiscalité">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3v18h18"></path><path d="M18 17V9"></path><path d="M13 17V5"></path><path d="M8 17v-3"></path></svg>
+                  </button>
+                </div>
               </div>
 
               <div class="tool-detail-panels">
                 <div class="tool-chart-card" id="fiscalite-panel" hidden>
                   <div class="tool-card-title">
-                    <h2>Loyer brut vs charges déductibles</h2>
+                    <h2>Loyers non imposés grâce aux charges déductibles</h2>
                   </div>
-                  <div class="line-chart" id="fiscalite-chart" aria-label="Graphique du loyer brut et des charges déductibles de la SCPI financée à crédit"></div>
+                  <div class="line-chart" id="fiscalite-chart" aria-label="Graphique du loyer brut et des charges déductibles de la SCPI financée à crédit uniquement, hors SCPI au comptant"></div>
                 </div>
                 <div class="tool-table-card" id="table-panel">
                   <div class="tool-card-title">
@@ -107,7 +109,7 @@
 
         <div class="tool-page-notes">
           <p class="tool-page-note">La SCPI au comptant applique un taux d'imposition effectif forfaitaire propre à une SCPI étrangère.</p>
-          <p class="tool-page-note">La fiscalité des revenus de la SCPI financée à crédit n'est volontairement pas simulée : en régime réel, les intérêts d'emprunt et les charges associées sont déductibles de ces revenus fonciers (déficit foncier), ce qui en neutralise généralement une grande partie sur la durée du crédit.</p>
+          <p class="tool-page-note">Le graphique "Loyer brut vs charges déductibles" ne porte que sur la SCPI financée à crédit : en régime réel, ses intérêts d'emprunt et son assurance emprunteur sont déductibles de ses revenus fonciers (déficit foncier, reportable 10 ans), ce qui neutralise généralement une grande partie du loyer sur la durée du crédit. La SCPI au comptant suit sa propre fiscalité forfaitaire estimée (ligne ci-dessus) et n'entre pas dans ce graphique. Dans les deux cas, cette fiscalité reste volontairement absente du calcul de l'effort d'épargne et du patrimoine affichés ailleurs sur la page.</p>
           <p class="tool-page-note">Le délai de jouissance des parts de SCPI, généralement de quelques mois avant le versement des premiers loyers, n'est pas non plus pris en compte.</p>
           <p class="tool-page-note">L'effet de levier est mesuré jusqu'à l'autofinancement (ou jusqu'à la fin du crédit si non atteint) : plus les versements sur la SCPI au comptant sont élevés, plus l'autofinancement est atteint tôt, et plus l'effet de levier affiché peut paraître important sur cette fenêtre plus courte.</p>
         </div>
@@ -163,7 +165,7 @@
             interetsAnnee += interetMois;
             capital = Math.max(0, capital - (mensualiteCredit - interetMois));
           }
-          parAnnee.push({ mensualite, interets: interetsAnnee, capitalRestantDuFinAnnee: capital });
+          parAnnee.push({ mensualite, interets: interetsAnnee, assuranceAnnee: assuranceMensuelle * 12, capitalRestantDuFinAnnee: capital });
         }
 
         return { parAnnee };
@@ -179,16 +181,51 @@
         let capitalComptant = params.versementInitial;
         let anneeAutofinancement = null;
 
+        // Déficit foncier reporté (intérêts + assurance emprunteur) : ce
+        // type de charge ne s'impute jamais sur le revenu global, seulement
+        // sur les revenus fonciers des 10 années suivantes (file d'attente
+        // FIFO, chaque déficit expirant 10 ans après l'année où il s'est
+        // constitué). Maintenu ici au fil de la boucle plutôt que dans un
+        // second passage : la consommation d'une année dépend de l'ordre et
+        // du reliquat exact des années précédentes.
+        const stockDeficit = [];
+
         for (let annee = 1; annee <= params.horizonAnnees; annee++) {
           const creditEnCours = annee <= params.dureeCredit;
           const infosCredit = creditEnCours ? echeancierCredit.parAnnee[annee - 1] : null;
           const mensualiteAffichee = infosCredit ? infosCredit.mensualite : 0;
           const capitalRestantDu = infosCredit ? infosCredit.capitalRestantDuFinAnnee : 0;
           const interetsPayesAnnee = infosCredit ? infosCredit.interets : 0;
+          const assurancePayeeAnnee = infosCredit ? infosCredit.assuranceAnnee : 0;
+          const chargesDeductiblesAnnee = interetsPayesAnnee + assurancePayeeAnnee;
 
           const valeurPartsCredit = params.montantEmprunte * Math.pow(1 + params.revalorisationCreditPct / 100, annee);
           const revenuBrutCredit = valeurPartsCredit * (params.rendementCreditPct / 100);
           const revenuBrutCreditMensuel = revenuBrutCredit / 12;
+
+          // Expire d'abord les déficits qui ont dépassé leurs 10 ans, puis
+          // constitue ou consomme le stock selon le signe du résultat
+          // foncier de l'année — sert uniquement à habiller le graphique
+          // "Loyer brut vs charges déductibles" (zone de report hachurée),
+          // sans effet sur l'effort ou le patrimoine ci-dessous.
+          for (let j = stockDeficit.length - 1; j >= 0; j--) {
+            if (stockDeficit[j].origine + 10 < annee) stockDeficit.splice(j, 1);
+          }
+          const resultatFoncierAnnee = revenuBrutCredit - chargesDeductiblesAnnee;
+          let deficitUtiliseAnnee = 0;
+          if (resultatFoncierAnnee < 0) {
+            stockDeficit.push({ origine: annee, montant: -resultatFoncierAnnee });
+          } else if (resultatFoncierAnnee > 0) {
+            let restantAUtiliser = resultatFoncierAnnee;
+            for (const d of stockDeficit) {
+              if (restantAUtiliser <= 0) break;
+              const pris = Math.min(d.montant, restantAUtiliser);
+              d.montant -= pris;
+              restantAUtiliser -= pris;
+              deficitUtiliseAnnee += pris;
+            }
+          }
+          const deficitReporteRestantFinAnnee = stockDeficit.reduce((somme, d) => somme + d.montant, 0);
 
           // --- Jambe "SCPI au comptant" : versements programmés capitalisés,
           //     fiscalité forfaitaire estimée. ---
@@ -205,10 +242,12 @@
           // bouclier fiscal des intérêts), ce qui donnait un effort "sans
           // comptant" croissant dans le temps — jugé trompeur commercialement
           // par Victor, puisque mensualité et loyer brut sont tous deux
-          // stables. Le curseur TMI et le calcul d'impôt associé (régime
-          // réel, déficit foncier reportable) ont depuis été retirés : ce
-          // revenu ne servait plus qu'à une phrase affichée à part, sans
-          // effet sur aucun autre chiffre de la page.
+          // stables. Le curseur TMI et le calcul d'impôt associé ont depuis
+          // été retirés : ce revenu ne servait plus qu'à une phrase affichée
+          // à part, sans effet sur aucun autre chiffre de la page. Le
+          // déficit foncier reportable (ci-dessus) a été réintroduit depuis,
+          // mais seulement pour habiller le graphique fiscalité — toujours
+          // aucun effet sur l'effort ni sur le patrimoine.
           const effortSansComptant = creditEnCours
             ? mensualiteAffichee - revenuBrutCreditMensuel
             : -revenuBrutCreditMensuel;
@@ -229,7 +268,9 @@
             valeurPartsCredit,
             revenuBrutCredit,
             revenuBrutCreditMensuel,
-            chargesDeductibles: interetsPayesAnnee,
+            chargesDeductibles: chargesDeductiblesAnnee,
+            deficitUtiliseAnnee,
+            deficitReporteRestantFinAnnee,
             revenuNetComptantMensuel,
             versementMensuelComptant: versementMensuelEffectif,
             effortSansComptant,
@@ -274,6 +315,7 @@
         versementMensuelProgramme: 0,
         arreterVersementsAutofinancement: false,
         reinvestirLoyersComptant: false,
+        isolerLevierCredit: false,
         rendementComptantPct: 5.8,
         revalorisationComptantPct: 0,
         tauxEffectifEstimePct: 15,
@@ -316,6 +358,12 @@
           key: "reinvestirLoyersComptant",
           label: "Réinvestir les loyers (sans financement)",
           type: "checkbox"
+        },
+        {
+          key: "isolerLevierCredit",
+          label: "Isoler l'effet de levier du crédit seul",
+          type: "checkbox",
+          note: "Par défaut, l'effort et l'autofinancement comptent aussi le loyer net de la SCPI au comptant : plus son versement programmé est élevé, plus l'autofinancement arrive tôt et plus le levier affiché grandit — alors que ce versement n'est pas lui-même un effort lié au crédit. Coché, seul le loyer de la SCPI à crédit compte : le levier affiché devient indépendant des versements sur la SCPI au comptant."
         }
       ];
 
@@ -561,19 +609,58 @@
       }
 
       // Loyer brut vs charges déductibles (intérêts d'emprunt réellement
-      // payés, cf. construireEcheancierCredit) de la jambe à crédit, année
-      // par année sur tout l'horizon — l'écart entre les deux courbes
-      // grandit au fil de l'amortissement, à mesure que les intérêts
-      // (décroissants) couvrent une part de moins en moins grande du loyer.
+      // payés + assurance emprunteur, cf. construireEcheancierCredit) de la
+      // jambe à crédit, année par année sur tout l'horizon — l'écart entre
+      // les deux courbes grandit au fil de l'amortissement, à mesure que les
+      // intérêts (décroissants) couvrent une part de moins en moins grande
+      // du loyer. Le déficit qui se constitue tant que les charges
+      // dépassent le loyer reste reportable 10 ans sur les revenus fonciers
+      // suivants (cf. simulerAnnees pour le calcul du stock) : toute la
+      // hauteur sous "Loyer brut" est coloriée, pas seulement une bande —
+      // en vert (0 € → "loyer non imposé") le montant de loyer qui échappe
+      // à l'impôt chaque année, que ce soit par les charges de l'année
+      // elle-même ou par du déficit encore reporté, et en bleu (jusqu'à
+      // "Loyer brut") le reste, réellement imposable.
       function renderChartFiscalite(resultat) {
         const rows = resultat.annees;
+        // "Loyer non imposé" = part du loyer brut couverte par les charges
+        // de l'année ET par le déficit foncier encore reporté, plafonnée au
+        // loyer brut lui-même (on ne peut pas neutraliser plus que le loyer
+        // perçu). Une seule formule couvre les trois cas : années de
+        // déficit (charges > loyer, donc tout le loyer est neutralisé),
+        // années où le report absorbe tout le solde positif, et années sans
+        // aucun déficit en jeu (se réduit alors aux seules charges, le cas
+        // "normal" d'un revenu foncier au réel).
+        const loyerBrutMensuel = rows.map((a) => a.revenuBrutCredit / 12);
+        const loyerNonImposeMensuel = rows.map((a) => Math.min(a.revenuBrutCredit, a.chargesDeductibles + a.deficitUtiliseAnnee) / 12);
         renderLineChart(rows, {
           chartId: "fiscalite-chart",
           series: [
-            { role: "invested", label: "Loyer brut", values: rows.map((a) => a.revenuBrutCredit / 12) },
+            { role: "invested", label: "Loyer brut", values: loyerBrutMensuel },
             { role: "gains", label: "Charges déductibles", values: rows.map((a) => a.chargesDeductibles / 12) }
           ],
-          ariaLabel: "Évolution du loyer brut et des charges déductibles de la SCPI financée à crédit",
+          // "imposable" couvre TOUTE la hauteur sous "Loyer brut" (0 →
+          // loyer brut), et "untaxed" est dessinée par-dessus (0 → loyer
+          // non imposé) : décochée dans la légende, "imposable" occupe donc
+          // seule tout l'espace plutôt que de laisser un blanc en dessous
+          // de la bande qu'elle couvrait jusque-là — demandé par Victor.
+          // L'ordre du tableau fixe l'empilement (shared.js dessine dans
+          // l'ordre, donc le dernier est au-dessus) : "imposable" d'abord
+          // (dessous), "untaxed" ensuite (dessus).
+          areas: [
+            { role: "imposable", lower: rows.map(() => 0), upper: loyerBrutMensuel },
+            { role: "untaxed", lower: rows.map(() => 0), upper: loyerNonImposeMensuel }
+          ],
+          legend: [
+            { role: "invested", label: "Loyer brut" },
+            { role: "gains", label: "Charges déductibles" },
+            { role: "untaxed", label: "Loyer non imposé" },
+            { role: "imposable", label: "Loyer imposable" }
+          ],
+          tooltipExtras: [
+            { role: "untaxed", label: "Dont déficit reporté restant (10 ans)", key: "deficitReporteRestantFinAnnee" }
+          ],
+          ariaLabel: "Évolution du loyer brut et des charges déductibles de la SCPI financée à crédit uniquement (hors SCPI au comptant), avec la part du loyer non imposée grâce au déficit foncier reportable sur 10 ans",
           // Valeurs mensuelles, de l'ordre de quelques centaines d'euros ici
           // (contrairement aux montants de capital des autres graphiques du
           // site) : l'arrondi à la centaine par défaut de l'infobulle
@@ -610,7 +697,45 @@
       // "SCPI au comptant" lui-même ne capitalise que via sa revalorisation
       // (cf. simulerAnnees) : le rendement y est un revenu distribué, pas
       // réinvesti.
+      // Option "Isoler l'effet de levier du crédit seul" : en mode mixte
+      // (ci-dessous), l'effort et donc la fenêtre de mesure comptent aussi le
+      // loyer net de la SCPI au comptant — plus son versement programmé est
+      // élevé, plus l'autofinancement arrive tôt et plus le levier affiché
+      // grandit, alors que ce versement n'est pas lui-même un effort lié au
+      // crédit (Victor, cf. échange sur l'effet de levier). Cette variante
+      // ignore entièrement la SCPI au comptant (ni dans l'effort, ni dans le
+      // patrimoine "avec financement") : effort et autofinancement reposent
+      // sur le seul loyer brut de la SCPI à crédit (row.effortSansComptant),
+      // et le patrimoine comparé est la seule valeur des parts à crédit
+      // (row.valeurPartsCredit) — un levier devenu indépendant des
+      // versements sur la SCPI au comptant.
+      function calculerEffetLevierCreditSeul(resultat, params) {
+        const horizonCredit = resultat.annees.slice(0, Math.min(params.dureeCredit, resultat.annees.length));
+        const rowAutofinancementSeul = horizonCredit.find((row) => row.effortSansComptant <= 0);
+        const anneeLimite = rowAutofinancementSeul ? rowAutofinancementSeul.annee : horizonCredit.length;
+        const anneesFinancement = horizonCredit.slice(0, anneeLimite);
+        let partReelle = 0;
+        let capitalContrefactuel = 0;
+        anneesFinancement.forEach((row) => {
+          const effortMensuel = Math.max(0, row.effortSansComptant);
+          for (let mois = 0; mois < 12; mois++) {
+            partReelle += effortMensuel;
+            capitalContrefactuel = capitalContrefactuel * (1 + params.revalorisationComptantPct / 100 / 12) + effortMensuel;
+            if (params.reinvestirLoyersComptant) {
+              capitalContrefactuel += capitalContrefactuel * (params.rendementComptantPct / 100) * (1 - params.tauxEffectifEstimePct / 100) / 12;
+            }
+          }
+        });
+        const patrimoineAvecFinancement = anneesFinancement.length
+          ? anneesFinancement[anneesFinancement.length - 1].valeurPartsCredit
+          : 0;
+        const partLevier = Math.max(0, patrimoineAvecFinancement - partReelle);
+        const effetLevierPct = partReelle > 0 ? (patrimoineAvecFinancement / partReelle - 1) * 100 : 0;
+        return { anneeLimite, patrimoineAvecFinancement, partReelle, partLevier, capitalContrefactuel, effetLevierPct };
+      }
+
       function calculerEffetLevier(resultat, params) {
+        if (params.isolerLevierCredit) return calculerEffetLevierCreditSeul(resultat, params);
         const anneeLimite = resultat.anneeAutofinancement ?? params.dureeCredit;
         const anneesFinancement = resultat.annees.slice(0, anneeLimite);
         let partReelle = params.versementInitial;

@@ -4623,6 +4623,80 @@ body[data-mode="acheter-louer"] #stat-location-group > .tool-stat-tile:first-chi
   view-transition-name: tool-view-active;
 }
 
+/* Rangée au-dessus de .tool-detail-panels : le sélecteur table/fiscalité
+   (.tool-view-toggle, déjà centré via son propre justify-self: center) et le
+   bouton "Exporter en PDF" calé à droite. 1fr/auto/1fr plutôt que flex +
+   margin-left: auto : les deux colonnes 1fr se partagent l'espace restant à
+   parts égales quel que soit le texte du bouton, donc le sélecteur reste
+   pile au centre de la rangée au lieu de dériver vers la gauche. */
+.tool-detail-toolbar {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 12px;
+}
+
+.tool-detail-toolbar .tool-view-toggle {
+  grid-column: 2;
+}
+
+.tool-pdf-export {
+  grid-column: 3;
+  justify-self: end;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 16px;
+  border: 1px solid rgba(43, 37, 30, 0.1);
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(255, 253, 250, 0.88), rgba(242, 238, 230, 0.66));
+  box-shadow: 0 16px 34px rgba(43, 37, 30, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.76);
+  color: var(--ink);
+  font: 500 0.82rem var(--sans);
+  cursor: pointer;
+  transition: box-shadow 200ms ease, transform 200ms ease;
+}
+
+.tool-pdf-export svg {
+  width: 16px;
+  height: 16px;
+  stroke-width: 2;
+  flex: 0 0 auto;
+}
+
+.tool-pdf-export:hover {
+  box-shadow: 0 20px 40px rgba(43, 37, 30, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.84);
+}
+
+.tool-pdf-export:active {
+  transform: translateY(1px);
+}
+
+/* Sous ~480px, le bouton "Exporter en PDF" (icône + texte) a vite plus de
+   poids que le sélecteur table/fiscalité : la grille 1fr/auto/1fr dérive
+   alors le sélecteur vers la gauche au lieu de le garder centré. Empilés
+   l'un sous l'autre, tous deux centrés, reste lisible à toute largeur. */
+@media (max-width: 480px) {
+  .tool-detail-toolbar {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    gap: 10px;
+  }
+
+  .tool-detail-toolbar .tool-view-toggle,
+  .tool-pdf-export {
+    grid-column: 1;
+    justify-self: center;
+  }
+}
+
+/* Bandeau visible seulement à l'impression (cf. @media print plus bas) :
+   nom du simulateur, nom du client, date — injecté par setupPdfExport
+   (shared.js) au clic sur "Exporter en PDF", avant window.print(). */
+.tool-print-header {
+  display: none;
+}
+
 .tool-card-title,
 .tool-params-title {
   display: flex;
@@ -4996,6 +5070,21 @@ body.chart-modal-open {
   fill: url(#chartAreaGains);
 }
 
+/* Aires "untaxed"/"imposable" (une-pierre-deux-coups.html) : tout l'espace
+   sous "Loyer brut" est colorié, pas seulement la part non imposée — "untaxed"
+   (0 → loyer non imposé, vert, assorti à "Charges déductibles" recolorée
+   ci-dessous) et "imposable" (loyer non imposé → loyer brut, bleu, assorti
+   à "Loyer brut") se partagent toute la hauteur sans laisser de blanc.
+   Mesurées depuis 0/la courbe inférieure plutôt qu'en bande entre deux
+   courbes proches, qui se resserrerait à rien pile au croisement. */
+body[data-mode="pierre2coups"] .chart-area-untaxed {
+  fill: url(#chartAreaGreen);
+}
+
+body[data-mode="pierre2coups"] .chart-area-imposable {
+  fill: url(#chartAreaInvested);
+}
+
 .chart-line {
   fill: none;
   stroke-linecap: round;
@@ -5025,6 +5114,36 @@ body.chart-modal-open {
 body[data-mode="acheter-louer"] .chart-line-invested {
   stroke-width: 4;
   opacity: 1;
+}
+
+/* "1 pierre 2 coups" : "Charges déductibles" recolorée en vert (même teinte
+   que l'effet de levier ailleurs sur le site, #4f8f52) pour s'assortir à
+   l'aire "untaxed" juste en dessous ; "Loyer brut" passée à l'épaisseur et
+   l'opacité pleines pour peser visuellement autant que cette courbe-là,
+   plutôt que rester en ligne secondaire fine derrière elle. */
+body[data-mode="pierre2coups"] .chart-line-invested {
+  stroke-width: 4;
+  opacity: 1;
+}
+
+body[data-mode="pierre2coups"] .chart-line-gains {
+  stroke: #4f8f52;
+}
+
+body[data-mode="pierre2coups"] .chart-hover-dot-gains {
+  fill: #4f8f52;
+}
+
+body[data-mode="pierre2coups"] .chart-tooltip-gains strong {
+  color: #4f8f52;
+}
+
+body[data-mode="pierre2coups"] .legend-gains {
+  background: #4f8f52;
+}
+
+body[data-mode="pierre2coups"] .chart-legend-switch input[data-role="gains"]:checked + .chart-legend-track {
+  background: #4f8f52;
 }
 
 /* config.compareFill (cf. shared.js renderLineChart) : zone entre les deux
@@ -5214,6 +5333,14 @@ body[data-mode="financer-rp-locatif"] .chart-compare-fill-scpi {
   background: var(--interest-gold);
 }
 
+.chart-legend-switch input[data-role="untaxed"]:checked + .chart-legend-track {
+  background: #4f8f52;
+}
+
+.chart-legend-switch input[data-role="imposable"]:checked + .chart-legend-track {
+  background: var(--invested-blue);
+}
+
 .chart-legend-switch input:checked + .chart-legend-track::before {
   transform: translateX(12px);
 }
@@ -5233,6 +5360,18 @@ body[data-mode="financer-rp-locatif"] .chart-compare-fill-scpi {
 
 .legend-invested {
   background: var(--invested-blue);
+}
+
+/* Puces "Loyer non imposé" (vert) / "Loyer imposable" (bleu), sur
+   une-pierre-deux-coups.html : mêmes teintes que les aires chart-area-untaxed
+   /-imposable, posées sur un fond uni pour rester lisibles en miniature (le
+   dégradé ne se verrait pas sur une si petite surface). */
+.legend-untaxed {
+  background: rgba(79, 143, 82, 0.4);
+}
+
+.legend-imposable {
+  background: rgba(111, 139, 167, 0.4);
 }
 
 /* Ligne de référence à zéro — visible seulement quand le domaine du
@@ -6318,7 +6457,15 @@ body[data-mode="scpi"] #chart-panel .chart-tooltip-gains strong {
 .tool-table-wrap table {
   width: 100%;
   table-layout: fixed;
-  border-collapse: collapse;
+  /* "separate" + border-spacing: 0, pas "collapse" : avec un <th> sticky
+     (ci-dessous), les bordures collapsées laissaient échapper un filet d'1px
+     tout en haut de l'en-tête, pile sur la bordure collapsée, où aucun fond
+     ne venait la couvrir — on y revoyait les chiffres de la ligne du dessous
+     sans aucune transparence. Rendu identique ici (un seul trait, un seul
+     border-bottom par cellule, jamais de double trait) mais sans ce défaut,
+     "separate" ne collapse justement pas la bordure dans le rendu du sticky. */
+  border-collapse: separate;
+  border-spacing: 0;
   font-size: 0.82rem;
 }
 
@@ -6355,9 +6502,20 @@ body[data-mode="scpi"] #chart-panel .chart-tooltip-gains strong {
   position: sticky;
   top: 0;
   z-index: 1;
-  background: rgba(255, 253, 250, 0.94);
+  /* Opaque (pas rgba(...,0.94)) : en semi-transparent, les lignes qui
+     défilent dessous restaient visibles en transparence à travers l'en-tête
+     figé — demandé par Victor. */
+  background: #fffdfa;
   color: var(--muted);
   font-weight: 600;
+  /* Filet résiduel au-dessus de l'en-tête (artefact de sous-pixel d'un
+     sticky dans un conteneur qui défile, variable selon la position de
+     scroll) : toujours visible même en fond opaque + border-collapse:
+     separate. Une ombre portée pleine, sans flou, prolonge le fond opaque
+     de quelques px au-dessus de la cellule pour le couvrir, sans agrandir
+     réellement la ligne (qui décalerait tout le tableau) — demandé par
+     Victor. */
+  box-shadow: 0 -4px 0 0 #fffdfa;
 }
 
 /* Ligne séparateur visuel dans un tableau générique (ex. "Fin du crédit") —
@@ -7601,6 +7759,15 @@ body[data-mode="per"] .tool-secondary-column {
    reconstruit qu'une fois (apparition réelle, pas une mise à jour de
    valeur). */
 body[data-mode="per"] .tool-result-card {
+  animation: none;
+}
+
+/* Même bug, même correctif que ci-dessus pour le PER : renderSummary()
+   remplace #summary.innerHTML à chaque glissement de curseur (durée du
+   crédit, taux d'intérêt, versements SCPI au comptant...), ce qui rejouait
+   toolFadeUp (voile blanc + léger saut vertical) à chaque tick au lieu
+   d'une vraie apparition. Demandé par Victor. */
+body[data-mode="pierre2coups"] .tool-result-card {
   animation: none;
 }
 
@@ -12121,5 +12288,205 @@ body[data-mode="financer-rp-locatif"] .table-row-highlight:hover td {
 
   .tool-page {
     overflow-x: clip;
+  }
+}
+
+/* Mise en page d'impression pour "Exporter en PDF" (setupPdfExport,
+   shared.js) : fige la simulation dans un PDF propre, pas une capture de
+   la page interactive telle quelle. Masque les curseurs/boutons (sans
+   objet une fois imprimés), déplie systématiquement les hypothèses et les
+   deux panneaux de résultats (graphique + tableau) quel que soit l'état de
+   repli/l'onglet actif à l'écran — un relevé complet, pas la seule vue
+   ouverte au moment du clic. Générique (pas de body[data-mode=...]) : les
+   sélecteurs ciblent les classes/structures communes à tous les
+   simulateurs du site, pour que setupPdfExport reste un branchement à deux
+   lignes partout où on l'ajoute. */
+@page {
+  size: landscape;
+  margin: 1.4cm;
+}
+
+@media print {
+  /* Par défaut, l'impression "économise l'encre" en supprimant les fonds
+     colorés des éléments HTML et en aplatissant les dégradés/opacités —
+     c'est ce qui faisait disparaître entièrement les barres de "Effet de
+     levier" (simples fonds CSS colorés) et rendait plat le dégradé des
+     aires du graphique fiscalité. Forcé ici sur toute la page plutôt que
+     sur chaque élément concerné un par un. */
+  * {
+    print-color-adjust: exact !important;
+    -webkit-print-color-adjust: exact !important;
+  }
+
+  /* Même mise en page qu'en mobile (cf. @media max-width: 980px plus haut) :
+     une seule colonne plutôt que la grille desktop à deux colonnes figées
+     (320-360px + 1fr) — dont la largeur de la colonne de droite dépend de
+     la largeur de page physique, imprévisible en impression (paysage, A4,
+     Letter...) et à l'origine de cartes qui débordaient ou n'avaient pas la
+     même largeur d'une carte à l'autre. */
+  .tool-layout,
+  .tool-overview,
+  .tool-summary {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .tool-layout :where(div, section, article) {
+    min-width: 0;
+  }
+
+  .line-chart,
+  .chart-canvas {
+    width: 100%;
+  }
+
+  /* Le "cadre" en verre dépoli (fond, bordure, ombre, flou) qui enveloppe
+     tout .tool-overview n'a de sens que sur un fond décoratif à l'écran :
+     à l'impression, sur une page blanche, il ne reste qu'un rectangle gris
+     pâle sans fonction — demandé par Victor. */
+  .tool-overview {
+    padding: 0;
+    border: none;
+    background: none;
+    box-shadow: none;
+    backdrop-filter: none;
+  }
+
+  /* .tool-page réserve en temps normal ~100-124px de padding en haut pour
+     la nav fixe (masquée ci-dessus) et une largeur max de 1320px pour le
+     confort de lecture à l'écran — les deux ne servent plus à rien à
+     l'impression et ne faisaient que pousser tout le contenu vers le bas
+     (espace mort en haut de chaque page) et le rétrécir inutilement.
+     .tool-layout a la même logique de largeur max (1120px). */
+  .tool-page {
+    width: auto;
+    min-height: 0;
+    padding: 0;
+  }
+
+  .tool-layout {
+    width: 100%;
+    margin: 0;
+  }
+
+  /* Une carte ne doit jamais être coupée au milieu par un saut de page —
+     reportée entière sur la page suivante à la place. Le tableau (potentiellement
+     plus haut qu'une page sur un long horizon) en est volontairement exclu :
+     seules ses lignes individuelles (plus bas) et son titre y échappent. */
+  .tool-params,
+  .tool-result-card,
+  .tool-chart-card {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .tool-table-wrap tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Empêche le titre d'une carte (ex. "Synthèse année par année") de se
+     retrouver seul en bas d'une page, séparé de son propre contenu. */
+  .tool-card-title {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  /* Le dégradé des aires du graphique fiscalité (chart-area-untaxed/
+     -imposable) reste plat à l'impression malgré print-color-adjust: exact
+     (le moteur d'impression semble aplatir les <linearGradient> SVG) — reste
+     alors une teinte unie, mais trop proche en clarté de l'autre pour bien
+     distinguer les deux courbes. Repris ici en deux teintes plus claires et
+     plus écartées, en dur plutôt qu'en dégradé, pour une impression fiable
+     quel que soit le moteur. */
+  .chart-area-untaxed {
+    fill: rgba(79, 143, 82, 0.28) !important;
+  }
+
+  .chart-area-imposable {
+    fill: rgba(111, 139, 167, 0.28) !important;
+  }
+
+  .main-nav,
+  .tool-nav,
+  .tool-params-title-actions,
+  .tool-collapsible-chevron-btn,
+  .tool-range-wrap,
+  .tool-presets,
+  .tool-auto-toggle,
+  .tool-view-toggle,
+  .tool-pdf-export,
+  .tool-table-toggle,
+  .chart-legend-switch {
+    display: none !important;
+  }
+
+  .tool-print-header {
+    display: block;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #2b251e;
+  }
+
+  .tool-print-header strong {
+    display: block;
+    font-size: 1.1rem;
+  }
+
+  .tool-print-header span {
+    display: inline-block;
+    margin-right: 16px;
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+
+  .tool-print-header span:empty {
+    display: none;
+  }
+
+  /* [hidden] plutôt qu'un sélecteur d'id nu : ne force l'affichage QUE
+     des panneaux réellement repliés/masqués au moment de l'impression, et
+     redonne à chacun son display d'origine (grid), pas display: block qui
+     casserait sa propre mise en page interne (titre + contenu). */
+  .tool-fields[hidden],
+  #fiscalite-panel[hidden],
+  #table-panel[hidden] {
+    display: grid !important;
+  }
+
+  .tool-table-wrap {
+    max-height: none;
+    overflow: visible;
+  }
+
+  .tool-table-wrap th {
+    position: static;
+    box-shadow: none;
+  }
+
+  /* À l'écran, un seul des deux panneaux (graphique/tableau) est jamais
+     visible à la fois, donc .tool-detail-panels n'a pas besoin d'écart
+     entre eux ; forcés tous les deux visibles ci-dessus pour l'impression,
+     ils se retrouvaient collés l'un à l'autre sans cet espace. Fond/ombre/
+     flou décoratifs (pensés pour un écran) retirés au passage : ombres et
+     flous multicouches, une fois les couleurs forcées ci-dessus, alourdissent
+     l'impression plutôt que de l'habiller — un simple filet suffit sur
+     papier. */
+  .tool-detail-panels {
+    display: grid;
+    gap: 24px;
+    padding: 0;
+    border: none;
+    background: none;
+    box-shadow: none;
+    backdrop-filter: none;
+  }
+
+  .tool-result-card,
+  .tool-chart-card,
+  .tool-table-card,
+  .tool-params {
+    box-shadow: none;
+    background: #fff;
+    border: 1px solid rgba(43, 37, 30, 0.2);
   }
 }

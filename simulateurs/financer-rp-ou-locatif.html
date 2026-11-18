@@ -3,11 +3,11 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Financer sa RP ou financer de l'immobilier locatif | Simulateur</title>
+    <title>RP ou locatif ? | Simulateur</title>
     <link rel="icon" href="../favicon.ico" sizes="any">
     <link rel="icon" href="../assets/favicon-96x96.png" type="image/png" sizes="96x96">
     <link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
-    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="../styles.css?v=66">
   </head>
   <body class="tool-body">
     <main class="tool-page" aria-labelledby="tool-page-title">
@@ -36,7 +36,7 @@
         </label>
       </nav>
       <nav class="tool-nav" aria-label="Navigation du simulateur">
-        <h1 id="tool-page-title">Financer sa RP ou financer de l'immobilier locatif</h1>
+        <h1 id="tool-page-title">RP ou locatif ?</h1>
       </nav>
 
       <section class="tool-layout">
@@ -57,9 +57,14 @@
 
         <div class="tool-summary" id="summary"></div>
 
+        <div id="stat-split-row"></div>
+
         <div class="tool-chart-card" id="chart-panel">
           <div class="tool-card-title">
             <h2>Patrimoine net dans le temps</h2>
+            <button type="button" class="tool-chart-expand-btn" aria-label="Agrandir le graphique">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4H4v5M15 4h5v5M9 20H4v-5M15 20h5v-5"></path></svg>
+            </button>
           </div>
           <div class="line-chart" id="chart" aria-label="Graphique comparant le patrimoine net de la résidence principale et de la SCPI"></div>
         </div>
@@ -83,7 +88,7 @@
       </section>
     </main>
 
-    <script src="shared.js"></script>
+    <script src="shared.js?v=29"></script>
     <script>
       // ---------------------------------------------------------------
       // Calcul — financement de la résidence principale (RP) à crédit,
@@ -136,7 +141,6 @@
         const montantEmprunteRP = p.capitalEmprunteRP;
         const dureeMoisRP = p.dureeCredit * 12;
         const mensualiteCreditRP = calculerMensualiteCreditMois(montantEmprunteRP, p.tauxInteretPct, dureeMoisRP);
-        const taxeFonciereMensuelle = p.taxeFonciereAnnuelle / 12;
         const chargesMensuelles = p.chargesAnnuelles / 12;
         const tauxMensuelRP = p.tauxInteretPct / 100 / 12;
 
@@ -190,7 +194,7 @@
           const creditScpiEnCours = mois <= dureeMoisScpi;
 
           const loyerMensuelCourant = p.loyerMensuel * Math.pow(1 + p.revalorisationLoyerPct / 100, anneeCourante - 1);
-          const effortRP = (creditRPEnCours ? mensualiteCreditRP : 0) + taxeFonciereMensuelle + chargesMensuelles;
+          const effortRP = (creditRPEnCours ? mensualiteCreditRP : 0) + chargesMensuelles;
 
           // Loyers nets (de frais ET de la fiscalité forfaitaire ci-dessus)
           // SCPI perçus ce mois-ci (capital emprunté + apport placé) :
@@ -265,9 +269,8 @@
           fraisNotaire,
           montantEmprunteRP,
           mensualiteCreditRP,
-          taxeFonciereMensuelle,
           chargesMensuelles,
-          effortRPInitial: mensualiteCreditRP + taxeFonciereMensuelle + chargesMensuelles,
+          effortRPInitial: mensualiteCreditRP + chargesMensuelles,
           capitalScpiInitial,
           mensualiteCreditScpi,
           loyerMensuelInitial: p.loyerMensuel,
@@ -293,8 +296,12 @@
         fraisNotairePct: 8,
         tauxInteretPct: 4,
         dureeCredit: 25,
-        taxeFonciereAnnuelle: 3000,
-        chargesAnnuelles: 1500,
+        // 3 500 = 1,7 % du prix du bien implicite par défaut (200 000 +
+        // 20 000 d'apport − 16 000 de frais de notaire = 204 000), même ratio
+        // et même mode de calcul que "Acheter ou louer ?" (cf.
+        // recomputeCharges plus bas) — pour que la valeur au chargement
+        // corresponde déjà à ce que l'Auto recalculerait.
+        chargesAnnuelles: 3500,
         revalorisationBienPct: 1.5,
         loyerMensuel: 950,
         revalorisationLoyerPct: 1,
@@ -311,46 +318,56 @@
       };
       document.body.dataset.mode = "financer-rp-locatif";
 
-      // Trois champs à valeur par défaut "intelligente", recalculée en
-      // direct tant que l'utilisateur ne les a pas réglés lui-même (après
-      // quoi leur valeur est respectée et ne suit plus automatiquement),
-      // tous ancrés sur le capital emprunté — le seul curseur "taille du
-      // projet" indépendant une fois le prix du bien retiré :
-      // - Taxe foncière = 1 % du capital emprunté.
-      // - Charges (copropriété, assurance, entretien) = 0,5 % du capital emprunté.
-      // - Apport = 10 % du capital emprunté (exigence bancaire courante) —
-      //   indépendant du taux de frais de notaire, qui ne fixe lui que le
-      //   plancher (zone grisée infranchissable, cf. field.zeroBased) : à 8 %
-      //   dans l'ancien, l'apport par défaut (10 %) couvre donc toujours les
-      //   frais de notaire plus un peu plus.
-      // Capital emprunté et apport sont deux curseurs totalement indépendants
-      // l'un de l'autre (plus de "prix du bien" qui les reliait).
-      let taxeFonciereTouched = false;
-      let chargesTouched = false;
+      // Taxe foncière + copropriété + assurance habitation + entretien
+      // courant réunis dans un seul champ "Charges annuelles" (plus de champ
+      // "Taxe foncière" séparé), au même taux total (1,7 %) et selon la même
+      // répartition que "Acheter ou louer ?" (cf. acheter-louer.html) —
+      // demandé par Victor pour que les deux simulateurs calculent les
+      // charges de la même façon. Comme ce simulateur n'a pas de "prix du
+      // bien" explicite (remplacé par capital emprunté + apport, cf.
+      // simulerFinancementRPvsSCPI), le taux s'applique au prix du bien
+      // IMPLICITE (capital emprunté + la part de l'apport qui finance
+      // réellement le bien, frais de notaire exclus) plutôt qu'au capital
+      // emprunté seul.
+      const CHARGES_BREAKDOWN_RATIOS = {
+        "taxe foncière": 0.4 / 1.7,
+        "copropriété": 0.9 / 1.7,
+        "assurance habitation": 0.1 / 1.7,
+        "entretien courant": 0.3 / 1.7
+      };
+
+      function prixBienImplicite(values) {
+        const fraisNotaire = values.capitalEmprunteRP * values.fraisNotairePct / 100;
+        return values.capitalEmprunteRP + (values.apport - fraisNotaire);
+      }
+
+      let chargesAuto = true;
       let apportTouched = false;
-      function handleCrossFieldDefaults(key, previousValue, newValue) {
-        if (key === "taxeFonciereAnnuelle") {
-          taxeFonciereTouched = true;
-          return;
-        }
-        if (key === "chargesAnnuelles") {
-          chargesTouched = true;
-          return;
-        }
+      const recomputeCharges = () => {
+        state.values.chargesAnnuelles = Math.round((prixBienImplicite(state.values) * 0.017) / 100) * 100;
+      };
+
+      // Apport = 10 % du capital emprunté (exigence bancaire courante) tant
+      // que l'utilisateur ne l'a pas réglé lui-même — indépendant du taux de
+      // frais de notaire, qui ne fixe lui que le plancher (zone grisée
+      // infranchissable, cf. field.zeroBased) : à 8 % dans l'ancien, l'apport
+      // par défaut (10 %) couvre donc toujours les frais de notaire plus un
+      // peu plus.
+      function handleCrossFieldDefaults(key) {
         if (key === "apport") {
           apportTouched = true;
+          if (chargesAuto) recomputeCharges();
           return;
         }
         if (key === "capitalEmprunteRP") {
-          if (!taxeFonciereTouched) {
-            state.values.taxeFonciereAnnuelle = Math.round(newValue * 0.01 / 100) * 100;
-          }
-          if (!chargesTouched) {
-            state.values.chargesAnnuelles = Math.round(newValue * 0.005 / 100) * 100;
-          }
           if (!apportTouched) {
-            state.values.apport = newValue * 0.1;
+            state.values.apport = state.values.capitalEmprunteRP * 0.1;
           }
+          if (chargesAuto) recomputeCharges();
+          return;
+        }
+        if (key === "fraisNotairePct") {
+          if (chargesAuto) recomputeCharges();
         }
       }
 
@@ -360,24 +377,26 @@
 
       const fieldDefinitionsBien = [
         {
-          key: "taxeFonciereAnnuelle",
-          label: "Taxe foncière annuelle",
-          min: (values) => Math.round(values.capitalEmprunteRP * 0.005 / 100) * 100,
-          max: (values) => Math.round(values.capitalEmprunteRP * 0.02 / 100) * 100,
-          step: 100,
-          suffix: "€/an",
-          group: "couts",
-          note: (values) => `Soit ${formatMoney(values.taxeFonciereAnnuelle / 12)}/mois.`
-        },
-        {
           key: "chargesAnnuelles",
           label: "Charges annuelles",
           min: 0,
-          max: (values) => Math.round(values.capitalEmprunteRP * 0.015 / 100) * 100,
+          max: 16000,
           step: 100,
           suffix: "€/an",
           group: "couts",
-          note: (values) => `Copropriété, assurance habitation, entretien courant. Soit ${formatMoney(values.chargesAnnuelles / 12)}/mois.`
+          autoToggle: {
+            get: () => chargesAuto,
+            set: (checked) => {
+              chargesAuto = checked;
+              if (checked) recomputeCharges();
+            }
+          },
+          note: (values) => {
+            const detail = Object.entries(CHARGES_BREAKDOWN_RATIOS)
+              .map(([poste, ratio]) => `${poste} ${formatMoney(values.chargesAnnuelles * ratio)}`)
+              .join(", ");
+            return `Dont ${detail}. Soit ${formatMoney(values.chargesAnnuelles / 12)}/mois.`;
+          }
         },
         { key: "revalorisationBienPct", label: "Revalorisation annuelle du bien", min: 0, max: 4, step: 0.1, suffix: "%/an", group: "gains" }
       ];
@@ -584,11 +603,25 @@
       // Rendu des résultats
       // ---------------------------------------------------------------
 
-      const ICON_CROSSING = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h6l4 12h6"></path><path d="M4 18h6l4-12h6"></path></svg>';
-
       function formatEcart(value) {
         const signe = value > 0 ? "+" : value < 0 ? "−" : "";
         return `${signe}${formatMoney(Math.abs(value))}`;
+      }
+
+      // Même recette que sur "Acheter ou louer ?" (cf. acheter-louer.html) :
+      // fond sombre + or pour le repère "quand" (is-highlight), fond vert
+      // pour le repère "combien" (is-gain) — plutôt que l'ancien bandeau
+      // .tool-status-banner + les pastilles plates de .comparateur-results,
+      // visuellement daté par rapport à l'autre simulateur.
+      function buildStatTile(title, value, sub, statusClass) {
+        const tile = document.createElement("div");
+        tile.className = `tool-stat-tile${statusClass ? ` ${statusClass}` : ""}`;
+        tile.innerHTML = `
+          <small>${title}</small>
+          <strong>${value}</strong>
+          <small class="tool-stat-sub">${sub}</small>
+        `;
+        return tile;
       }
 
       function renderSummary(resultat) {
@@ -605,26 +638,7 @@
         const seuilEgalite = Math.max(finalRP, finalScpi) * 0.02;
         const gagnant = Math.abs(ecartFinal) < seuilEgalite ? null : ecartFinal > 0 ? "rp" : "scpi";
 
-        // Arrondi à l'inférieur pour l'affichage (cohérent avec le reste du
-        // site) : une décimale ici a l'air d'une fausse précision.
-        const basculeAffichee = resultat.anneeBascule !== null ? Math.max(1, Math.floor(resultat.anneeBascule)) : null;
-        const basculeBanner = resultat.anneeBascule !== null ? (() => {
-          const rpPrendLAvantage = !resultat.rpAvantageuxDepart;
-          return `
-          <div class="tool-status-banner is-ok" role="status">
-            <span class="tool-status-icon" aria-hidden="true">${ICON_CROSSING}</span>
-            <div class="tool-status-copy">
-              <strong>Bascule en faveur de ${rpPrendLAvantage ? "la RP" : "la SCPI"} à ${formatNumber(basculeAffichee)} ans</strong>
-              <span>${rpPrendLAvantage
-                ? `Jusqu'à cette échéance, les frais d'acquisition de la RP pèsent plus que l'écart d'effort capitalisé : la SCPI est plus avantageuse. Au-delà, c'est la RP qui prend l'avantage.`
-                : `Jusqu'à cette échéance, la RP reste plus avantageuse. Au-delà, la capitalisation de l'écart d'effort rattrape puis dépasse le patrimoine net de la RP.`}</span>
-            </div>
-          </div>
-        `;
-        })() : "";
-
         summary.innerHTML = `
-          ${basculeBanner}
           <div class="comparateur-results">
             <span class="capital-metric-invested">
               <small>RP — patrimoine net à ${horizonAnnees} ans</small>
@@ -636,13 +650,32 @@
               <strong>${formatMoney(finalScpi)}</strong>
               <small class="comparateur-result-sub">Effort initial : ${formatMoney(resultat.effortScpiInitial)}/mois</small>
             </span>
-            <span class="capital-metric-ecart">
-              <small>Écart à l'échéance</small>
-              <strong>${formatEcart(ecartFinal)}</strong>
-              <small class="comparateur-result-verdict">${gagnant ? `${gagnant === "rp" ? "La RP" : "La SCPI"} est plus avantageuse` : "Quasi équivalent"}</small>
-            </span>
           </div>
         `;
+
+        // Arrondi à l'inférieur pour l'affichage (cohérent avec le reste du
+        // site) : une décimale ici a l'air d'une fausse précision.
+        const basculeAffichee = resultat.anneeBascule !== null ? Math.max(1, Math.floor(resultat.anneeBascule)) : null;
+        const rpPrendLAvantage = !resultat.rpAvantageuxDepart;
+        const basculeTile = buildStatTile(
+          "Bascule",
+          basculeAffichee !== null ? `${formatNumber(basculeAffichee)} ans` : "—",
+          basculeAffichee !== null
+            ? (rpPrendLAvantage
+              ? `Jusqu'à ${formatNumber(basculeAffichee)} ans, les frais d'acquisition de la RP pèsent plus que l'écart d'effort capitalisé : la SCPI est plus avantageuse. Au-delà, c'est la RP qui prend l'avantage.`
+              : `Jusqu'à ${formatNumber(basculeAffichee)} ans, la RP reste plus avantageuse. Au-delà, la capitalisation de l'écart d'effort rattrape puis dépasse le patrimoine net de la RP.`)
+            : "Un côté reste avantageux du début à la fin de l'horizon simulé, sans jamais basculer.",
+          "is-highlight"
+        );
+        const ecartTile = buildStatTile(
+          "Écart à l'échéance",
+          formatEcart(ecartFinal),
+          gagnant
+            ? `${gagnant === "rp" ? "La résidence principale" : "L'immobilier locatif / SCPI"} est plus avantageux à ${formatNumber(horizonAnnees)} ans.`
+            : "Quasi équivalent à cette échéance.",
+          "is-gain"
+        );
+        document.querySelector("#stat-split-row").replaceChildren(basculeTile, ecartTile);
       }
 
       function renderChartRPvsScpi(resultat) {
@@ -658,9 +691,15 @@
           { annee: 0, patrimoineNetRP: resultat.patrimoineNetRPInitial, patrimoineNetScpi: resultat.patrimoineNetScpiInitial },
           ...resultat.annees
         ];
+        const basculeArrondie = resultat.anneeBascule !== null ? Math.round(resultat.anneeBascule) : null;
         const marker = resultat.anneeBascule !== null ? {
           index: Math.max(0, Math.min(rows.length - 1, resultat.anneeBascule)),
-          label: "Bascule"
+          label: "Bascule",
+          // +1 : renderLineChart compare highlightYear à la position de la
+          // graduation dans le tableau (1-based), pas directement au champ
+          // "annee" (décalé de 1 puisque rows[0] est "année 0", cf.
+          // acheter-louer.html pour le même ajustement).
+          highlightYear: basculeArrondie + 1
         } : null;
 
         // Code couleur respecté partout sur la page : bleu (rôle "invested",
@@ -670,6 +709,9 @@
             { role: "invested", label: "RP", values: rows.map((r) => r.patrimoineNetRP) },
             { role: "gains", label: "Immobilier locatif / SCPI", values: rows.map((r) => r.patrimoineNetScpi) }
           ],
+          // Zone colorée entre les deux courbes (bleu si la RP est devant,
+          // doré si c'est la SCPI) — même traitement que "Acheter ou louer ?".
+          compareFill: { roleA: "invested", roleB: "gains", classA: "rp", classB: "scpi" },
           zeroBaseline: false,
           marker,
           startYear: 0,
@@ -680,14 +722,20 @@
 
       function renderTableSynthese(resultat) {
         const horizonAnnees = state.values.horizonAnnees;
-        const echeances = [1, 2, 3, 5, 7, 10, 12, 15, 20, 25, 30].filter((a) => a <= horizonAnnees);
+        const echeances = [0, 1, 2, 3, 5, 7, 10, 12, 15, 20, 25, 30].filter((a) => a <= horizonAnnees);
         if (!echeances.includes(horizonAnnees)) echeances.push(horizonAnnees);
         const basculeArrondie = resultat.anneeBascule !== null ? Math.round(resultat.anneeBascule) : null;
         if (basculeArrondie && basculeArrondie >= 1 && basculeArrondie <= horizonAnnees && !echeances.includes(basculeArrondie)) {
           echeances.push(basculeArrondie);
         }
         echeances.sort((a, b) => a - b);
-        const rows = echeances.map((an) => resultat.annees[an - 1]);
+        // Année 0 (signature) n'existe pas dans resultat.annees (qui ne
+        // stocke qu'une ligne PAR ANNÉE ÉCOULÉE, cf. simulerFinancementRPvsSCPI)
+        // — reconstruite à la volée à partir des mêmes valeurs de départ que
+        // celles déjà utilisées par le graphique (resultat.patrimoineNet*Initial).
+        const rows = echeances.map((an) => an === 0
+          ? { annee: 0, patrimoineNetRP: resultat.patrimoineNetRPInitial, patrimoineNetScpi: resultat.patrimoineNetScpiInitial }
+          : resultat.annees[an - 1]);
 
         const headers = ["Année", "Patrimoine net — RP", "Patrimoine net — SCPI", "Écart", "Avantage"];
         const mapper = (row) => {
@@ -753,7 +801,7 @@
             ${renderEffortStep({
               number: 1,
               title: "Le crédit RP et ses charges annexes",
-              detail: `${formatMoney(resultat.mensualiteCreditRP)} de mensualité, + ${formatMoney(resultat.taxeFonciereMensuelle)} de taxe foncière, + ${formatMoney(resultat.chargesMensuelles)} de charges mensualisées.`,
+              detail: `${formatMoney(resultat.mensualiteCreditRP)} de mensualité, + ${formatMoney(resultat.chargesMensuelles)} de charges mensualisées (taxe foncière comprise).`,
               value: resultat.effortRPInitial
             })}
             ${renderEffortStep({
@@ -843,8 +891,7 @@
             <div class="tool-waterfall-col is-b">
               <div class="tool-waterfall-col-title is-b">Résidence principale</div>
               ${renderWaterfallRow("Mensualité de crédit RP", resultat.mensualiteCreditRP, scale)}
-              ${renderWaterfallRow("Taxe foncière mensualisée", resultat.taxeFonciereMensuelle, scale)}
-              ${renderWaterfallRow("Charges mensualisées", resultat.chargesMensuelles, scale)}
+              ${renderWaterfallRow("Charges mensualisées (taxe foncière comprise)", resultat.chargesMensuelles, scale)}
               ${renderWaterfallTotal("Effort d'épargne réel", resultat.effortRPInitial, scale)}
             </div>
             <div class="tool-waterfall-col is-a">
@@ -892,13 +939,13 @@
 
       document.querySelector("#reset-fields").addEventListener("click", () => {
         state.values = structuredClone(defaults);
-        taxeFonciereTouched = false;
-        chargesTouched = false;
+        chargesAuto = true;
         apportTouched = false;
         withHeightTransition(document.querySelector(".tool-layout"), render);
       });
 
       render();
+      setupChartExpandButtons();
     </script>
   </body>
 </html>
